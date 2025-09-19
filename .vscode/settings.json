@@ -1,0 +1,22 @@
+{
+  // Visual cues so you instantly know which window is which
+  "window.title": "🧠 Fitlog • Codex",
+  "workbench.colorCustomizations": {
+    "titleBar.activeBackground": "#0ea5a4",
+    "titleBar.activeForeground": "#ffffff"
+  },
+
+  // TS/JS quality
+  "typescript.tsdk": "node_modules/typescript/lib",
+  "typescript.preferences.importModuleSpecifier": "non-relative",
+  "editor.formatOnSave": true,
+  "editor.defaultFormatter": "esbenp.prettier-vscode",
+  "eslint.validate": ["typescript", "typescriptreact", "javascript"],
+
+  // Expo / RN niceties
+  "react-native-tools.showUserTips": false,
+  "files.associations": {
+    "*.sql": "sql"
+  }
+}
+

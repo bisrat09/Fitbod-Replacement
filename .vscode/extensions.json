@@ -1,0 +1,11 @@
+{
+  "recommendations": [
+    "openai.openai-chatgpt",   // or the Codex/ChatGPT extension ID you have
+    "esbenp.prettier-vscode",
+    "dbaeumer.vscode-eslint"
+  ],
+  "unwantedRecommendations": [
+    "anthropic.claude"         // prevent prompts to install Claude here
+  ]
+}
+

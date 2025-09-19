@@ -69,3 +69,30 @@ Files
 - Export/backup JSON via `expo-file-system`.
 - UI polish: RIR chips styling, nicer forms, charts (react-native-svg).
 
+---
+
+# Fitlog Dev Log — 2025-09-19
+
+Summary
+- Iteration 1 complete (blocks + timers + attached sets).
+- Iteration 2 progress: Equipment filtering, Favorites library, Supersets, sticky action bar, Tabs, Log view.
+
+Highlights
+- Supersets: “Make Superset” adds a second exercise to a block; unified block rest; auto-advance across exercises.
+- Inline set editing and completion: per-row Reps/Weight inputs; “Log Set” marks only that row; persists with `sets.is_completed`.
+- Sticky bottom bar: centered red “Log Set” button; always visible; hides the old summary list to prevent overlap.
+- Favorites library: toggle common exercises; Add Exercise modal prioritizes favorites, then other equipment-available exercises.
+- Tabs: Workout and Log (grouped by workout date: Today/Yesterday/date).
+- Migrations: v3 (`sets.is_completed`) and v4 (`user_favorite_exercises`).
+
+Key files
+- `app/index.tsx`, `app/_layout.tsx`, `app/log.tsx`, `app/exercises.tsx`
+- `src/lib/dao.ts`, `src/lib/migrations/{003,004}_*.{sql,ts}`
+
+Next Steps (tomorrow)
+- Last‑time preview: show prior working set when an exercise becomes active.
+- Replace exercise: swap within block while preserving set slots.
+- Variant rotation: bias by recency + simple per‑muscle fatigue.
+- PR banner: est‑1RM / rep PR detection and metrics upsert.
+- Units/labels: reflect lb|kg from user settings.
+- Optional polish: sticky timer chip in action bar; persist active row across reloads; nicer tab icons.

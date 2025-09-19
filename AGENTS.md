@@ -3,6 +3,20 @@
 Purpose
 - This file orients coding agents working in this repository. It defines scope, conventions, and constraints. Treat it as the canonical collaboration contract with the developer.
 
+Mode
+- Level: Medium
+- Verbosity: 4 (balanced; concise but with brief rationale when useful)
+- Initiative: Balanced (propose small, high‑value steps; avoid gold‑plating)
+- Confirmations: Ask before network access or adding dependencies
+- Output: Show diffs for edited files; keep changes localized
+
+Context Tips
+- Persist context in-repo: keep DEVLOG.md and this AGENTS.md updated.
+- Prefer file references over large pastes; send diffs when possible.
+- Keep messages compact; summarize long threads on request.
+- On context drift, reset by: “Read DEVLOG.md and AGENTS.md, then do X.”
+- Response suffix (visibility cue): append "I remember" at the end of each assistant reply in this repo to indicate continued context tracking.
+
 Project Snapshot
 - App: Expo Router + TypeScript, offline-first fitness tracker
 - Storage: SQLite via `expo-sqlite` (local only)
@@ -50,4 +64,3 @@ Roadmap Pointers (future tasks)
 
 Today’s Context
 - Latest changes are summarized in `DEVLOG.md`.
-
