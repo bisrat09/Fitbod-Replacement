@@ -33,6 +33,8 @@ export const colors = {
     setBadgeBg: '#E5E5EA',
     completedBorder: '#34C759',
     completedBg: '#E8FAE8',
+    textOnAccent: '#FFFFFF',
+    goldText: '#78350F',
   },
   dark: {
     bg: '#1C1C1E',
@@ -66,6 +68,8 @@ export const colors = {
     setBadgeBg: '#3A3A3C',
     completedBorder: '#34C759',
     completedBg: '#1A3A1A',
+    textOnAccent: '#FFFFFF',
+    goldText: '#78350F',
   },
 };
 

@@ -22,16 +22,37 @@ Fitlog is an offline-first fitness workout logging app built with Expo Router + 
 ```
 app/                    # Screens (Expo Router)
   _layout.tsx           # Tab navigation (4 tabs: Workout, Log, Progress, Settings)
-  index.tsx             # Workout screen (~1158 lines — being refactored)
-  history.tsx           # Workout history with expandable detail
-  progress.tsx          # 1RM trends per exercise
+  index.tsx             # Workout screen (split into sub-components)
+  history.tsx           # Workout history with expandable detail, calendar, PR badges
+  progress.tsx          # 1RM trends per exercise, gold PR timeline
   programs.tsx          # Program builder (hidden route, accessible from Settings)
-  settings.tsx          # Unit toggle, export/import, about
+  settings.tsx          # Grouped sections, unit segmented control, Switch toggle, data export/import
   exercises.tsx         # Exercise library with search + custom creation (hidden route)
-  equipment.tsx         # Equipment inventory toggles (hidden route)
-  log.tsx               # Recent sets (hidden route)
+  equipment.tsx         # Equipment toggle rows with icons (hidden route)
+  log.tsx               # Recent sets with ExerciseInitial circles (hidden route)
+src/components/         # Reusable Fitbod-style components
+  Card.tsx              # Dark surface card with border, optional done state
+  Chip.tsx              # Filter chip pill (selected/unselected)
+  PinkButton.tsx        # Pink accent CTA button
+  ExerciseInitial.tsx   # Colored circle with exercise initial letter
+  SectionHeader.tsx     # Section header with optional action
+  ExerciseCard.tsx      # Exercise row with initial, name, set summary
+  SupersetHeader.tsx    # Pink superset label
+  SetRow.tsx            # Set input row with badge, reps/weight inputs
+  ActionChip.tsx        # Icon + label chip for actions
+  SettingsRow.tsx       # Settings row with label, value, chevron
+  BottomSheet.tsx       # Modal bottom sheet with drag handle
+  RestTimer.tsx         # Rest timer overlay with countdown + controls
+  index.ts              # Barrel export
+  workout/              # Workout screen sub-components
+    WorkoutHeader.tsx   # Title, PR banner, stats, program suggestion
+    BlockCard.tsx       # Exercise card with set rows, rest timer, actions
+    ExercisePickerSheet.tsx  # Unified picker for add/superset/swap
+    FinishSheet.tsx     # Workout summary + stats
+    PlateCalcSheet.tsx  # Plate calculator
+    StickyBar.tsx       # Bottom sticky Log Set button + timer
 src/theme/              # Theming (Fitbod-style)
-  colors.ts             # Light + dark palettes (Fitbod colors)
+  colors.ts             # Light + dark palettes (Fitbod colors + textOnAccent, goldText)
   ThemeContext.tsx       # Theme provider + useTheme hook (dark default)
   typography.ts         # Font size + weight constants
 src/lib/                # Core logic
@@ -62,7 +83,11 @@ Dark theme (default):
   bg: #1C1C1E          card: #2C2C2E        cardBorder: #3A3A3C
   text: #FFFFFF        textSecondary: #8E8E93  textMuted: #636366
   accent: #FF3B5C      green: #34C759       gold: #FFD700
+  textOnAccent: #FFFFFF (white text on colored backgrounds)
+  goldText: #78350F    (dark brown text on gold badges)
 ```
+
+**Rule:** Never hardcode hex values in screens/components. Use `c.*` theme tokens from `useTheme()`. The only exception is the ExerciseInitial palette (decorative, theme-independent).
 
 ## Tab Layout (4 tabs)
 1. **Workout** (barbell icon) → `index.tsx`
@@ -88,12 +113,12 @@ npx expo-doctor        # Check dependencies
 - If adding a table or column, create a migration in `src/lib/migrations/`.
 - TypeScript with explicit types on public helpers; avoid `any` where practical.
 
-## UI Redesign Status
+## UI Redesign Status — ALL PHASES COMPLETE
 See TASKS.md for the full Fitbod design spec and phase checklist.
 - **Phase 1: Theme & Foundation** — DONE (colors, dark default, 4-tab Ionicons, typography)
-- **Phase 2: Reusable Components** — pending
-- **Phase 3: Workout Screen Redesign** — pending
-- **Phase 4: History & Workout Summary** — pending
-- **Phase 5: Progress, Programs, Exercises** — pending
-- **Phase 6: Settings & Equipment** — pending
-- **Phase 7: Polish & Cleanup** — pending
+- **Phase 2: Reusable Components** — DONE (Card, Chip, SetRow, ExerciseCard, BottomSheet, etc.)
+- **Phase 3: Workout Screen Redesign** — DONE (split into 6 sub-components)
+- **Phase 4: History & Workout Summary** — DONE (dark cards, themed calendar, PR badges)
+- **Phase 5: Progress, Programs, Exercises** — DONE (Card components, ExerciseInitial, gold PRs)
+- **Phase 6: Settings & Equipment** — DONE (grouped sections, segmented controls, Switch, toggle rows)
+- **Phase 7: Polish & Cleanup** — DONE (all hardcoded hex removed, consistent spacing, 186 tests passing)

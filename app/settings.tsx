@@ -1,20 +1,22 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, Pressable, Button, TextInput } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, Pressable, TextInput, Switch } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import * as FileSystem from 'expo-file-system';
 import * as Crypto from 'expo-crypto';
 import { bootstrapDb } from '@/lib/bootstrap';
 import { ensureUser, getUserUnit, updateUserUnit, exportAllData, importData, logBodyWeight, getBodyWeightHistory, deleteBodyWeight, getLifetimeStats } from '@/lib/dao';
 import { useTheme } from '@/theme/ThemeContext';
+import { fontSize, fontWeight } from '@/theme/typography';
+import { Card } from '@/components/Card';
+import { SettingsRow } from '@/components/SettingsRow';
 
 export default function Settings() {
   const { theme, c, toggle: toggleTheme } = useTheme();
   const [dbCtx, setDbCtx] = useState<any>(null);
   const [unit, setUnit] = useState<'lb' | 'kg'>('lb');
   const [status, setStatus] = useState<string | null>(null);
-  // Body weight
   const [bwInput, setBwInput] = useState('');
   const [bwHistory, setBwHistory] = useState<any[]>([]);
-  // Lifetime stats
   const [stats, setStats] = useState<any>(null);
 
   useEffect(() => {
@@ -22,20 +24,16 @@ export default function Settings() {
       const { db, userId } = await bootstrapDb();
       const ctx = { db, userId };
       await ensureUser(ctx, { id: userId, display_name: 'You', unit: 'lb' });
-      const u = await getUserUnit(ctx);
-      setUnit(u);
+      setUnit(await getUserUnit(ctx));
       setDbCtx(ctx);
       await refreshData(ctx);
     })();
   }, []);
 
   async function refreshData(ctx?: any) {
-    const c = ctx || dbCtx;
-    if (!c) return;
-    const [bw, st] = await Promise.all([
-      getBodyWeightHistory(c, 10),
-      getLifetimeStats(c),
-    ]);
+    const x = ctx || dbCtx;
+    if (!x) return;
+    const [bw, st] = await Promise.all([getBodyWeightHistory(x, 10), getLifetimeStats(x)]);
     setBwHistory(bw);
     setStats(st);
   }
@@ -84,19 +82,13 @@ export default function Settings() {
     try {
       setStatus('Looking for backup...');
       const files = await FileSystem.readDirectoryAsync(FileSystem.documentDirectory!);
-      const backups = files.filter(f => f.startsWith('fitlog_backup_') && f.endsWith('.json')).sort().reverse();
-      if (backups.length === 0) {
-        setStatus('No backup files found.');
-        setTimeout(() => setStatus(null), 4000);
-        return;
-      }
-      const latest = backups[0];
-      const path = `${FileSystem.documentDirectory}${latest}`;
+      const backups = files.filter((f) => f.startsWith('fitlog_backup_') && f.endsWith('.json')).sort().reverse();
+      if (backups.length === 0) { setStatus('No backup files found.'); setTimeout(() => setStatus(null), 4000); return; }
+      const path = `${FileSystem.documentDirectory}${backups[0]}`;
       const json = await FileSystem.readAsStringAsync(path);
-      const data = JSON.parse(json);
-      setStatus(`Importing from ${latest}...`);
-      await importData(dbCtx, data);
-      setStatus(`Imported successfully!`);
+      setStatus(`Importing from ${backups[0]}...`);
+      await importData(dbCtx, JSON.parse(json));
+      setStatus('Imported successfully!');
       await refreshData();
       setTimeout(() => setStatus(null), 5000);
     } catch (err: any) {
@@ -112,99 +104,163 @@ export default function Settings() {
   }
 
   return (
-    <ScrollView style={[styles.container, {backgroundColor: c.bg}]}>
-      <Text style={[styles.h1, {color: c.text}]}>Settings</Text>
+    <ScrollView style={[styles.container, { backgroundColor: c.bg }]} contentContainerStyle={styles.content}>
+      <Text style={[styles.h1, { color: c.text }]}>Settings</Text>
 
       {/* Lifetime Stats */}
       {stats && (
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Lifetime Stats</Text>
-          <View style={styles.statsGrid}>
-            <View style={styles.statCard}>
-              <Text style={styles.statNumber}>{stats.totalWorkouts}</Text>
-              <Text style={styles.statLabel}>Workouts</Text>
+          <Text style={[styles.sectionTitle, { color: c.textMuted }]}>LIFETIME STATS</Text>
+          <Card>
+            <View style={styles.statsGrid}>
+              {[
+                { value: stats.totalWorkouts, label: 'Workouts' },
+                { value: stats.totalSets, label: 'Sets' },
+                { value: Math.round(stats.totalVolume).toLocaleString(), label: `${unit} lifted` },
+                { value: stats.currentStreak, label: 'Day streak' },
+              ].map((s) => (
+                <View key={s.label} style={styles.statItem}>
+                  <Text style={[styles.statNumber, { color: c.text }]}>{s.value}</Text>
+                  <Text style={[styles.statLabel, { color: c.textMuted }]}>{s.label}</Text>
+                </View>
+              ))}
             </View>
-            <View style={styles.statCard}>
-              <Text style={styles.statNumber}>{stats.totalSets}</Text>
-              <Text style={styles.statLabel}>Sets</Text>
-            </View>
-            <View style={styles.statCard}>
-              <Text style={styles.statNumber}>{Math.round(stats.totalVolume).toLocaleString()}</Text>
-              <Text style={styles.statLabel}>{unit} lifted</Text>
-            </View>
-            <View style={styles.statCard}>
-              <Text style={styles.statNumber}>{stats.currentStreak}</Text>
-              <Text style={styles.statLabel}>Day streak</Text>
-            </View>
-          </View>
-          {stats.mostTrainedExercise && (
-            <Text style={styles.statMeta}>Most trained: {stats.mostTrainedExercise}</Text>
-          )}
+            {stats.mostTrainedExercise && (
+              <Text style={[styles.statMeta, { color: c.textSecondary }]}>
+                Most trained: {stats.mostTrainedExercise}
+              </Text>
+            )}
+          </Card>
         </View>
       )}
 
       {/* Body Weight */}
       <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Body Weight</Text>
-        <View style={styles.row}>
-          <TextInput placeholder={`Weight (${unit})`} value={bwInput} onChangeText={setBwInput} keyboardType='numeric' style={styles.bwInput} />
-          <Button title='Log' onPress={handleLogWeight} disabled={!bwInput.trim()} />
-        </View>
-        {bwHistory.length > 0 && (
-          <View style={styles.bwList}>
-            {bwHistory.map((entry: any) => (
-              <View key={entry.id} style={styles.bwRow}>
-                <Text style={styles.bwDate}>{formatDate(entry.date)}</Text>
-                <Text style={styles.bwWeight}>{entry.weight} {unit}</Text>
-                <Pressable onPress={() => handleDeleteBw(entry.id)}><Text style={styles.bwDelete}>×</Text></Pressable>
-              </View>
-            ))}
+        <Text style={[styles.sectionTitle, { color: c.textMuted }]}>BODY WEIGHT</Text>
+        <Card>
+          <View style={styles.bwInputRow}>
+            <TextInput
+              placeholder={`Weight (${unit})`}
+              value={bwInput}
+              onChangeText={setBwInput}
+              keyboardType="numeric"
+              style={[styles.bwInput, { backgroundColor: c.inputBg, borderColor: c.inputBorder, color: c.text }]}
+              placeholderTextColor={c.textMuted}
+            />
+            <Pressable
+              onPress={handleLogWeight}
+              disabled={!bwInput.trim()}
+              style={[styles.logBtn, { backgroundColor: bwInput.trim() ? c.accent : c.cardBorder }]}
+            >
+              <Text style={[styles.logBtnText, { color: bwInput.trim() ? c.textOnAccent : c.textMuted }]}>Log</Text>
+            </Pressable>
           </View>
+          {bwHistory.length > 0 && (
+            <View style={styles.bwList}>
+              {bwHistory.map((entry: any, idx: number) => (
+                <View
+                  key={entry.id}
+                  style={[
+                    styles.bwRow,
+                    idx < bwHistory.length - 1 && { borderBottomColor: c.cardBorder, borderBottomWidth: StyleSheet.hairlineWidth },
+                  ]}
+                >
+                  <Text style={[styles.bwDate, { color: c.textSecondary }]}>{formatDate(entry.date)}</Text>
+                  <Text style={[styles.bwWeight, { color: c.text }]}>{entry.weight} {unit}</Text>
+                  <Pressable onPress={() => handleDeleteBw(entry.id)} hitSlop={8}>
+                    <Ionicons name="close-circle" size={18} color={c.textMuted} />
+                  </Pressable>
+                </View>
+              ))}
+            </View>
+          )}
+        </Card>
+      </View>
+
+      {/* Preferences */}
+      <View style={styles.section}>
+        <Text style={[styles.sectionTitle, { color: c.textMuted }]}>PREFERENCES</Text>
+        <Card style={{ padding: 0 }}>
+          {/* Unit selector */}
+          <View style={[styles.settingRow, { borderBottomColor: c.cardBorder }]}>
+            <Text style={[styles.settingLabel, { color: c.text }]}>Units</Text>
+            <View style={[styles.segmentedControl, { backgroundColor: c.inputBg, borderColor: c.cardBorder }]}>
+              <Pressable
+                onPress={() => { if (unit !== 'lb') toggleUnit(); }}
+                style={[styles.segmentBtn, unit === 'lb' && [styles.segmentBtnSelected, { backgroundColor: c.chipSelectedBg }]]}
+              >
+                <Text style={[styles.segmentText, { color: unit === 'lb' ? c.chipSelectedText : c.textSecondary }]}>lb</Text>
+              </Pressable>
+              <Pressable
+                onPress={() => { if (unit !== 'kg') toggleUnit(); }}
+                style={[styles.segmentBtn, unit === 'kg' && [styles.segmentBtnSelected, { backgroundColor: c.chipSelectedBg }]]}
+              >
+                <Text style={[styles.segmentText, { color: unit === 'kg' ? c.chipSelectedText : c.textSecondary }]}>kg</Text>
+              </Pressable>
+            </View>
+          </View>
+
+          {/* Dark mode toggle */}
+          <View style={[styles.settingRow, { borderBottomColor: c.cardBorder }]}>
+            <Text style={[styles.settingLabel, { color: c.text }]}>Dark Mode</Text>
+            <Switch
+              value={theme === 'dark'}
+              onValueChange={toggleTheme}
+              trackColor={{ false: c.cardBorder, true: c.accent }}
+              thumbColor={c.textOnAccent}
+            />
+          </View>
+
+          {/* Navigation rows */}
+          <View style={[styles.navRow, { borderBottomColor: c.cardBorder }]}>
+            <SettingsRow
+              label="Programs"
+              onPress={() => import('expo-router').then((m) => m.router.push('/programs'))}
+            />
+          </View>
+          <View style={[styles.navRow, { borderBottomColor: c.cardBorder }]}>
+            <SettingsRow
+              label="Exercise Library"
+              onPress={() => import('expo-router').then((m) => m.router.push('/exercises'))}
+            />
+          </View>
+          <View style={styles.navRowLast}>
+            <SettingsRow
+              label="Equipment"
+              onPress={() => import('expo-router').then((m) => m.router.push('/equipment'))}
+            />
+          </View>
+        </Card>
+      </View>
+
+      {/* Data */}
+      <View style={styles.section}>
+        <Text style={[styles.sectionTitle, { color: c.textMuted }]}>DATA</Text>
+        <Card style={{ padding: 0 }}>
+          <Pressable onPress={handleExport} style={[styles.dataActionRow, { borderBottomColor: c.cardBorder }]}>
+            <Ionicons name="download-outline" size={20} color={c.accent} />
+            <Text style={[styles.dataActionLabel, { color: c.text }]}>Export Backup</Text>
+            <Ionicons name="chevron-forward" size={16} color={c.textMuted} />
+          </Pressable>
+          <Pressable onPress={handleImport} style={styles.dataActionRowLast}>
+            <Ionicons name="push-outline" size={20} color={c.accent} />
+            <Text style={[styles.dataActionLabel, { color: c.text }]}>Import Backup</Text>
+            <Ionicons name="chevron-forward" size={16} color={c.textMuted} />
+          </Pressable>
+        </Card>
+        {status && (
+          <Text style={[styles.statusText, { color: c.green }]}>{status}</Text>
         )}
-      </View>
-
-      {/* Unit Preference */}
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Weight Unit</Text>
-        <View style={styles.row}>
-          <Pressable onPress={toggleUnit} style={[styles.unitBtn, unit === 'lb' && styles.unitBtnActive]}>
-            <Text style={[styles.unitBtnText, unit === 'lb' && styles.unitBtnTextActive]}>LB</Text>
-          </Pressable>
-          <Pressable onPress={toggleUnit} style={[styles.unitBtn, unit === 'kg' && styles.unitBtnActive]}>
-            <Text style={[styles.unitBtnText, unit === 'kg' && styles.unitBtnTextActive]}>KG</Text>
-          </Pressable>
-        </View>
-      </View>
-
-      {/* Theme */}
-      <View style={styles.section}>
-        <Text style={[styles.sectionTitle, {color: c.text}]}>Theme</Text>
-        <View style={styles.row}>
-          <Pressable onPress={toggleTheme} style={[styles.unitBtn, theme === 'light' && styles.unitBtnActive]}>
-            <Text style={[styles.unitBtnText, theme === 'light' && styles.unitBtnTextActive]}>Light</Text>
-          </Pressable>
-          <Pressable onPress={toggleTheme} style={[styles.unitBtn, theme === 'dark' && {backgroundColor: '#1e293b', borderColor: '#1e293b'}]}>
-            <Text style={[styles.unitBtnText, theme === 'dark' && {color: '#fff'}]}>Dark</Text>
-          </Pressable>
-        </View>
-      </View>
-
-      {/* Export / Import */}
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Data</Text>
-        <View style={styles.row}>
-          <Button title='Export Backup' onPress={handleExport} />
-          <Button title='Import Backup' color='#059669' onPress={handleImport} />
-        </View>
-        {status && <Text style={styles.statusText}>{status}</Text>}
       </View>
 
       {/* About */}
       <View style={styles.section}>
-        <Text style={styles.sectionTitle}>About</Text>
-        <Text style={styles.aboutText}>Fitlog — Offline-first fitness tracker</Text>
-        <Text style={styles.aboutText}>All data stored locally on your device.</Text>
-        <Text style={styles.aboutText}>Expo SDK 54 · React Native 0.81 · Schema v6</Text>
+        <Text style={[styles.sectionTitle, { color: c.textMuted }]}>ABOUT</Text>
+        <Card>
+          <Text style={[styles.aboutText, { color: c.textSecondary }]}>Fitlog — Offline-first fitness tracker</Text>
+          <Text style={[styles.aboutText, { color: c.textMuted }]}>All data stored locally on your device.</Text>
+          <Text style={[styles.aboutText, { color: c.textMuted }]}>Expo SDK 54 · React Native 0.81 · Schema v7</Text>
+        </Card>
       </View>
 
       <View style={{ height: 40 }} />
@@ -213,28 +269,100 @@ export default function Settings() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, padding: 16 },
-  h1: { fontSize: 24, fontWeight: '600', marginBottom: 16 },
-  section: { marginBottom: 20, gap: 8 },
-  sectionTitle: { fontSize: 16, fontWeight: '700', color: '#374151' },
-  row: { flexDirection: 'row', gap: 8, alignItems: 'center' },
-  unitBtn: { paddingVertical: 10, paddingHorizontal: 20, borderRadius: 8, borderWidth: 1, borderColor: '#d1d5db', backgroundColor: '#f9fafb' },
-  unitBtnActive: { backgroundColor: '#111827', borderColor: '#111827' },
-  unitBtnText: { fontWeight: '700', fontSize: 16, color: '#374151' },
-  unitBtnTextActive: { color: '#fff' },
-  statusText: { fontSize: 13, color: '#059669', fontStyle: 'italic', marginTop: 4 },
-  aboutText: { fontSize: 13, color: '#6b7280' },
+  container: { flex: 1 },
+  content: { padding: 16, paddingTop: 8 },
+  h1: { fontSize: fontSize.h1, fontWeight: fontWeight.bold, marginBottom: 20 },
+  section: { marginBottom: 24 },
+  sectionTitle: {
+    fontSize: 13,
+    fontWeight: fontWeight.semibold,
+    textTransform: 'uppercase',
+    letterSpacing: 1,
+    paddingLeft: 16,
+    marginBottom: 8,
+  },
   // Stats
-  statsGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
-  statCard: { backgroundColor: '#f3f4f6', borderRadius: 8, padding: 12, alignItems: 'center', minWidth: 75, flex: 1 },
-  statNumber: { fontSize: 20, fontWeight: '800', color: '#111827' },
-  statLabel: { fontSize: 11, color: '#6b7280', marginTop: 2 },
-  statMeta: { fontSize: 12, color: '#6b7280', fontStyle: 'italic' },
+  statsGrid: { flexDirection: 'row', flexWrap: 'wrap' },
+  statItem: { alignItems: 'center', width: '50%', paddingVertical: 8 },
+  statNumber: { fontSize: fontSize.h1, fontWeight: fontWeight.bold },
+  statLabel: { fontSize: fontSize.small, marginTop: 2 },
+  statMeta: { fontSize: fontSize.small, fontStyle: 'italic', marginTop: 8, textAlign: 'center' },
   // Body weight
-  bwInput: { flex: 1, borderWidth: 1, borderColor: '#d1d5db', borderRadius: 8, padding: 8, fontSize: 14 },
-  bwList: { gap: 4, marginTop: 4 },
-  bwRow: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingVertical: 4, borderBottomWidth: 1, borderColor: '#f3f4f6' },
-  bwDate: { fontSize: 12, color: '#6b7280', width: 60 },
-  bwWeight: { fontSize: 14, fontWeight: '600', color: '#111', flex: 1 },
-  bwDelete: { color: '#ef4444', fontWeight: '700', fontSize: 16 },
+  bwInputRow: { flexDirection: 'row', gap: 8, alignItems: 'center' },
+  bwInput: {
+    flex: 1,
+    borderWidth: 1,
+    borderRadius: 10,
+    paddingVertical: 10,
+    paddingHorizontal: 12,
+    fontSize: fontSize.body,
+  },
+  logBtn: {
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    borderRadius: 10,
+  },
+  logBtnText: {
+    fontSize: fontSize.body,
+    fontWeight: fontWeight.semibold,
+  },
+  bwList: { marginTop: 8 },
+  bwRow: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingVertical: 10 },
+  bwDate: { fontSize: fontSize.body, width: 64 },
+  bwWeight: { fontSize: fontSize.body, fontWeight: fontWeight.semibold, flex: 1 },
+  // Preferences section
+  settingRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    minHeight: 48,
+  },
+  settingLabel: { fontSize: fontSize.body },
+  segmentedControl: {
+    flexDirection: 'row',
+    borderRadius: 8,
+    borderWidth: 1,
+    overflow: 'hidden',
+  },
+  segmentBtn: {
+    paddingVertical: 6,
+    paddingHorizontal: 16,
+  },
+  segmentBtnSelected: {
+    borderRadius: 6,
+    margin: 1,
+  },
+  segmentText: {
+    fontSize: fontSize.body,
+    fontWeight: fontWeight.semibold,
+  },
+  navRow: {
+    borderBottomWidth: StyleSheet.hairlineWidth,
+  },
+  navRowLast: {},
+  // Data
+  dataActionRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    paddingVertical: 14,
+    paddingHorizontal: 16,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+  },
+  dataActionRowLast: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    paddingVertical: 14,
+    paddingHorizontal: 16,
+  },
+  dataActionLabel: {
+    fontSize: fontSize.body,
+    flex: 1,
+  },
+  statusText: { fontSize: fontSize.caption, fontStyle: 'italic', marginTop: 8, paddingLeft: 16 },
+  aboutText: { fontSize: fontSize.caption, lineHeight: 20 },
 });

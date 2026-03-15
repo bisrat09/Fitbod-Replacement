@@ -1,6 +1,6 @@
 # Fitlog — Tasks
 
-## Current Priority: UI Redesign (Fitbod-style)
+## UI Redesign (Fitbod-style) — ALL 7 PHASES COMPLETE
 
 ### Fitbod Design Reference (from 12 screenshots — DO NOT ASK FOR AGAIN)
 
@@ -111,32 +111,47 @@
 - [x] Add `src/theme/typography.ts` — font size/weight constants
 - [x] 186 tests passing
 
-#### Phase 2: Reusable Components (`src/components/`)
-- [ ] Card, Chip, SetRow, ExerciseCard, SupersetHeader
-- [ ] BottomSheet, SectionHeader, SettingsRow
-- [ ] ActionChip, PinkButton, RestTimer, ExerciseInitial
+#### Phase 2: Reusable Components (`src/components/`) — DONE
+- [x] Card, Chip, SetRow, ExerciseCard, SupersetHeader
+- [x] BottomSheet, SectionHeader, SettingsRow
+- [x] ActionChip, PinkButton, RestTimer, ExerciseInitial
+- [x] Barrel export `src/components/index.ts`
+- [x] 186 tests still passing
 
-#### Phase 3: Workout Screen Redesign
-- [ ] Split `app/index.tsx` (1158 lines) into ~8 sub-components in `src/components/workout/`
-- [ ] Restyle: "Up Next" header, filter chips, exercise cards, set inputs, rest timer, finish modal
+#### Phase 3: Workout Screen Redesign — DONE
+- [x] Split `app/index.tsx` (1158→822 lines) into 6 sub-components in `src/components/workout/`
+  - WorkoutHeader (136 lines) — "Up Next" title, PR banner, elapsed, stats, program suggestion
+  - BlockCard (263 lines) — exercise card, set rows, rest timer, actions menu BottomSheet
+  - ExercisePickerSheet (145 lines) — unified picker for add/superset/swap (replaced 3 separate modals)
+  - FinishSheet (222 lines) — workout summary, stats, body weight, template, share
+  - PlateCalcSheet (117 lines) — plate calculator with per-side breakdown
+  - StickyBar (44 lines) — bottom sticky Log Set button + timer
+- [x] Restyle with Phase 2 components: Card, Chip, PinkButton, SetRow, RestTimer, ExerciseInitial, etc.
+- [x] Unified picker state (was 3 separate modal states → 1 PickerState)
+- [x] Fitbod-styled: dark cards, pink CTAs, exercise initial circles, green checkmarks, rest timer overlay
+- [x] 186 tests still passing
 
-#### Phase 4: History & Workout Summary
-- [ ] Restyle `app/history.tsx` — dark cards, per-set listings, calendar
+#### Phase 4: History & Workout Summary — DONE
+- [x] Restyle `app/history.tsx` — dark Card components, themed calendar (pink dots, accent today), ExerciseInitial circles in detail view, green checkmarks, gold PR badges, Ionicons nav arrows, ActionChip for repeat
+- [x] 186 tests still passing
 
-#### Phase 5: Progress, Programs, Exercises
-- [ ] Restyle `app/progress.tsx` — strength scores, 1RM trends
-- [ ] Restyle `app/programs.tsx` — dark cards, exercise rows
-- [ ] Restyle `app/exercises.tsx` — search bar, tabs, initial circles
+#### Phase 5: Progress, Programs, Exercises — DONE
+- [x] Restyle `app/progress.tsx` — Card components, ExerciseInitial, gold PR timeline, themed 1RM calculator
+- [x] Restyle `app/programs.tsx` — Card/Chip/PinkButton, BottomSheet for exercise picker, ExerciseInitial, themed day cards
+- [x] Restyle `app/exercises.tsx` — search bar with icon, ExerciseInitial circles, star favorites, Card components, themed archive
+- [x] 186 tests still passing
 
-#### Phase 6: Settings & Equipment
-- [ ] Restyle `app/settings.tsx` — grouped sections, setting rows, toggles
-- [ ] Restyle `app/equipment.tsx`
+#### Phase 6: Settings & Equipment — DONE
+- [x] Restyle `app/settings.tsx` — grouped sections with uppercase headers, segmented lb/kg pill selector, Switch toggle for dark mode, SettingsRow navigation with hairline separators, data export/import as full-width rows with icons, proper Card padding control
+- [x] Restyle `app/equipment.tsx` — common equipment as toggle rows with checkmark circles, custom equipment section, icon per equipment type, add button as compact square, empty state with icon
+- [x] 186 tests still passing
 
-#### Phase 7: Polish & Cleanup
-- [ ] Remove all hardcoded hex values
-- [ ] Consistent spacing across screens
-- [ ] Run all 186 tests
-- [ ] Update CLAUDE.md with new component structure
+#### Phase 7: Polish & Cleanup — DONE
+- [x] Remove all hardcoded hex values — added `textOnAccent` and `goldText` theme tokens, replaced all `#FFFFFF`/`#000000`/`#78350F`/`#666`/`#eee` across 9 files (settings, equipment, log, history, PinkButton, RestTimer, SetRow, ExerciseInitial, WorkoutHeader, PlateCalcSheet). Only ExerciseInitial palette remains (decorative, theme-independent)
+- [x] Consistent spacing across screens — new screens use `padding: 16, paddingTop: 8`, `section: marginBottom: 24`, `h1: marginBottom: 20`, uniform `sectionTitle` styling. Older screens (exercises, progress, programs) have `marginBottom: 4` on h1 intentionally (subtitle below)
+- [x] Restyle `app/log.tsx` — was completely un-themed; now uses Card, ExerciseInitial, ScrollView, theme tokens, grouped sections
+- [x] 186 tests still passing
+- [x] Update CLAUDE.md with new component structure + all phases marked DONE
 
 ---
 
