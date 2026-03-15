@@ -1,17 +1,20 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { bootstrapDb } from '@/lib/bootstrap';
-import { ensureUser } from '@/lib/dao';
+import { ensureUser, getUserUnit } from '@/lib/dao';
 
 export default function LogScreen(){
   const [dbCtx, setDbCtx] = useState<any>(null);
   const [recentByDate, setRecentByDate] = useState<Record<string, any[]>>({});
+  const [unit, setUnit] = useState<'lb'|'kg'>('lb');
 
   useEffect(()=>{(async()=>{
     const { db, userId } = await bootstrapDb();
     const ctx = { db, userId };
     await ensureUser(ctx, { id: userId, display_name: 'You', unit: 'lb' });
     setDbCtx(ctx);
+    const u = await getUserUnit(ctx);
+    setUnit(u);
   })();},[]);
 
   useEffect(()=>{(async()=>{
@@ -58,7 +61,7 @@ export default function LogScreen(){
             {list.map((s:any)=> (
               <View key={s.id} style={styles.rowItem}>
                 <Text style={styles.title}>{s.exercise_name}</Text>
-                <Text style={styles.meta}>{s.reps ?? '-'} reps • {s.weight ?? '-'} lb</Text>
+                <Text style={styles.meta}>{s.reps ?? '-'} reps • {s.weight ?? '-'} {unit}</Text>
               </View>
             ))}
           </View>

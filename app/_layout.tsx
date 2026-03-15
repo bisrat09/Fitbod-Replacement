@@ -10,26 +10,48 @@ export default function RootLayout(){
         tabBarActiveTintColor: '#ef4444',
         tabBarInactiveTintColor: '#6b7280',
         tabBarStyle: { borderTopColor: '#e5e7eb' },
-        tabBarLabelStyle: { fontSize: 18, fontWeight: '600' },
+        tabBarLabelStyle: { fontSize: 11, fontWeight: '600' },
       }}
     >
       <Tabs.Screen
         name="index"
         options={{
           title: 'Workout',
-          tabBarIcon: ({ color }) => <Text style={{ color, fontSize: 16 }}>💪</Text>,
+          tabBarIcon: ({ color }) => <Text style={{ color, fontSize: 14 }}>💪</Text>,
         }}
       />
       <Tabs.Screen
-        name="log"
+        name="history"
         options={{
-          title: 'Log',
-          tabBarIcon: ({ color }) => <Text style={{ color, fontSize: 16 }}>📒</Text>,
+          title: 'History',
+          tabBarIcon: ({ color }) => <Text style={{ color, fontSize: 14 }}>📊</Text>,
         }}
       />
-      {/* Hidden routes still accessible via router.push */}
-      <Tabs.Screen name="history" options={{ href: null, title: 'History' }} />
+      <Tabs.Screen
+        name="progress"
+        options={{
+          title: 'Progress',
+          tabBarIcon: ({ color }) => <Text style={{ color, fontSize: 14 }}>📈</Text>,
+        }}
+      />
+      <Tabs.Screen
+        name="programs"
+        options={{
+          title: 'Programs',
+          tabBarIcon: ({ color }) => <Text style={{ color, fontSize: 14 }}>📋</Text>,
+        }}
+      />
+      <Tabs.Screen
+        name="settings"
+        options={{
+          title: 'Settings',
+          tabBarIcon: ({ color }) => <Text style={{ color, fontSize: 14 }}>⚙️</Text>,
+        }}
+      />
+      {/* Hidden routes accessible via router.push */}
+      <Tabs.Screen name="log" options={{ href: null, title: 'Log' }} />
       <Tabs.Screen name="equipment" options={{ href: null, title: 'Equipment' }} />
+      <Tabs.Screen name="exercises" options={{ href: null, title: 'Exercises' }} />
     </Tabs>
   );
 }
