@@ -182,9 +182,9 @@ export default function Today(){
         const targetSets = dayExs[i].target_sets ?? 3;
         let nextIdx = await getNextSetIndex(dbCtx, id);
         const lastTop = await latestExerciseTopSet(dbCtx, dayExs[i].exercise_id) as any;
-        const w = lastTop?.weight ?? parseFloat(weight) || 0;
-        const r = dayExs[i].target_reps_min ?? lastTop?.reps ?? parseInt(reps) || 0;
-        const rirVal = dayExs[i].target_rir ?? lastTop?.rir ?? 2;
+        const w = lastTop?.weight ?? (parseFloat(weight) || 0);
+        const r = dayExs[i].target_reps_min ?? (lastTop?.reps ?? (parseInt(reps) || 0));
+        const rirVal = dayExs[i].target_rir ?? (lastTop?.rir ?? 2);
         for (let s = 0; s < targetSets; s++) {
           const setId = Crypto.randomUUID();
           await addSet(dbCtx, { id: setId, workout_id: id, exercise_id: dayExs[i].exercise_id, set_index: nextIdx, weight: w, reps: r, rir: rirVal, is_warmup: 0, block_id: blockId });
@@ -385,8 +385,8 @@ export default function Today(){
     let nextIdx = await getNextSetIndex(dbCtx, workoutId);
     // Auto-prefill from last workout's top set, fallback to global inputs
     const lastTop = await latestExerciseTopSet(dbCtx, exerciseId) as any;
-    const w = lastTop?.weight ?? parseFloat(weight) || 0;
-    const r = lastTop?.reps ?? parseInt(reps) || 0;
+    const w = lastTop?.weight ?? (parseFloat(weight) || 0);
+    const r = lastTop?.reps ?? (parseInt(reps) || 0);
     const rirVal = lastTop?.rir ?? (isNaN(parseInt(rir)) ? null : parseInt(rir));
     for(let i=0;i<3;i++){
       const id = Crypto.randomUUID();
