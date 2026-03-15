@@ -4,8 +4,10 @@ import * as FileSystem from 'expo-file-system';
 import * as Crypto from 'expo-crypto';
 import { bootstrapDb } from '@/lib/bootstrap';
 import { ensureUser, getUserUnit, updateUserUnit, exportAllData, importData, logBodyWeight, getBodyWeightHistory, deleteBodyWeight, getLifetimeStats } from '@/lib/dao';
+import { useTheme } from '@/theme/ThemeContext';
 
 export default function Settings() {
+  const { theme, c, toggle: toggleTheme } = useTheme();
   const [dbCtx, setDbCtx] = useState<any>(null);
   const [unit, setUnit] = useState<'lb' | 'kg'>('lb');
   const [status, setStatus] = useState<string | null>(null);
@@ -110,8 +112,8 @@ export default function Settings() {
   }
 
   return (
-    <ScrollView style={styles.container}>
-      <Text style={styles.h1}>Settings</Text>
+    <ScrollView style={[styles.container, {backgroundColor: c.bg}]}>
+      <Text style={[styles.h1, {color: c.text}]}>Settings</Text>
 
       {/* Lifetime Stats */}
       {stats && (
@@ -170,6 +172,19 @@ export default function Settings() {
           </Pressable>
           <Pressable onPress={toggleUnit} style={[styles.unitBtn, unit === 'kg' && styles.unitBtnActive]}>
             <Text style={[styles.unitBtnText, unit === 'kg' && styles.unitBtnTextActive]}>KG</Text>
+          </Pressable>
+        </View>
+      </View>
+
+      {/* Theme */}
+      <View style={styles.section}>
+        <Text style={[styles.sectionTitle, {color: c.text}]}>Theme</Text>
+        <View style={styles.row}>
+          <Pressable onPress={toggleTheme} style={[styles.unitBtn, theme === 'light' && styles.unitBtnActive]}>
+            <Text style={[styles.unitBtnText, theme === 'light' && styles.unitBtnTextActive]}>Light</Text>
+          </Pressable>
+          <Pressable onPress={toggleTheme} style={[styles.unitBtn, theme === 'dark' && {backgroundColor: '#1e293b', borderColor: '#1e293b'}]}>
+            <Text style={[styles.unitBtnText, theme === 'dark' && {color: '#fff'}]}>Dark</Text>
           </Pressable>
         </View>
       </View>

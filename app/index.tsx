@@ -3,9 +3,11 @@ import { View, Text, Button, TextInput, StyleSheet, Pressable, Vibration, Modal,
 import { bootstrapDb } from '@/lib/bootstrap';
 import { ensureUser, createWorkout, addSet, listWorkoutSets, createExercise, listBlocksWithExercises, createBlock, addBlockExercise, listExercisesAvailableByEquipment, getExercise, findExerciseByName, listExercises, getNextSetIndex, updateSet, listBlockExercisesWithNames, listFavoriteExerciseIds, lastWorkingSetsForExercise, upsertMetric, getBestMetric, replaceBlockExercise, getUserUnit, computeWeeklyVolume, upsertWeeklyVolume, exerciseRecency, deleteSet, deleteBlock, swapBlockOrder, latestExerciseTopSet, getSetting, setSetting, deleteSetting, getTodayWorkout, getActiveProgram, getNextProgramDay, listProgramDayExercises, updateWorkoutNotes, getWorkoutStreak, getWorkoutsThisWeek, duplicateBlock, saveWorkoutAsTemplate, logBodyWeight, getBestSetsInWorkout, getMostRecentWorkoutId, repeatWorkout, listWorkoutDetail } from '@/lib/dao';
 import * as Crypto from 'expo-crypto';
-import { suggestNextWeight, generateWarmupWeights, epley1RM, calculatePlates, formatWorkoutSummary } from '@/lib/progression';
+import { suggestNextWeight, generateWarmupWeights, epley1RM, calculatePlates, formatWorkoutSummary, roundToIncrement } from '@/lib/progression';
+import { useTheme } from '@/theme/ThemeContext';
 
 export default function Today(){
+  const { c } = useTheme();
   const [dbCtx, setDbCtx] = useState<any>(null);
   const [workoutId, setWorkoutId] = useState<string | null>(null);
   const [exerciseId, setExerciseId] = useState<string | null>(null);
@@ -52,6 +54,9 @@ export default function Today(){
   const [templateName, setTemplateName] = useState('');
   const [templateSaved, setTemplateSaved] = useState(false);
   const [bestSetIds, setBestSetIds] = useState<Set<string>>(new Set());
+  // Muscle group filter for pickers
+  const MUSCLE_FILTERS = ['chest', 'back', 'legs', 'shoulders', 'arms', 'core'];
+  const [muscleFilter, setMuscleFilter] = useState<string | null>(null);
   // Plate calculator
   const [showPlateCalc, setShowPlateCalc] = useState(false);
   const [plateTarget, setPlateTarget] = useState('');
@@ -361,6 +366,7 @@ export default function Today(){
     setExerciseChoices(sorted);
     setSelectedExerciseId(sorted?.[0]?.id ?? null);
     setPickerSearch('');
+    setMuscleFilter(null);
     setShowAddBlock(true);
   }
 
@@ -584,6 +590,26 @@ export default function Today(){
     setElapsed(0);
   }
 
+  function matchesMuscleFilter(mg: string, filter: string): boolean {
+    const groups = (mg || '').toLowerCase();
+    const map: Record<string, string[]> = {
+      chest: ['chest', 'upper_chest'],
+      back: ['lats', 'upper_back', 'lower_back', 'rear_delts'],
+      legs: ['quads', 'glutes', 'hamstrings', 'calves'],
+      shoulders: ['delts', 'front_delts', 'rear_delts'],
+      arms: ['biceps', 'triceps'],
+      core: ['core', 'abs'],
+    };
+    return (map[filter] ?? []).some(m => groups.includes(m));
+  }
+
+  function filterExercises(list: any[]): any[] {
+    let filtered = list;
+    if (pickerSearch) filtered = filtered.filter((ex: any) => ex.name.toLowerCase().includes(pickerSearch.toLowerCase()));
+    if (muscleFilter) filtered = filtered.filter((ex: any) => matchesMuscleFilter(ex.muscle_groups, muscleFilter));
+    return filtered;
+  }
+
   function toggleCollapseBlock(blockId: string) {
     setCollapsedBlocks(prev => {
       const next = new Set(prev);
@@ -615,6 +641,23 @@ export default function Today(){
     setTemplateSaved(true);
   }
 
+  async function addDropSets(blockId: string, exerciseId: string) {
+    if (!dbCtx || !workoutId) return;
+    const baseWeight = parseFloat(weight) || 0;
+    const drops = [0.8, 0.6, 0.4]; // 80%, 60%, 40%
+    const ex = await getExercise(dbCtx, exerciseId);
+    const inc = ex?.default_increment ?? 2.5;
+    let nextIdx = await getNextSetIndex(dbCtx, workoutId);
+    for (const pct of drops) {
+      const id = Crypto.randomUUID();
+      const dropWeight = roundToIncrement(baseWeight * pct, inc);
+      await addSet(dbCtx, { id, workout_id: workoutId, exercise_id: exerciseId, set_index: nextIdx, weight: dropWeight, reps: parseInt(reps) || 8, rir: 0, is_warmup: 0, block_id: blockId });
+      nextIdx++;
+    }
+    const rows = await listWorkoutSets(dbCtx, workoutId);
+    setSets(rows);
+  }
+
   async function handleDuplicateBlock(blockId: string) {
     if (!dbCtx || !workoutId) return;
     await duplicateBlock(dbCtx, blockId, workoutId);
@@ -638,8 +681,8 @@ export default function Today(){
   // Refresh last-time previews when blockExercises change
   useEffect(() => { fetchLastTimePreviews(); }, [blockExercises]);
 
-  return(<View style={styles.container}>
-    <Text style={styles.h1}>Today</Text>
+  return(<View style={[styles.container, {backgroundColor: c.bg}]}>
+    <Text style={[styles.h1, {color: c.text}]}>Today</Text>
     {/* PR Banner */}
     {prBanner && (
       <View style={styles.prBanner}>
@@ -721,7 +764,7 @@ export default function Today(){
             const totalCount = workingSets.length;
             const allDone = totalCount > 0 && doneCount === totalCount;
             return (
-              <View key={b.id} style={[styles.blockBox, allDone && styles.blockBoxDone]}>
+              <View key={b.id} style={[styles.blockBox, {backgroundColor: c.blockBg, borderColor: c.blockBorder}, allDone && styles.blockBoxDone]}>
                 <View style={[styles.row, {justifyContent:'space-between'}]}>
                   <View style={[styles.row, {gap:4}]}>
                     <Pressable onPress={()=>moveBlock(b.id,'up')} style={styles.moveBtn}><Text style={styles.moveBtnText}>▲</Text></Pressable>
@@ -808,6 +851,7 @@ export default function Today(){
                       <View style={styles.row}>
                         <Button title='+ Set' onPress={()=>logSetForBlock(b.id, ex.exercise_id)} />
                         <Button title='Add Warmups' onPress={()=>addWarmups(b.id, ex.exercise_id)} />
+                        <Button title='Drop' color='#8b5cf6' onPress={()=>addDropSets(b.id, ex.exercise_id)} />
                         <Button title='Swap' color='#6b7280' onPress={()=>openSwapExercise(b.id, ex.exercise_id)} />
                       </View>
                     </View>
@@ -860,7 +904,7 @@ export default function Today(){
       const runningTimer = activeBlockId ? timers[activeBlockId] : null;
       const showTimer = runningTimer && runningTimer.running && runningTimer.timeLeft > 0;
       return (
-        <View style={styles.stickyBar}>
+        <View style={[styles.stickyBar, {backgroundColor: c.stickyBg, borderColor: c.cardBorder}]}>
           {showTimer && (
             <Text style={styles.stickyTimerText}>{formatTime(runningTimer!.timeLeft)}</Text>
           )}
@@ -876,8 +920,15 @@ export default function Today(){
         <View style={styles.modalCard}>
           <Text style={styles.h2}>Add Exercise</Text>
           <TextInput placeholder='Search exercises...' value={pickerSearch} onChangeText={setPickerSearch} style={styles.searchInput} />
-          <ScrollView style={{maxHeight:260}}>
-            {exerciseChoices.filter((ex:any)=>!pickerSearch || ex.name.toLowerCase().includes(pickerSearch.toLowerCase())).map((ex:any)=>{
+          <View style={[styles.chipsRow, {flexWrap:'wrap',marginBottom:4}]}>
+            {MUSCLE_FILTERS.map(mf => (
+              <Pressable key={mf} onPress={() => setMuscleFilter(muscleFilter === mf ? null : mf)} style={[styles.chip, {paddingVertical:3,paddingHorizontal:7}, muscleFilter === mf && styles.chipSelected]}>
+                <Text style={[{fontSize:11},styles.chipText, muscleFilter === mf && styles.chipTextSelected]}>{mf}</Text>
+              </Pressable>
+            ))}
+          </View>
+          <ScrollView style={{maxHeight:240}}>
+            {filterExercises(exerciseChoices).map((ex:any)=>{
               const selected = selectedExerciseId===ex.id;
               return (
                 <Pressable key={ex.id} onPress={()=>setSelectedExerciseId(ex.id)} style={[styles.choiceRow, selected && styles.choiceRowSelected]}>
@@ -900,8 +951,8 @@ export default function Today(){
         <View style={styles.modalCard}>
           <Text style={styles.h2}>Make Superset</Text>
           <TextInput placeholder='Search exercises...' value={pickerSearch} onChangeText={setPickerSearch} style={styles.searchInput} />
-          <ScrollView style={{maxHeight:260}}>
-            {supersetChoices.filter((ex:any)=>!pickerSearch || ex.name.toLowerCase().includes(pickerSearch.toLowerCase())).map((ex:any)=>{
+          <ScrollView style={{maxHeight:240}}>
+            {filterExercises(supersetChoices).map((ex:any)=>{
               const selected = selectedSupersetExerciseId===ex.id;
               return (
                 <Pressable key={ex.id} onPress={()=>setSelectedSupersetExerciseId(ex.id)} style={[styles.choiceRow, selected && styles.choiceRowSelected]}>
@@ -977,8 +1028,8 @@ export default function Today(){
         <View style={styles.modalCard}>
           <Text style={styles.h2}>Swap Exercise</Text>
           <TextInput placeholder='Search exercises...' value={pickerSearch} onChangeText={setPickerSearch} style={styles.searchInput} />
-          <ScrollView style={{maxHeight:260}}>
-            {swapChoices.filter((ex:any)=>!pickerSearch || ex.name.toLowerCase().includes(pickerSearch.toLowerCase())).map((ex:any)=>{
+          <ScrollView style={{maxHeight:240}}>
+            {filterExercises(swapChoices).map((ex:any)=>{
               const selected = selectedSwapExerciseId===ex.id;
               return (
                 <Pressable key={ex.id} onPress={()=>setSelectedSwapExerciseId(ex.id)} style={[styles.choiceRow, selected && styles.choiceRowSelected]}>

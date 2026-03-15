@@ -406,7 +406,27 @@ Key files
 - `app/index.tsx`: Plate calc modal, collapsible blocks, quick-start, share (+88 lines, now 1106)
 - `app/exercises.tsx`: Personal bests display (+14 lines, now 203)
 
+---
+
+# Fitlog Dev Log — 2026-03-14 (Iteration 15)
+
+Summary
+- Iteration 15: Dark mode, drop sets, muscle group filter chips.
+
+Highlights
+- **Dark mode**: Full theme system with React Context (`ThemeProvider`). Light/dark color palettes for all UI elements. Persisted to settings table. Toggle in Settings screen. Applied to tab bar, headers, Today screen container/blocks/sticky bar. New `src/theme/` with `colors.ts` (73 lines) and `ThemeContext.tsx` (51 lines).
+- **Drop sets**: "Drop" button per exercise adds 3 descending-weight sets (80%/60%/40% of current weight, rounded to increment). RIR set to 0 for drop sets.
+- **Muscle group filter chips**: Exercise picker modals (Add/Superset/Swap) now have filter chips for chest/back/legs/shoulders/arms/core. Filters stack with text search. Muscle mapping handles compound groups (e.g. "back" matches lats, upper_back, lower_back, rear_delts).
+- **Theme-aware layout**: `_layout.tsx` reads theme colors for tab bar, header, and borders. Blocks, sticky bar, and container all respond to dark mode.
+
+Key files
+- `src/theme/colors.ts`: Light/dark color palettes (73 lines)
+- `src/theme/ThemeContext.tsx`: Theme provider + useTheme hook (51 lines)
+- `app/_layout.tsx`: ThemeProvider wrapper, theme-aware tab bar (39 lines)
+- `app/index.tsx`: Drop sets, muscle filters, theme-aware container/blocks/sticky (+51 lines, 1157)
+- `app/settings.tsx`: Theme toggle UI (+15 lines, 241)
+
 Next Steps
-- Dark mode support.
+- Apply dark mode to remaining screens (History, Progress, Programs, Exercises).
 - Notification reminders.
 - Chart visualizations.
