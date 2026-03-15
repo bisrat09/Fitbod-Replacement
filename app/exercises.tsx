@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, Pressable, TextInput, Button } from 'react-native';
 import { bootstrapDb } from '@/lib/bootstrap';
-import { ensureUser, findExerciseByName, createExercise, listFavoriteExerciseIds, listFavoriteExercises, addFavoriteExercise, removeFavoriteExercise, listExercises, archiveExercise, unarchiveExercise, listArchivedExercises } from '@/lib/dao';
+import { ensureUser, findExerciseByName, createExercise, listFavoriteExerciseIds, listFavoriteExercises, addFavoriteExercise, removeFavoriteExercise, listExercises, archiveExercise, unarchiveExercise, listArchivedExercises, getAllExerciseStats, getUserUnit } from '@/lib/dao';
 import * as Crypto from 'expo-crypto';
 
 export default function ExerciseLibrary() {
@@ -17,6 +17,8 @@ export default function ExerciseLibrary() {
   // Archive
   const [showArchived, setShowArchived] = useState(false);
   const [archivedExercises, setArchivedExercises] = useState<any[]>([]);
+  const [exStats, setExStats] = useState<Record<string, any>>({});
+  const [unit, setUnit] = useState<'lb'|'kg'>('lb');
 
   useEffect(() => {
     (async () => {
@@ -31,14 +33,20 @@ export default function ExerciseLibrary() {
   async function refresh(ctx?: any) {
     const c = ctx || dbCtx;
     if (!c) return;
-    const [exs, ids, archived] = await Promise.all([
+    const [exs, ids, archived, stats, u] = await Promise.all([
       listExercises(c),
       listFavoriteExerciseIds(c),
       listArchivedExercises(c),
+      getAllExerciseStats(c),
+      getUserUnit(c),
     ]);
     setExercises(exs);
     setFavIds(new Set(ids));
     setArchivedExercises(archived);
+    setUnit(u);
+    const statsMap: Record<string, any> = {};
+    for (const s of stats) statsMap[s.id] = s;
+    setExStats(statsMap);
   }
 
   async function toggleFav(exerciseId: string) {
@@ -113,6 +121,11 @@ export default function ExerciseLibrary() {
               </View>
               <Text style={[styles.muscleText, isFav && { color: '#d1fae5' }]}>{muscles}</Text>
               {equip ? <Text style={[styles.equipText, isFav && { color: '#a7f3d0' }]}>{equip}</Text> : null}
+            {exStats[ex.id]?.total_sets > 0 && (
+              <Text style={[styles.statsText, isFav && { color: '#d1fae5' }]}>
+                {exStats[ex.id].total_sets} sets{exStats[ex.id].best_1rm ? ` · Best 1RM: ${Math.round(exStats[ex.id].best_1rm)} ${unit}` : ''}{exStats[ex.id].best_weight ? ` · Max: ${exStats[ex.id].best_weight} ${unit}` : ''}
+              </Text>
+            )}
             </Pressable>
             <Pressable onPress={() => handleArchive(ex.id)} style={styles.archiveBtn}>
               <Text style={styles.archiveBtnText}>Archive</Text>
@@ -178,6 +191,7 @@ const styles = StyleSheet.create({
   formTitle: { fontWeight: '600', fontSize: 15 },
   formInput: { borderWidth: 1, borderColor: '#d1d5db', borderRadius: 6, padding: 8, fontSize: 14 },
   formRow: { flexDirection: 'row', gap: 8, marginTop: 4 },
+  statsText: { fontSize: 11, color: '#6b7280', marginTop: 2 },
   archiveBtn: { paddingHorizontal: 6, paddingVertical: 4 },
   archiveBtnText: { fontSize: 11, color: '#6b7280' },
   archivedSection: { marginTop: 16, gap: 6 },

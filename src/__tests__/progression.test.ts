@@ -1,4 +1,4 @@
-import { epley1RM, roundToIncrement, suggestNextWeight, warmupPlan, generateWarmupWeights } from '@/lib/progression';
+import { epley1RM, roundToIncrement, suggestNextWeight, warmupPlan, generateWarmupWeights, calculatePlates, formatWorkoutSummary } from '@/lib/progression';
 
 // ============================================================
 // Iteration 1: Epley 1RM formula
@@ -210,10 +210,110 @@ describe('generateWarmupWeights', () => {
 
   test('handles large increment (5kg plates)', () => {
     const warmups = generateWarmupWeights(100, 5);
-    // 100*0.40=40, 100*0.60=60, 100*0.75=75, 100*0.85=85
     expect(warmups[0].weight).toBe(40);
     expect(warmups[1].weight).toBe(60);
     expect(warmups[2].weight).toBe(75);
     expect(warmups[3].weight).toBe(85);
+  });
+});
+
+// ============================================================
+// Iteration 14: Plate calculator
+// ============================================================
+describe('calculatePlates', () => {
+  test('calculates plates for 225 lb (45 bar)', () => {
+    // (225 - 45) / 2 = 90 per side → 2x45
+    const result = calculatePlates(225, 45, 'lb');
+    expect(result).toEqual([{ plate: 45, count: 2 }]);
+  });
+
+  test('calculates plates for 185 lb', () => {
+    // (185 - 45) / 2 = 70 per side → 1x45 + 1x25
+    const result = calculatePlates(185, 45, 'lb');
+    expect(result).toEqual([{ plate: 45, count: 1 }, { plate: 25, count: 1 }]);
+  });
+
+  test('calculates plates for 135 lb', () => {
+    // (135 - 45) / 2 = 45 per side → 1x45
+    const result = calculatePlates(135, 45, 'lb');
+    expect(result).toEqual([{ plate: 45, count: 1 }]);
+  });
+
+  test('calculates plates for 95 lb', () => {
+    // (95 - 45) / 2 = 25 per side → 1x25
+    const result = calculatePlates(95, 45, 'lb');
+    expect(result).toEqual([{ plate: 25, count: 1 }]);
+  });
+
+  test('calculates mixed plates for 175 lb', () => {
+    // (175 - 45) / 2 = 65 per side → 1x45 + 1x10 + 1x10? No...
+    // 65: 1x45=45, remaining 20 → 0x25, 2x10=20
+    const result = calculatePlates(175, 45, 'lb');
+    expect(result).toEqual([{ plate: 45, count: 1 }, { plate: 10, count: 2 }]);
+  });
+
+  test('returns empty for bar weight only', () => {
+    expect(calculatePlates(45, 45, 'lb')).toEqual([]);
+  });
+
+  test('returns empty for weight below bar', () => {
+    expect(calculatePlates(30, 45, 'lb')).toEqual([]);
+  });
+
+  test('calculates kg plates for 100kg (20 bar)', () => {
+    // (100 - 20) / 2 = 40 per side → 2x20
+    const result = calculatePlates(100, 20, 'kg');
+    expect(result).toEqual([{ plate: 20, count: 2 }]);
+  });
+
+  test('calculates kg plates for 62.5kg', () => {
+    // (62.5 - 20) / 2 = 21.25 per side → 1x20 + 1x1.25
+    const result = calculatePlates(62.5, 20, 'kg');
+    expect(result).toEqual([{ plate: 20, count: 1 }, { plate: 1.25, count: 1 }]);
+  });
+
+  test('handles 2.5lb plates', () => {
+    // (50 - 45) / 2 = 2.5 per side
+    const result = calculatePlates(50, 45, 'lb');
+    expect(result).toEqual([{ plate: 2.5, count: 1 }]);
+  });
+});
+
+// ============================================================
+// Iteration 14: Format workout summary
+// ============================================================
+describe('formatWorkoutSummary', () => {
+  test('formats workout with exercises', () => {
+    const text = formatWorkoutSummary(
+      { split: 'push', date: '2026-03-14T10:00:00Z', elapsed: 3600 },
+      [
+        { name: 'Bench Press', sets: [{ weight: 185, reps: 5, rir: 2, is_warmup: 0, is_completed: 1 }] },
+      ],
+      'lb'
+    );
+    expect(text).toContain('PUSH');
+    expect(text).toContain('Bench Press');
+    expect(text).toContain('185 lb × 5');
+    expect(text).toContain('Duration: 60 min');
+    expect(text).toContain('Logged with Fitlog');
+  });
+
+  test('excludes warmup and incomplete sets', () => {
+    const text = formatWorkoutSummary(
+      { date: '2026-03-14' },
+      [
+        { name: 'Squat', sets: [
+          { weight: 60, reps: 5, is_warmup: 1, is_completed: 1 },  // warmup excluded
+          { weight: 100, reps: 5, is_warmup: 0, is_completed: 0 }, // incomplete excluded
+          { weight: 100, reps: 5, is_warmup: 0, is_completed: 1 }, // included
+        ] },
+      ],
+      'kg'
+    );
+    expect(text).not.toContain('60 kg');  // warmup excluded
+    expect(text).toContain('100 kg × 5');
+    // Should only have one set line
+    const matches = text.match(/100 kg × 5/g);
+    expect(matches).toHaveLength(1);
   });
 });

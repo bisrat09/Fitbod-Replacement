@@ -384,7 +384,29 @@ New DAO functions
 - `listArchivedExercises(ctx)` — list archived exercises
 - `getBestSetsInWorkout(ctx, workoutId)` — set IDs with highest est 1RM per exercise
 
+---
+
+# Fitlog Dev Log — 2026-03-14 (Iteration 14)
+
+Summary
+- Iteration 14: Plate calculator, workout sharing, exercise personal bests, collapsible blocks, quick-start.
+
+Highlights
+- **Plate calculator**: Modal showing plates per side for any target weight. Supports lb (45/25/10/5/2.5) and kg (20/10/5/2.5/1.25). Visual plate bars with counts and total verification.
+- **Share workout**: "Share" button in finish modal uses React Native Share API to send a formatted text summary of the workout (split, duration, exercises, sets with weight/reps/RIR).
+- **Exercise personal bests**: Exercises screen shows per-exercise stats: total completed sets, best est. 1RM, max weight. Uses `getAllExerciseStats()` single-query approach.
+- **Collapsible blocks**: Tap block title to collapse/expand. Collapsed blocks show only the header with progress badge. Timer stays visible. Reduces scroll noise during long workouts.
+- **Quick-start**: "Quick Start" button on Today screen (when no workout active) repeats the most recent workout. One tap to start training.
+- **formatWorkoutSummary**: Pure function in progression.ts that formats workout data into shareable text.
+- **Tests**: 17 new tests (150 total) — plate calculator (10), formatWorkoutSummary (2), exercise stats (3), getMostRecentWorkoutId (2).
+
+Key files
+- `src/lib/progression.ts`: calculatePlates, formatWorkoutSummary (+38 lines, now 40)
+- `src/lib/dao.ts`: getExerciseStats, getAllExerciseStats, getMostRecentWorkoutId (+40 lines, now 1020)
+- `app/index.tsx`: Plate calc modal, collapsible blocks, quick-start, share (+88 lines, now 1106)
+- `app/exercises.tsx`: Personal bests display (+14 lines, now 203)
+
 Next Steps
-- UI polish: charts library for visual progress.
-- Notification reminders.
 - Dark mode support.
+- Notification reminders.
+- Chart visualizations.

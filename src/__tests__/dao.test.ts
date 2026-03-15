@@ -22,6 +22,7 @@ import {
   logBodyWeight, getBodyWeightHistory, getLatestBodyWeight, deleteBodyWeight,
   getWorkoutDatesForMonth, getLifetimeStats,
   saveWorkoutAsTemplate, archiveExercise, unarchiveExercise, listArchivedExercises, getBestSetsInWorkout,
+  getExerciseStats, getAllExerciseStats, getMostRecentWorkoutId,
 } from '@/lib/dao';
 
 let mockDb: ReturnType<typeof createMockDb>;
@@ -1092,5 +1093,51 @@ describe('getBestSetsInWorkout', () => {
     mockDb.db.getAllAsync.mockResolvedValueOnce([]);
     const result = await getBestSetsInWorkout(ctx, 'w1');
     expect(result.size).toBe(0);
+  });
+});
+
+// ============================================================
+// Iteration 14: Exercise stats
+// ============================================================
+describe('getExerciseStats', () => {
+  test('returns best 1RM, best weight, total sets', async () => {
+    mockDb.db.getFirstAsync
+      .mockResolvedValueOnce({ est_1rm: 120 })
+      .mockResolvedValueOnce({ weight: 100 })
+      .mockResolvedValueOnce({ n: 50 });
+    const result = await getExerciseStats(ctx, 'ex1');
+    expect(result.bestEst1RM).toBe(120);
+    expect(result.bestWeight).toBe(100);
+    expect(result.totalSets).toBe(50);
+  });
+
+  test('handles no data', async () => {
+    mockDb.db.getFirstAsync.mockResolvedValue(null);
+    const result = await getExerciseStats(ctx, 'ex1');
+    expect(result.bestEst1RM).toBeNull();
+    expect(result.totalSets).toBe(0);
+  });
+});
+
+describe('getAllExerciseStats', () => {
+  test('queries with subselects for stats', async () => {
+    await getAllExerciseStats(ctx);
+    const sql = mockDb.db.getAllAsync.mock.calls[0][0];
+    expect(sql).toContain('MAX(m.est_1rm)');
+    expect(sql).toContain('MAX(s.weight)');
+    expect(sql).toContain('is_archived=0');
+  });
+});
+
+describe('getMostRecentWorkoutId', () => {
+  test('returns most recent workout ID', async () => {
+    mockDb.setDefaultGetFirst({ id: 'w-latest' });
+    const result = await getMostRecentWorkoutId(ctx);
+    expect(result).toBe('w-latest');
+  });
+
+  test('returns null when no workouts', async () => {
+    const result = await getMostRecentWorkoutId(ctx);
+    expect(result).toBeNull();
   });
 });

@@ -977,3 +977,43 @@ export async function getLifetimeStats(ctx: Ctx) {
     currentStreak: streakDays,
   };
 }
+
+// Exercise stats: best 1RM, best weight, total completed sets
+export async function getExerciseStats(ctx: Ctx, exerciseId: string) {
+  const [best, topWeight, setCount] = await Promise.all([
+    ctx.db.getFirstAsync<{ est_1rm: number }>(
+      `SELECT MAX(est_1rm) AS est_1rm FROM metrics WHERE user_id=? AND exercise_id=?`, [ctx.userId, exerciseId]
+    ),
+    ctx.db.getFirstAsync<{ weight: number }>(
+      `SELECT MAX(weight) AS weight FROM sets WHERE user_id=? AND exercise_id=? AND is_warmup=0 AND is_completed=1`, [ctx.userId, exerciseId]
+    ),
+    ctx.db.getFirstAsync<{ n: number }>(
+      `SELECT COUNT(*) AS n FROM sets WHERE user_id=? AND exercise_id=? AND is_warmup=0 AND is_completed=1`, [ctx.userId, exerciseId]
+    ),
+  ]);
+  return {
+    bestEst1RM: best?.est_1rm ?? null,
+    bestWeight: topWeight?.weight ?? null,
+    totalSets: setCount?.n ?? 0,
+  };
+}
+
+// All exercise stats in one query (for exercises screen)
+export async function getAllExerciseStats(ctx: Ctx) {
+  return ctx.db.getAllAsync<any>(
+    `SELECT ex.id,
+       (SELECT MAX(m.est_1rm) FROM metrics m WHERE m.exercise_id=ex.id AND m.user_id=ex.user_id) AS best_1rm,
+       (SELECT MAX(s.weight) FROM sets s WHERE s.exercise_id=ex.id AND s.user_id=ex.user_id AND s.is_warmup=0 AND s.is_completed=1) AS best_weight,
+       (SELECT COUNT(*) FROM sets s2 WHERE s2.exercise_id=ex.id AND s2.user_id=ex.user_id AND s2.is_warmup=0 AND s2.is_completed=1) AS total_sets
+     FROM exercises ex WHERE ex.user_id=? AND ex.is_archived=0`,
+    [ctx.userId]
+  );
+}
+
+// Get most recent workout ID (for quick-start)
+export async function getMostRecentWorkoutId(ctx: Ctx): Promise<string | null> {
+  const row = await ctx.db.getFirstAsync<{ id: string }>(
+    `SELECT id FROM workouts WHERE user_id=? ORDER BY date DESC LIMIT 1`, [ctx.userId]
+  );
+  return row?.id ?? null;
+}

@@ -1,9 +1,9 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { View, Text, Button, TextInput, StyleSheet, Pressable, Vibration, Modal, ScrollView } from 'react-native';
+import { View, Text, Button, TextInput, StyleSheet, Pressable, Vibration, Modal, ScrollView, Share } from 'react-native';
 import { bootstrapDb } from '@/lib/bootstrap';
-import { ensureUser, createWorkout, addSet, listWorkoutSets, createExercise, listBlocksWithExercises, createBlock, addBlockExercise, listExercisesAvailableByEquipment, getExercise, findExerciseByName, listExercises, getNextSetIndex, updateSet, listBlockExercisesWithNames, listFavoriteExerciseIds, lastWorkingSetsForExercise, upsertMetric, getBestMetric, replaceBlockExercise, getUserUnit, computeWeeklyVolume, upsertWeeklyVolume, exerciseRecency, deleteSet, deleteBlock, swapBlockOrder, latestExerciseTopSet, getSetting, setSetting, deleteSetting, getTodayWorkout, getActiveProgram, getNextProgramDay, listProgramDayExercises, updateWorkoutNotes, getWorkoutStreak, getWorkoutsThisWeek, duplicateBlock, saveWorkoutAsTemplate, logBodyWeight, getBestSetsInWorkout } from '@/lib/dao';
+import { ensureUser, createWorkout, addSet, listWorkoutSets, createExercise, listBlocksWithExercises, createBlock, addBlockExercise, listExercisesAvailableByEquipment, getExercise, findExerciseByName, listExercises, getNextSetIndex, updateSet, listBlockExercisesWithNames, listFavoriteExerciseIds, lastWorkingSetsForExercise, upsertMetric, getBestMetric, replaceBlockExercise, getUserUnit, computeWeeklyVolume, upsertWeeklyVolume, exerciseRecency, deleteSet, deleteBlock, swapBlockOrder, latestExerciseTopSet, getSetting, setSetting, deleteSetting, getTodayWorkout, getActiveProgram, getNextProgramDay, listProgramDayExercises, updateWorkoutNotes, getWorkoutStreak, getWorkoutsThisWeek, duplicateBlock, saveWorkoutAsTemplate, logBodyWeight, getBestSetsInWorkout, getMostRecentWorkoutId, repeatWorkout, listWorkoutDetail } from '@/lib/dao';
 import * as Crypto from 'expo-crypto';
-import { suggestNextWeight, generateWarmupWeights, epley1RM } from '@/lib/progression';
+import { suggestNextWeight, generateWarmupWeights, epley1RM, calculatePlates, formatWorkoutSummary } from '@/lib/progression';
 
 export default function Today(){
   const [dbCtx, setDbCtx] = useState<any>(null);
@@ -52,6 +52,12 @@ export default function Today(){
   const [templateName, setTemplateName] = useState('');
   const [templateSaved, setTemplateSaved] = useState(false);
   const [bestSetIds, setBestSetIds] = useState<Set<string>>(new Set());
+  // Plate calculator
+  const [showPlateCalc, setShowPlateCalc] = useState(false);
+  const [plateTarget, setPlateTarget] = useState('');
+  const BAR_WEIGHT = { lb: 45, kg: 20 };
+  // Collapsible blocks
+  const [collapsedBlocks, setCollapsedBlocks] = useState<Set<string>>(new Set());
   // Workout split
   const SPLIT_OPTIONS = ['push', 'pull', 'legs', 'upper', 'lower', 'full'];
   const [split, setSplit] = useState('push');
@@ -564,6 +570,45 @@ export default function Today(){
     await refreshBlocksAndSets();
   }
 
+  async function handleQuickStart() {
+    if (!dbCtx) return;
+    const lastId = await getMostRecentWorkoutId(dbCtx);
+    if (!lastId) return;
+    const newId = Crypto.randomUUID();
+    const now = Date.now();
+    await repeatWorkout(dbCtx, lastId, newId, new Date().toISOString());
+    await setSetting(dbCtx, 'active_workout_id', newId);
+    await setSetting(dbCtx, 'workout_start_time', String(now));
+    setWorkoutId(newId);
+    setWorkoutStartTime(now);
+    setElapsed(0);
+  }
+
+  function toggleCollapseBlock(blockId: string) {
+    setCollapsedBlocks(prev => {
+      const next = new Set(prev);
+      if (next.has(blockId)) next.delete(blockId); else next.add(blockId);
+      return next;
+    });
+  }
+
+  async function handleShareWorkout() {
+    if (!dbCtx || !workoutId) return;
+    const detail = await listWorkoutDetail(dbCtx, workoutId);
+    // Group sets by exercise
+    const exMap = new Map<string, { name: string; sets: any[] }>();
+    for (const s of detail) {
+      if (!exMap.has(s.exercise_id)) exMap.set(s.exercise_id, { name: s.exercise_name, sets: [] });
+      exMap.get(s.exercise_id)!.sets.push(s);
+    }
+    const text = formatWorkoutSummary(
+      { split, date: new Date().toISOString(), elapsed },
+      Array.from(exMap.values()),
+      unit
+    );
+    await Share.share({ message: text });
+  }
+
   async function handleSaveAsTemplate() {
     if (!dbCtx || !workoutId || !templateName.trim()) return;
     await saveWorkoutAsTemplate(dbCtx, workoutId, templateName.trim(), Crypto.randomUUID());
@@ -630,8 +675,9 @@ export default function Today(){
     )}
     <View style={styles.row}>
       <Button title={workoutId?'Workout Started':'Start Workout'} onPress={startWorkout} disabled={!!workoutId} />
+      {!workoutId && <Button title='Quick Start' color='#6b7280' onPress={handleQuickStart} />}
       <Button title='Equipment' onPress={()=>import('expo-router').then(m=>m.router.push('/equipment'))} />
-      <Button title='Exercises' onPress={()=>import('expo-router').then(m=>m.router.push('/exercises'))} />
+      <Button title='Plates' color='#6b7280' onPress={()=>{setPlateTarget(weight);setShowPlateCalc(true);}} />
     </View>
     {workoutId && (
       <View style={styles.row}>
@@ -680,7 +726,9 @@ export default function Today(){
                   <View style={[styles.row, {gap:4}]}>
                     <Pressable onPress={()=>moveBlock(b.id,'up')} style={styles.moveBtn}><Text style={styles.moveBtnText}>▲</Text></Pressable>
                     <Pressable onPress={()=>moveBlock(b.id,'down')} style={styles.moveBtn}><Text style={styles.moveBtnText}>▼</Text></Pressable>
-                    <Text style={styles.blockTitle}>{b.order_index}. {(exs[0]?.exercise_name) ?? 'Exercise'}</Text>
+                    <Pressable onPress={()=>toggleCollapseBlock(b.id)} style={{flexDirection:'row',alignItems:'center',gap:4}}>
+                      <Text style={styles.blockTitle}>{collapsedBlocks.has(b.id) ? '▶' : '▼'} {b.order_index}. {(exs[0]?.exercise_name) ?? 'Exercise'}</Text>
+                    </Pressable>
                     <Text style={styles.progressBadge}>{doneCount}/{totalCount}</Text>
                   </View>
                   <View style={[styles.row, {gap:4}]}>
@@ -692,6 +740,7 @@ export default function Today(){
                     </Pressable>
                   </View>
                 </View>
+                {!collapsedBlocks.has(b.id) && <>
                 {exs.length===1 && (
                   <Pressable onPress={()=>openMakeSuperset(b.id)}><Text style={{color:'#0ea5a4'}}>Make Superset</Text></Pressable>
                 )}
@@ -764,7 +813,7 @@ export default function Today(){
                     </View>
                   );
                 })}
-                {/* Inline CTA removed; sticky action bar handles logging */}
+                </>}
                 <View style={styles.timerBox}>
                   <Text style={[timer.running ? styles.timerRunning : undefined, timer.running && timer.timeLeft <= 3 && timer.timeLeft > 0 && styles.timerUrgent]}>Rest: {formatTime(timer.timeLeft)}</Text>
                   <View style={styles.row}>
@@ -915,7 +964,8 @@ export default function Today(){
             )}
           </View>
           <View style={[styles.row, {marginTop:8}]}>
-            <Button title='Back to Workout' onPress={()=>setShowFinishModal(false)} />
+            <Button title='Share' color='#6b7280' onPress={handleShareWorkout} />
+            <Button title='Back' onPress={()=>setShowFinishModal(false)} />
             <Button title='Done' color='#059669' onPress={confirmFinishWorkout} />
           </View>
         </View>
@@ -942,6 +992,40 @@ export default function Today(){
             <Button title='Cancel' onPress={()=>setShowSwapModal(null)} />
             <Button title='Swap' onPress={confirmSwapExercise} disabled={!selectedSwapExerciseId} />
           </View>
+        </View>
+      </View>
+    </Modal>
+    {/* Plate Calculator Modal */}
+    <Modal visible={showPlateCalc} animationType='fade' transparent onRequestClose={()=>setShowPlateCalc(false)}>
+      <View style={styles.modalBackdrop}>
+        <View style={styles.modalCard}>
+          <Text style={styles.h2}>Plate Calculator</Text>
+          <TextInput placeholder={`Target weight (${unit})`} value={plateTarget} onChangeText={setPlateTarget} keyboardType='numeric' style={styles.searchInput} />
+          <Text style={{fontSize:12,color:'#6b7280'}}>Bar: {BAR_WEIGHT[unit]} {unit}</Text>
+          {(()=>{
+            const target = parseFloat(plateTarget) || 0;
+            const bar = BAR_WEIGHT[unit];
+            if (target <= bar) return <Text style={{color:'#9ca3af'}}>Weight must exceed bar weight ({bar} {unit})</Text>;
+            const plates = calculatePlates(target, bar, unit);
+            if (plates.length === 0) return <Text style={{color:'#9ca3af'}}>No plates needed</Text>;
+            return (
+              <View style={{gap:6,marginTop:4}}>
+                <Text style={{fontWeight:'600',fontSize:13}}>Per side:</Text>
+                {plates.map(p => (
+                  <View key={p.plate} style={styles.plateRow}>
+                    <View style={[styles.plateVisual, {width: Math.max(30, p.plate * (unit==='lb' ? 1.2 : 2.5))}]}>
+                      <Text style={styles.plateText}>{p.plate}</Text>
+                    </View>
+                    <Text style={styles.plateCount}>×{p.count}</Text>
+                  </View>
+                ))}
+                <Text style={{fontSize:12,color:'#6b7280',marginTop:4}}>
+                  Total: {bar} + {plates.reduce((s,p)=>s+p.plate*p.count*2,0)} = {bar + plates.reduce((s,p)=>s+p.plate*p.count*2,0)} {unit}
+                </Text>
+              </View>
+            );
+          })()}
+          <Button title='Close' onPress={()=>setShowPlateCalc(false)} />
         </View>
       </View>
     </Modal>
@@ -1014,4 +1098,8 @@ const styles = StyleSheet.create({
   finishInput:{borderWidth:1,borderColor:'#d1d5db',borderRadius:6,padding:6,fontSize:14},
   setBadgeBest:{backgroundColor:'#fef3c7',borderWidth:1,borderColor:'#f59e0b'},
   setBadgeTextBest:{color:'#d97706'},
+  plateRow:{flexDirection:'row',alignItems:'center',gap:8},
+  plateVisual:{height:28,backgroundColor:'#374151',borderRadius:4,alignItems:'center',justifyContent:'center'},
+  plateText:{color:'#fff',fontWeight:'700',fontSize:12},
+  plateCount:{fontSize:14,fontWeight:'600',color:'#374151'},
 });
