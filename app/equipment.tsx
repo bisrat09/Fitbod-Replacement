@@ -2,10 +2,12 @@ import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, TextInput, Button, Pressable } from 'react-native';
 import { bootstrapDb } from '@/lib/bootstrap';
 import { ensureUser, listEquipment, addEquipment, removeEquipment } from '@/lib/dao';
+import { useTheme } from '@/theme/ThemeContext';
 
 const COMMON_ITEMS = ['barbell', 'rack', 'bench', 'dumbbells', 'pullup_bar', 'cable'];
 
 export default function EquipmentScreen(){
+  const { c } = useTheme();
   const [dbCtx, setDbCtx] = useState<any>(null);
   const [items, setItems] = useState<string[]>([]);
   const [newItem, setNewItem] = useState('');
@@ -45,8 +47,8 @@ export default function EquipmentScreen(){
   }
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.h1}>Your Equipment</Text>
+    <View style={[styles.container, {backgroundColor: c.bg}]}>
+      <Text style={[styles.h1, {color: c.text}]}>Your Equipment</Text>
       <View style={styles.row}>
         <TextInput placeholder='Add equipment (e.g., barbell)' value={newItem} onChangeText={setNewItem} style={styles.input} />
         <Button title='Add' onPress={()=>addItem(newItem)} />

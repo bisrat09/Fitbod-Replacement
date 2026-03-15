@@ -671,7 +671,7 @@ export async function getWorkoutsThisWeek(ctx: Ctx): Promise<number> {
 // Enhanced workout summaries with volume and muscle groups
 export async function listWorkoutSummariesEnhanced(ctx: Ctx, limit: number = 50) {
   return ctx.db.getAllAsync<any>(
-    `SELECT w.id, w.date, w.split, w.notes,
+    `SELECT w.id, w.date, w.split, w.notes, w.duration_seconds,
        COUNT(DISTINCT s.exercise_id) AS exercise_count,
        COUNT(s.id) AS total_sets,
        SUM(CASE WHEN s.is_warmup=0 AND s.is_completed=1 THEN 1 ELSE 0 END) AS working_sets,
@@ -976,6 +976,12 @@ export async function getLifetimeStats(ctx: Ctx) {
     mostTrainedExercise: topExercise?.name ?? null,
     currentStreak: streakDays,
   };
+}
+
+// Update workout duration
+export async function updateWorkoutDuration(ctx: Ctx, workoutId: string, durationSeconds: number) {
+  const ts = nowIso();
+  await ctx.db.runAsync(`UPDATE workouts SET duration_seconds=?, updated_at=? WHERE id=? AND user_id=?`, [durationSeconds, ts, workoutId, ctx.userId]);
 }
 
 // Exercise stats: best 1RM, best weight, total completed sets

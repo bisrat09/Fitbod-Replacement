@@ -4,9 +4,12 @@ import * as Crypto from 'expo-crypto';
 import { bootstrapDb } from '@/lib/bootstrap';
 import { ensureUser, listPrograms, createProgram, deleteProgram, setActiveProgram, addProgramDay, listProgramDays, deleteProgramDay, addProgramDayExercise, listProgramDayExercises, removeProgramDayExercise, listExercisesAvailableByEquipment, getUserUnit } from '@/lib/dao';
 
+import { useTheme } from '@/theme/ThemeContext';
+
 const SPLITS = ['push', 'pull', 'legs', 'upper', 'lower', 'full'];
 
 export default function Programs() {
+  const { c } = useTheme();
   const [dbCtx, setDbCtx] = useState<any>(null);
   const [programs, setPrograms] = useState<any[]>([]);
   const [expanded, setExpanded] = useState<string | null>(null);
@@ -126,8 +129,8 @@ export default function Programs() {
   }
 
   return (
-    <ScrollView style={styles.container}>
-      <Text style={styles.h1}>Programs</Text>
+    <ScrollView style={[styles.container, {backgroundColor: c.bg}]}>
+      <Text style={[styles.h1, {color: c.text}]}>Programs</Text>
       <Text style={styles.hint}>Create workout templates. The active program suggests your next workout day.</Text>
 
       {/* Create */}

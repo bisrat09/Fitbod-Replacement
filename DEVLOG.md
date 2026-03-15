@@ -426,7 +426,28 @@ Key files
 - `app/index.tsx`: Drop sets, muscle filters, theme-aware container/blocks/sticky (+51 lines, 1157)
 - `app/settings.tsx`: Theme toggle UI (+15 lines, 241)
 
+---
+
+# Fitlog Dev Log — 2026-03-14 (Iteration 16)
+
+Summary
+- Iteration 16: Dark mode on all screens, 1RM calculator, workout duration storage.
+
+Highlights
+- **Dark mode on all screens**: Applied `useTheme()` + `c.bg`/`c.text` to History, Progress, Programs, Exercises, Equipment, and Log screens. Every screen now responds to the dark mode toggle. Tab bar, headers, and all containers are theme-aware.
+- **1RM calculator**: Top of Progress screen has a weight×reps calculator showing estimated 1RM and a rep max table (1-15 rep equivalents). Uses Epley formula. Styled with theme colors.
+- **Workout duration storage**: Schema v7 adds `duration_seconds` to workouts table. Duration is saved when finishing a workout. Shown in history cards as "X min". Included in enhanced history query.
+- **Tests**: 2 new tests (152 total).
+
+Key files
+- `src/lib/migrations/007_workout_duration.ts`: New column
+- `src/lib/migrations/index.ts`: v7 migration
+- `src/lib/dao.ts`: updateWorkoutDuration, enhanced query (+7 lines, 1027)
+- `app/progress.tsx`: 1RM calculator with rep table (+40 lines, 183)
+- `app/history.tsx`, `app/programs.tsx`, `app/exercises.tsx`, `app/equipment.tsx`, `app/log.tsx`: Dark mode applied
+- `app/index.tsx`: Save duration on finish (+3 lines, 1162)
+
 Next Steps
-- Apply dark mode to remaining screens (History, Progress, Programs, Exercises).
-- Notification reminders.
-- Chart visualizations.
+- Notification reminders / scheduled workouts.
+- Percentage-based training (% of 1RM).
+- Deload week detection.

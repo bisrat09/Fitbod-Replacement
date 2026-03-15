@@ -3,8 +3,10 @@ import { View, Text, StyleSheet, ScrollView, Pressable, TextInput, Button } from
 import { bootstrapDb } from '@/lib/bootstrap';
 import { ensureUser, findExerciseByName, createExercise, listFavoriteExerciseIds, listFavoriteExercises, addFavoriteExercise, removeFavoriteExercise, listExercises, archiveExercise, unarchiveExercise, listArchivedExercises, getAllExerciseStats, getUserUnit } from '@/lib/dao';
 import * as Crypto from 'expo-crypto';
+import { useTheme } from '@/theme/ThemeContext';
 
 export default function ExerciseLibrary() {
+  const { c } = useTheme();
   const [dbCtx, setDbCtx] = useState<any>(null);
   const [favIds, setFavIds] = useState<Set<string>>(new Set());
   const [exercises, setExercises] = useState<any[]>([]);
@@ -104,8 +106,8 @@ export default function ExerciseLibrary() {
   });
 
   return (
-    <ScrollView style={styles.container}>
-      <Text style={styles.h1}>Exercise Library</Text>
+    <ScrollView style={[styles.container, {backgroundColor: c.bg}]}>
+      <Text style={[styles.h1, {color: c.text}]}>Exercise Library</Text>
       <Text style={styles.hint}>Tap to favorite. Favorites appear first when adding exercises to workouts.</Text>
       <TextInput placeholder='Search exercises...' value={search} onChangeText={setSearch} style={styles.searchInput} />
 

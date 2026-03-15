@@ -23,6 +23,7 @@ import {
   getWorkoutDatesForMonth, getLifetimeStats,
   saveWorkoutAsTemplate, archiveExercise, unarchiveExercise, listArchivedExercises, getBestSetsInWorkout,
   getExerciseStats, getAllExerciseStats, getMostRecentWorkoutId,
+  updateWorkoutDuration,
 } from '@/lib/dao';
 
 let mockDb: ReturnType<typeof createMockDb>;
@@ -1139,5 +1140,25 @@ describe('getMostRecentWorkoutId', () => {
   test('returns null when no workouts', async () => {
     const result = await getMostRecentWorkoutId(ctx);
     expect(result).toBeNull();
+  });
+});
+
+// ============================================================
+// Iteration 16: Workout duration
+// ============================================================
+describe('updateWorkoutDuration', () => {
+  test('updates duration_seconds', async () => {
+    await updateWorkoutDuration(ctx, 'w1', 3600);
+    const params = mockDb.db.runAsync.mock.calls[0][1];
+    expect(params[0]).toBe(3600);
+    expect(params[2]).toBe('w1');
+  });
+});
+
+describe('listWorkoutSummariesEnhanced with duration', () => {
+  test('includes duration_seconds in query', async () => {
+    await listWorkoutSummariesEnhanced(ctx, 10);
+    const sql = mockDb.db.getAllAsync.mock.calls[0][0];
+    expect(sql).toContain('duration_seconds');
   });
 });

@@ -2,8 +2,10 @@ import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { bootstrapDb } from '@/lib/bootstrap';
 import { ensureUser, getUserUnit } from '@/lib/dao';
+import { useTheme } from '@/theme/ThemeContext';
 
 export default function LogScreen(){
+  const { c } = useTheme();
   const [dbCtx, setDbCtx] = useState<any>(null);
   const [recentByDate, setRecentByDate] = useState<Record<string, any[]>>({});
   const [unit, setUnit] = useState<'lb'|'kg'>('lb');
@@ -50,8 +52,8 @@ export default function LogScreen(){
   }
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.h1}>Log</Text>
+    <View style={[styles.container, {backgroundColor: c.bg}]}>
+      <Text style={[styles.h1, {color: c.text}]}>Log</Text>
       {Object.keys(recentByDate).length===0 ? (
         <Text style={{color:'#666'}}>No recent activity yet.</Text>
       ) : (

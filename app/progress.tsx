@@ -1,14 +1,20 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, Pressable } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, Pressable, TextInput } from 'react-native';
 import { bootstrapDb } from '@/lib/bootstrap';
 import { ensureUser, listExercisesWithMetrics, getMetricHistory, getUserUnit } from '@/lib/dao';
+import { useTheme } from '@/theme/ThemeContext';
+import { epley1RM } from '@/lib/progression';
 
 export default function Progress() {
+  const { c } = useTheme();
   const [dbCtx, setDbCtx] = useState<any>(null);
   const [exercises, setExercises] = useState<any[]>([]);
   const [expanded, setExpanded] = useState<string | null>(null);
   const [history, setHistory] = useState<Record<string, any[]>>({});
   const [unit, setUnit] = useState<'lb' | 'kg'>('lb');
+  // 1RM Calculator
+  const [calcWeight, setCalcWeight] = useState('');
+  const [calcReps, setCalcReps] = useState('');
 
   useEffect(() => {
     (async () => {
@@ -39,9 +45,37 @@ export default function Progress() {
   }
 
   return (
-    <ScrollView style={styles.container}>
-      <Text style={styles.h1}>Progress</Text>
-      <Text style={styles.hint}>Track your estimated 1RM over time per exercise.</Text>
+    <ScrollView style={[styles.container, {backgroundColor: c.bg}]}>
+      <Text style={[styles.h1, {color: c.text}]}>Progress</Text>
+      <Text style={[styles.hint, {color: c.textMuted}]}>Track your estimated 1RM over time per exercise.</Text>
+
+      {/* 1RM Calculator */}
+      <View style={[styles.calcCard, {backgroundColor: c.card, borderColor: c.cardBorder}]}>
+        <Text style={[styles.calcTitle, {color: c.text}]}>1RM Calculator</Text>
+        <View style={styles.calcRow}>
+          <TextInput placeholder='Weight' value={calcWeight} onChangeText={setCalcWeight} keyboardType='numeric' style={[styles.calcInput, {borderColor: c.inputBorder, color: c.text}]} />
+          <Text style={{color: c.textSecondary}}>×</Text>
+          <TextInput placeholder='Reps' value={calcReps} onChangeText={setCalcReps} keyboardType='numeric' style={[styles.calcInput, {borderColor: c.inputBorder, color: c.text}]} />
+          <Text style={{color: c.textSecondary}}>=</Text>
+          <Text style={[styles.calcResult, {color: c.gold}]}>
+            {(parseFloat(calcWeight) > 0 && parseInt(calcReps) > 0) ? `${Math.round(epley1RM(parseFloat(calcWeight), parseInt(calcReps)))} ${unit}` : '—'}
+          </Text>
+        </View>
+        {parseFloat(calcWeight) > 0 && parseInt(calcReps) > 0 && (
+          <View style={styles.repTable}>
+            {[1,2,3,4,5,6,8,10,12,15].map(r => {
+              const est1rm = epley1RM(parseFloat(calcWeight), parseInt(calcReps));
+              const repMax = est1rm / (1 + r / 30);
+              return (
+                <View key={r} style={styles.repRow}>
+                  <Text style={[styles.repLabel, {color: c.textSecondary}]}>{r}RM</Text>
+                  <Text style={[styles.repValue, {color: c.text}]}>{Math.round(repMax)} {unit}</Text>
+                </View>
+              );
+            })}
+          </View>
+        )}
+      </View>
 
       {exercises.length === 0 ? (
         <Text style={styles.empty}>No data yet. Complete some sets to see your progress!</Text>
@@ -133,4 +167,14 @@ const styles = StyleSheet.create({
   timelineValuePR: { color: '#f59e0b', fontWeight: '800' },
   timelineDetail: { fontSize: 12, color: '#6b7280' },
   expandHint: { fontSize: 11, color: '#9ca3af', marginTop: 6, textAlign: 'center' },
+  // Calculator
+  calcCard: { borderWidth: 1, borderRadius: 10, padding: 12, marginBottom: 16, gap: 8 },
+  calcTitle: { fontWeight: '700', fontSize: 15 },
+  calcRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  calcInput: { borderWidth: 1, borderRadius: 6, padding: 6, width: 65, fontSize: 14, textAlign: 'center' },
+  calcResult: { fontSize: 20, fontWeight: '800' },
+  repTable: { flexDirection: 'row', flexWrap: 'wrap', gap: 4, marginTop: 4 },
+  repRow: { flexDirection: 'row', gap: 4, minWidth: 80, paddingVertical: 2 },
+  repLabel: { fontSize: 12, width: 30 },
+  repValue: { fontSize: 12, fontWeight: '600' },
 });

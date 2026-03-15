@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { View, Text, Button, TextInput, StyleSheet, Pressable, Vibration, Modal, ScrollView, Share } from 'react-native';
 import { bootstrapDb } from '@/lib/bootstrap';
-import { ensureUser, createWorkout, addSet, listWorkoutSets, createExercise, listBlocksWithExercises, createBlock, addBlockExercise, listExercisesAvailableByEquipment, getExercise, findExerciseByName, listExercises, getNextSetIndex, updateSet, listBlockExercisesWithNames, listFavoriteExerciseIds, lastWorkingSetsForExercise, upsertMetric, getBestMetric, replaceBlockExercise, getUserUnit, computeWeeklyVolume, upsertWeeklyVolume, exerciseRecency, deleteSet, deleteBlock, swapBlockOrder, latestExerciseTopSet, getSetting, setSetting, deleteSetting, getTodayWorkout, getActiveProgram, getNextProgramDay, listProgramDayExercises, updateWorkoutNotes, getWorkoutStreak, getWorkoutsThisWeek, duplicateBlock, saveWorkoutAsTemplate, logBodyWeight, getBestSetsInWorkout, getMostRecentWorkoutId, repeatWorkout, listWorkoutDetail } from '@/lib/dao';
+import { ensureUser, createWorkout, addSet, listWorkoutSets, createExercise, listBlocksWithExercises, createBlock, addBlockExercise, listExercisesAvailableByEquipment, getExercise, findExerciseByName, listExercises, getNextSetIndex, updateSet, listBlockExercisesWithNames, listFavoriteExerciseIds, lastWorkingSetsForExercise, upsertMetric, getBestMetric, replaceBlockExercise, getUserUnit, computeWeeklyVolume, upsertWeeklyVolume, exerciseRecency, deleteSet, deleteBlock, swapBlockOrder, latestExerciseTopSet, getSetting, setSetting, deleteSetting, getTodayWorkout, getActiveProgram, getNextProgramDay, listProgramDayExercises, updateWorkoutNotes, getWorkoutStreak, getWorkoutsThisWeek, duplicateBlock, saveWorkoutAsTemplate, logBodyWeight, getBestSetsInWorkout, getMostRecentWorkoutId, repeatWorkout, listWorkoutDetail, updateWorkoutDuration } from '@/lib/dao';
 import * as Crypto from 'expo-crypto';
 import { suggestNextWeight, generateWarmupWeights, epley1RM, calculatePlates, formatWorkoutSummary, roundToIncrement } from '@/lib/progression';
 import { useTheme } from '@/theme/ThemeContext';
@@ -526,8 +526,11 @@ export default function Today(){
         await logBodyWeight(dbCtx, { id: Crypto.randomUUID(), date: new Date().toISOString(), weight: bw });
       }
     }
-    // Save notes and clear persisted active workout
+    // Save duration, notes, and clear persisted active workout
     if (dbCtx) {
+      if (workoutId && elapsed > 0) {
+        await updateWorkoutDuration(dbCtx, workoutId, elapsed);
+      }
       if (workoutNotes.trim() && workoutId) {
         await updateWorkoutNotes(dbCtx, workoutId, workoutNotes.trim());
       }

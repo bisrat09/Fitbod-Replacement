@@ -3,8 +3,10 @@ import { View, Text, StyleSheet, ScrollView, Pressable } from 'react-native';
 import { bootstrapDb } from '@/lib/bootstrap';
 import { ensureUser, listWorkoutSummariesEnhanced, listWorkoutDetail, getUserUnit, deleteWorkout, repeatWorkout, getSetPRStatus, setSetting, getWorkoutDatesForMonth } from '@/lib/dao';
 import * as Crypto from 'expo-crypto';
+import { useTheme } from '@/theme/ThemeContext';
 
 export default function History() {
+  const { c } = useTheme();
   const [dbCtx, setDbCtx] = useState<any>(null);
   const [workouts, setWorkouts] = useState<any[]>([]);
   const [expanded, setExpanded] = useState<string | null>(null);
@@ -144,8 +146,8 @@ export default function History() {
   }
 
   return (
-    <ScrollView style={styles.container}>
-      <Text style={styles.h1}>History</Text>
+    <ScrollView style={[styles.container, {backgroundColor: c.bg}]}>
+      <Text style={[styles.h1, {color: c.text}]}>History</Text>
       {repeatStatus && (
         <View style={styles.repeatBanner}><Text style={styles.repeatBannerText}>{repeatStatus}</Text></View>
       )}
@@ -177,7 +179,7 @@ export default function History() {
                   return unique.length > 0 ? <Text style={styles.musclesText}>{unique.join(' · ')}</Text> : null;
                 })()}
                 <Text style={styles.meta}>
-                  {w.exercise_count} exercise{w.exercise_count !== 1 ? 's' : ''} · {w.working_sets || 0} working sets
+                  {w.exercise_count} exercise{w.exercise_count !== 1 ? 's' : ''} · {w.working_sets || 0} working sets{w.duration_seconds ? ` · ${Math.round(w.duration_seconds / 60)} min` : ''}
                 </Text>
                 {w.notes ? <Text style={styles.notesText}>{w.notes}</Text> : null}
                 {isExpanded && sets.length > 0 && (
