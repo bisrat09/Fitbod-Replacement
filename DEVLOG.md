@@ -447,7 +447,27 @@ Key files
 - `app/history.tsx`, `app/programs.tsx`, `app/exercises.tsx`, `app/equipment.tsx`, `app/log.tsx`: Dark mode applied
 - `app/index.tsx`: Save duration on finish (+3 lines, 1162)
 
+---
+
+# Fitlog Dev Log — 2026-03-14 (Bug Fix Pass)
+
+Summary
+- Systematic audit and bug fix pass across all 16 iterations. 34 new edge-case tests.
+
+Bugs Fixed
+1. **Date mutation in getWeekStart** (CRITICAL): `new Date(d.setDate(diff))` mutated `d`. Fixed to `const mon = new Date(d); mon.setDate(diff);`
+2. **NaN rir in logSetForBlock** (HIGH): `parseInt(rir)` could be NaN and was passed directly to addSet. Fixed with `isNaN(parsedRir) ? null : parsedRir`.
+3. **Loose equality in PR check** (HIGH): `s.weight && s.reps` would skip weight=0. Fixed to `s.weight != null && s.weight > 0 && s.reps != null && s.reps > 0`.
+4. **Missing null guards** (MEDIUM): Set edit handlers (`onEndEditing`) called `updateSet(dbCtx, ...)` without null check. Added `if(!dbCtx||!workoutId) return;` guards.
+5. **Dead code removed** (MEDIUM): Unused `exerciseId`/`setExerciseId` state and `defaultExId` tracking removed. Simplified seed loop.
+6. **Missing interval cleanup** (MEDIUM): Added `useEffect` cleanup to clear all rest timer intervals on component unmount.
+
+Tests Added
+- `edge-cases.test.ts` (34 tests): epley1RM extremes, roundToIncrement boundaries, suggestNextWeight undefined/zero/clamping, calculatePlates (bar-only, below-bar, heavy, mixed kg), formatWorkoutSummary (empty/no-split/no-elapsed/null-rir), streak edge cases, weekly volume (spaces, empty), equipment filtering (whitespace), program day cycling (missing split).
+
+Test count: 152 → 186 (34 new edge-case tests)
+
 Next Steps
-- Notification reminders / scheduled workouts.
-- Percentage-based training (% of 1RM).
-- Deload week detection.
+- Run on device to catch runtime issues.
+- Refactor index.tsx into smaller components.
+- Add integration tests with real SQLite.

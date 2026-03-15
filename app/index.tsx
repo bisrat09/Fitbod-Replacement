@@ -10,7 +10,6 @@ export default function Today(){
   const { c } = useTheme();
   const [dbCtx, setDbCtx] = useState<any>(null);
   const [workoutId, setWorkoutId] = useState<string | null>(null);
-  const [exerciseId, setExerciseId] = useState<string | null>(null);
   const [weight, setWeight] = useState('185');
   const [reps, setReps] = useState('5');
   const [rir, setRir] = useState('2');
@@ -102,17 +101,11 @@ export default function Today(){
       { name: 'Front Squat', req: 'barbell,rack', mg: 'quads,glutes,core' },
       { name: 'Hip Thrust', req: 'barbell,bench', mg: 'glutes,hamstrings' },
     ];
-    let defaultExId: string | null = null;
     for(const s of seed){
       const existing = await findExerciseByName(ctx, s.name);
-      if(existing){
-        if(s.name==='Barbell Bench Press') defaultExId = existing.id;
-        continue;
-      }
-      const id = Crypto.randomUUID();
-      if(s.name==='Barbell Bench Press') defaultExId = id;
+      if(existing) continue;
       await createExercise(ctx, {
-        id,
+        id: Crypto.randomUUID(),
         name: s.name,
         muscle_groups: s.mg,
         is_compound: 1,
@@ -121,11 +114,6 @@ export default function Today(){
         default_increment: 2.5,
       });
     }
-    if(!defaultExId){
-      const exs = await listExercises(ctx);
-      defaultExId = exs?.[0]?.id ?? null;
-    }
-    setExerciseId(defaultExId ?? null);
     const userUnit = await getUserUnit(ctx);
     setUnit(userUnit);
     // Load stats
@@ -153,6 +141,15 @@ export default function Today(){
     }
     setDbCtx(ctx);
   })();},[]);
+
+  // Cleanup all rest timer intervals on unmount
+  useEffect(() => {
+    return () => {
+      for (const key of Object.keys(intervalRefs.current)) {
+        clearInterval(intervalRefs.current[key]);
+      }
+    };
+  }, []);
 
   // Workout elapsed timer
   useEffect(() => {
@@ -201,7 +198,8 @@ export default function Today(){
     if(!dbCtx || !workoutId) return;
     const id = Crypto.randomUUID();
     const nextIdx = await getNextSetIndex(dbCtx, workoutId);
-    await addSet(dbCtx, { id, workout_id: workoutId, exercise_id: exerciseId, set_index: nextIdx, weight: parseFloat(weight), reps: parseInt(reps), rir: parseInt(rir), is_warmup: 0, block_id: blockId });
+    const parsedRir = parseInt(rir);
+    await addSet(dbCtx, { id, workout_id: workoutId, exercise_id: exerciseId, set_index: nextIdx, weight: parseFloat(weight) || 0, reps: parseInt(reps) || 0, rir: isNaN(parsedRir) ? null : parsedRir, is_warmup: 0, block_id: blockId });
     const rows = await listWorkoutSets(dbCtx, workoutId);
     setSets(rows);
     // Prefill next-set weight
@@ -278,7 +276,7 @@ export default function Today(){
     startRest(blockId, restDuration);
     // PR detection
     const exName = (blockExercises[blockId] ?? []).find((e: any) => e.exercise_id === active.exerciseId)?.exercise_name ?? '';
-    if (s.weight && s.reps && !s.is_warmup) {
+    if (s.weight != null && s.weight > 0 && s.reps != null && s.reps > 0 && !s.is_warmup) {
       checkForPR(active.exerciseId, exName, s.weight, s.reps);
     }
     // Auto-advance to next incomplete set
@@ -488,7 +486,8 @@ export default function Today(){
     const d = new Date();
     const day = d.getDay(); // 0=Sun
     const diff = d.getDate() - day + (day === 0 ? -6 : 1); // Monday
-    const mon = new Date(d.setDate(diff));
+    const mon = new Date(d);
+    mon.setDate(diff);
     return mon.toISOString().slice(0, 10);
   }
 
@@ -819,7 +818,7 @@ export default function Today(){
                                   keyboardType='numeric'
                                   returnKeyType='next'
                                   onFocus={()=>{ setActiveBlockId(b.id); setActiveRowByBlock(prev=>({...prev,[b.id]:{exerciseId:ex.exercise_id,row:i}})); }}
-                                  onEndEditing={async (e)=>{ const v=parseInt(e.nativeEvent.text||''); await updateSet(dbCtx,{id:s.id,reps:isNaN(v)?null:v}); const rows=await listWorkoutSets(dbCtx, workoutId!); setSets(rows); }}
+                                  onEndEditing={async (e)=>{ if(!dbCtx||!workoutId) return; const v=parseInt(e.nativeEvent.text||''); await updateSet(dbCtx,{id:s.id,reps:isNaN(v)?null:v}); const rows=await listWorkoutSets(dbCtx, workoutId); setSets(rows); }}
                                   style={[styles.setInput, completed? styles.setInputCompleted : (!complete&&{borderColor:'#f59e0b'})]}
                                 />
                               </View>
@@ -830,7 +829,7 @@ export default function Today(){
                                   keyboardType='numeric'
                                   returnKeyType='done'
                                   onFocus={()=>{ setActiveBlockId(b.id); setActiveRowByBlock(prev=>({...prev,[b.id]:{exerciseId:ex.exercise_id,row:i}})); }}
-                                  onEndEditing={async (e)=>{ const v=parseFloat(e.nativeEvent.text||''); await updateSet(dbCtx,{id:s.id,weight:isNaN(v)?null:v}); const rows=await listWorkoutSets(dbCtx, workoutId!); setSets(rows); }}
+                                  onEndEditing={async (e)=>{ if(!dbCtx||!workoutId) return; const v=parseFloat(e.nativeEvent.text||''); await updateSet(dbCtx,{id:s.id,weight:isNaN(v)?null:v}); const rows=await listWorkoutSets(dbCtx, workoutId); setSets(rows); }}
                                   style={[styles.setInput, completed? styles.setInputCompleted : (!complete&&{borderColor:'#f59e0b'})]}
                                 />
                               </View>
@@ -844,7 +843,7 @@ export default function Today(){
                             <TextInput
                               placeholder='note...'
                               defaultValue={s.notes || ''}
-                              onEndEditing={async (e) => { const v = e.nativeEvent.text?.trim() || null; await updateSet(dbCtx, { id: s.id, notes: v }); }}
+                              onEndEditing={async (e) => { if(!dbCtx) return; const v = e.nativeEvent.text?.trim() || null; await updateSet(dbCtx, { id: s.id, notes: v }); }}
                               style={styles.setNoteInput}
                             />
                             </View>
