@@ -18,6 +18,9 @@ import {
   getMetricHistory, updateWorkoutNotes, getWorkoutNotes,
   getWorkoutStreak, getWorkoutsThisWeek, listWorkoutSummariesEnhanced,
   listExercisesWithMetrics,
+  repeatWorkout, duplicateBlock, getSetPRStatus,
+  logBodyWeight, getBodyWeightHistory, getLatestBodyWeight, deleteBodyWeight,
+  getWorkoutDatesForMonth, getLifetimeStats,
 } from '@/lib/dao';
 
 let mockDb: ReturnType<typeof createMockDb>;
@@ -811,5 +814,210 @@ describe('latestExerciseTopSet', () => {
     const sql = mockDb.db.getFirstAsync.mock.calls[0][0];
     expect(sql).toContain('is_warmup=0');
     expect(sql).toContain('ORDER BY w.date DESC, s.weight DESC');
+  });
+});
+
+// ============================================================
+// Iteration 11: Repeat workout
+// ============================================================
+describe('repeatWorkout', () => {
+  test('creates new workout from source', async () => {
+    // Source workout exists
+    mockDb.db.getFirstAsync.mockResolvedValueOnce({ id: 'w-old', split: 'push', notes: 'good' });
+    // No blocks
+    mockDb.db.getAllAsync.mockResolvedValueOnce([]);
+    await repeatWorkout(ctx, 'w-old', 'w-new', '2026-03-15T10:00:00Z');
+    // Should insert new workout
+    const insertCalls = mockDb.calls.filter(c => c.method === 'runAsync' && c.sql.includes('INSERT INTO workouts'));
+    expect(insertCalls).toHaveLength(1);
+    expect(insertCalls[0].params![2]).toBe('2026-03-15T10:00:00Z');
+    expect(insertCalls[0].params![3]).toBe('push'); // preserves split
+  });
+
+  test('does nothing if source workout not found', async () => {
+    mockDb.db.getFirstAsync.mockResolvedValueOnce(null);
+    await repeatWorkout(ctx, 'nonexistent', 'w-new', '2026-03-15');
+    const insertCalls = mockDb.calls.filter(c => c.sql.includes('INSERT INTO workouts'));
+    expect(insertCalls).toHaveLength(0);
+  });
+
+  test('copies blocks and block exercises', async () => {
+    mockDb.db.getFirstAsync.mockResolvedValueOnce({ id: 'w-old', split: 'pull' });
+    // Blocks
+    mockDb.db.getAllAsync
+      .mockResolvedValueOnce([{ id: 'b1', order_index: 1, kind: 'single', notes: null }])  // blocks
+      .mockResolvedValueOnce([{ id: 'be1', exercise_id: 'ex1', order_index: 1 }])           // block exercises
+      .mockResolvedValueOnce([{ id: 's1', weight: 100, reps: 5, rir: 2, tempo: null }]);    // source sets
+    mockDb.db.getFirstAsync.mockResolvedValueOnce({ weight: 105, reps: 5 }); // latest top set
+    await repeatWorkout(ctx, 'w-old', 'w-new', '2026-03-15');
+    expect(mockDb.sqlContains('INSERT INTO workout_blocks')).toBe(true);
+    expect(mockDb.sqlContains('INSERT INTO block_exercises')).toBe(true);
+    expect(mockDb.sqlContains('INSERT INTO sets')).toBe(true);
+  });
+});
+
+// ============================================================
+// Iteration 11: Duplicate block
+// ============================================================
+describe('duplicateBlock', () => {
+  test('copies block with exercises and sets', async () => {
+    // Source block
+    mockDb.db.getFirstAsync
+      .mockResolvedValueOnce({ id: 'b1', kind: 'single', order_index: 1, notes: null }) // source block
+      .mockResolvedValueOnce({ mx: 2 }) // max order index
+      .mockResolvedValueOnce({ n: 5 }); // next set index
+    // Block exercises
+    mockDb.db.getAllAsync
+      .mockResolvedValueOnce([{ id: 'be1', exercise_id: 'ex1', order_index: 1 }])
+      .mockResolvedValueOnce([{ id: 's1', weight: 100, reps: 5, rir: 2, tempo: null }]);
+
+    const newBlockId = await duplicateBlock(ctx, 'b1', 'w1');
+    expect(newBlockId).toBeTruthy();
+    expect(mockDb.sqlContains('INSERT INTO workout_blocks')).toBe(true);
+    expect(mockDb.sqlContains('INSERT INTO block_exercises')).toBe(true);
+  });
+
+  test('returns undefined if source block not found', async () => {
+    mockDb.db.getFirstAsync.mockResolvedValueOnce(null);
+    const result = await duplicateBlock(ctx, 'nonexistent', 'w1');
+    expect(result).toBeUndefined();
+  });
+});
+
+// ============================================================
+// Iteration 11: PR status per set
+// ============================================================
+describe('getSetPRStatus', () => {
+  test('returns set of PR set IDs', async () => {
+    // Completed sets for workout
+    mockDb.db.getAllAsync.mockResolvedValueOnce([
+      { id: 's1', exercise_id: 'ex1', weight: 100, reps: 5 },
+      { id: 's2', exercise_id: 'ex1', weight: 90, reps: 8 },
+    ]);
+    // Best metric for ex1 — matches s1's est_1rm (100 * (1 + 5/30) ≈ 116.67)
+    mockDb.db.getFirstAsync
+      .mockResolvedValueOnce({ est_1rm: 116.667 })  // for s1
+      .mockResolvedValueOnce({ est_1rm: 116.667 }); // for s2 (doesn't match s2's est)
+
+    const result = await getSetPRStatus(ctx, 'w1');
+    expect(result).toBeInstanceOf(Set);
+    expect(result.has('s1')).toBe(true);
+    // s2: 90*(1+8/30) = 114, != 116.667, so not a PR
+    expect(result.has('s2')).toBe(false);
+  });
+
+  test('returns empty set when no completed sets', async () => {
+    mockDb.db.getAllAsync.mockResolvedValueOnce([]);
+    const result = await getSetPRStatus(ctx, 'w1');
+    expect(result.size).toBe(0);
+  });
+});
+
+// ============================================================
+// Iteration 11: updateSet with notes
+// ============================================================
+describe('updateSet with notes', () => {
+  test('includes notes in COALESCE update', async () => {
+    await updateSet(ctx, { id: 's1', notes: 'felt strong' });
+    const sql = mockDb.db.runAsync.mock.calls[0][0];
+    expect(sql).toContain('notes=COALESCE');
+  });
+});
+
+// ============================================================
+// Iteration 12: Body weight tracking
+// ============================================================
+describe('logBodyWeight', () => {
+  test('inserts body weight entry', async () => {
+    await logBodyWeight(ctx, { id: 'bw1', date: '2026-03-14', weight: 185 });
+    const sql = mockDb.db.runAsync.mock.calls[0][0];
+    expect(sql).toContain('INSERT INTO body_weight');
+    const params = mockDb.db.runAsync.mock.calls[0][1];
+    expect(params[3]).toBe(185);
+  });
+});
+
+describe('getBodyWeightHistory', () => {
+  test('returns entries ordered by date DESC', async () => {
+    mockDb.setDefaultGetAll([{ id: 'bw1', date: '2026-03-14', weight: 185 }]);
+    const result = await getBodyWeightHistory(ctx, 10);
+    expect(result).toHaveLength(1);
+    const sql = mockDb.db.getAllAsync.mock.calls[0][0];
+    expect(sql).toContain('ORDER BY date DESC');
+  });
+});
+
+describe('getLatestBodyWeight', () => {
+  test('returns most recent entry', async () => {
+    mockDb.setDefaultGetFirst({ weight: 185, date: '2026-03-14' });
+    const result = await getLatestBodyWeight(ctx);
+    expect(result?.weight).toBe(185);
+  });
+
+  test('returns null when no entries', async () => {
+    const result = await getLatestBodyWeight(ctx);
+    expect(result).toBeNull();
+  });
+});
+
+describe('deleteBodyWeight', () => {
+  test('deletes by id and userId', async () => {
+    await deleteBodyWeight(ctx, 'bw1');
+    const sql = mockDb.db.runAsync.mock.calls[0][0];
+    expect(sql).toContain('DELETE FROM body_weight');
+  });
+});
+
+// ============================================================
+// Iteration 12: Workout calendar
+// ============================================================
+describe('getWorkoutDatesForMonth', () => {
+  test('queries for distinct days in month', async () => {
+    mockDb.setDefaultGetAll([{ day: '2026-03-01' }, { day: '2026-03-05' }]);
+    const result = await getWorkoutDatesForMonth(ctx, '2026-03');
+    expect(result).toEqual(['2026-03-01', '2026-03-05']);
+    const sql = mockDb.db.getAllAsync.mock.calls[0][0];
+    expect(sql).toContain('DISTINCT');
+  });
+
+  test('handles February correctly', async () => {
+    mockDb.setDefaultGetAll([]);
+    await getWorkoutDatesForMonth(ctx, '2026-02');
+    const params = mockDb.db.getAllAsync.mock.calls[0][1];
+    expect(params[1]).toBe('2026-02-01');
+    // Feb 2026 has 28 days
+    expect(params[2]).toContain('2026-02-28');
+  });
+});
+
+// ============================================================
+// Iteration 12: Lifetime stats
+// ============================================================
+describe('getLifetimeStats', () => {
+  test('aggregates all stats', async () => {
+    mockDb.db.getFirstAsync
+      .mockResolvedValueOnce({ n: 50 })     // workout count
+      .mockResolvedValueOnce({ n: 200 })    // set count
+      .mockResolvedValueOnce({ vol: 100000 }) // volume
+      .mockResolvedValueOnce({ name: 'Bench Press', cnt: 60 }); // top exercise
+    // getWorkoutStreak internal call
+    mockDb.db.getAllAsync.mockResolvedValueOnce([]); // streak days
+
+    const result = await getLifetimeStats(ctx);
+    expect(result.totalWorkouts).toBe(50);
+    expect(result.totalSets).toBe(200);
+    expect(result.totalVolume).toBe(100000);
+    expect(result.mostTrainedExercise).toBe('Bench Press');
+    expect(result.currentStreak).toBe(0);
+  });
+
+  test('handles empty database', async () => {
+    mockDb.db.getFirstAsync.mockResolvedValue(null);
+    mockDb.db.getAllAsync.mockResolvedValueOnce([]);
+    const result = await getLifetimeStats(ctx);
+    expect(result.totalWorkouts).toBe(0);
+    expect(result.totalSets).toBe(0);
+    expect(result.totalVolume).toBe(0);
+    expect(result.mostTrainedExercise).toBeNull();
   });
 });

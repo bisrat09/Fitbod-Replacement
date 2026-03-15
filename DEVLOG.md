@@ -299,7 +299,64 @@ New DAO functions
 - `getWorkoutsThisWeek(ctx)` — count of workouts since Monday
 - `listWorkoutSummariesEnhanced(ctx, limit)` — summaries with volume + muscle groups
 
+---
+
+# Fitlog Dev Log — 2026-03-14 (Iteration 11)
+
+Summary
+- Iteration 11: Per-set notes (schema v5), repeat past workout, duplicate block, PR badges in history.
+
+Highlights
+- **Per-set notes**: Schema migration v5 adds `notes TEXT` column to `sets`. Each set row has an inline note input ("note...") saved on blur. Notes shown in history detail after the set info.
+- **Repeat past workout**: "Repeat Workout" button on expanded history cards. Creates a new workout with same split, blocks, exercises, and sets pre-filled with latest weights from history. Sets the new workout as active so it appears on the Workout tab.
+- **Duplicate block**: "Dup" button on each block header copies the block with all exercises and sets (uncompleted) to the end of the workout.
+- **PR badges in history**: When expanding a workout in history, sets that matched the best-ever est. 1RM for their exercise get a gold "PR" badge. Computed via `getSetPRStatus()` which compares each set's Epley 1RM against the metrics table.
+- **Tests**: 8 new tests (117 total) covering repeatWorkout, duplicateBlock, getSetPRStatus, and updateSet with notes.
+
+Key files
+- `src/lib/migrations/005_set_notes.ts`: New migration adding notes column
+- `src/lib/migrations/index.ts`: Added v5 migration
+- `src/lib/dao.ts`: 3 new functions, updateSet updated (+133 lines, now 838)
+- `app/index.tsx`: Duplicate block, per-set notes input (+23 lines, now 969)
+- `app/history.tsx`: Repeat workout, PR badges, notes display (+44 lines, now 211)
+- `src/__tests__/dao.test.ts`: 8 new tests (117 total)
+
+New DAO functions
+- `repeatWorkout(ctx, sourceId, newId, date)` — copy workout structure with fresh sets
+- `duplicateBlock(ctx, blockId, workoutId)` — clone a block within a workout
+- `getSetPRStatus(ctx, workoutId)` — returns Set of set IDs that were PRs
+
+---
+
+# Fitlog Dev Log — 2026-03-14 (Iteration 12)
+
+Summary
+- Iteration 12: Body weight tracking (schema v6), workout calendar, lifetime stats.
+
+Highlights
+- **Body weight tracking**: New `body_weight` table via migration v6. Settings screen has a weight input with log button and recent history (last 10 entries). Each entry shows date and weight with delete option.
+- **Workout calendar**: Monthly grid on History screen showing dots on workout days. Navigate months with left/right arrows. Today highlighted in blue. No external calendar library — pure View/Text grid.
+- **Lifetime stats**: Settings screen shows 4 stat cards (total workouts, total sets, total volume, current streak) plus the most-trained exercise. Uses `getLifetimeStats()` which aggregates across all tables.
+- **Settings upgrade**: Reorganized with stats at top, body weight section, then unit/data/about. Now 226 lines.
+- **Tests**: 9 new tests (126 total) covering body weight CRUD, calendar dates, and lifetime stats.
+
+Key files
+- `src/lib/migrations/006_body_weight.ts`: New table
+- `src/lib/migrations/index.ts`: v6 migration
+- `src/lib/dao.ts`: 6 new functions (+64 lines, now 902)
+- `app/settings.tsx`: Body weight input/history + lifetime stats cards (full rewrite, 226 lines)
+- `app/history.tsx`: Monthly calendar grid with dots (+72 lines, now 283)
+- `src/__tests__/dao.test.ts`: 9 new tests (126 total)
+
+New DAO functions
+- `logBodyWeight(ctx, entry)` — insert body weight record
+- `getBodyWeightHistory(ctx, limit)` — recent body weight entries
+- `getLatestBodyWeight(ctx)` — most recent entry
+- `deleteBodyWeight(ctx, id)` — remove entry
+- `getWorkoutDatesForMonth(ctx, yearMonth)` — distinct workout dates in a month
+- `getLifetimeStats(ctx)` — aggregated lifetime statistics
+
 Next Steps
-- UI polish: charts library, animations.
-- Per-set notes.
-- Workout templates from history (repeat a past workout).
+- UI polish: charts library for visual progress.
+- Workout sharing / social features.
+- Notification reminders.

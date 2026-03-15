@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { View, Text, Button, TextInput, StyleSheet, Pressable, Vibration, Modal, ScrollView } from 'react-native';
 import { bootstrapDb } from '@/lib/bootstrap';
-import { ensureUser, createWorkout, addSet, listWorkoutSets, createExercise, listBlocksWithExercises, createBlock, addBlockExercise, listExercisesAvailableByEquipment, getExercise, findExerciseByName, listExercises, getNextSetIndex, updateSet, listBlockExercisesWithNames, listFavoriteExerciseIds, lastWorkingSetsForExercise, upsertMetric, getBestMetric, replaceBlockExercise, getUserUnit, computeWeeklyVolume, upsertWeeklyVolume, exerciseRecency, deleteSet, deleteBlock, swapBlockOrder, latestExerciseTopSet, getSetting, setSetting, deleteSetting, getTodayWorkout, getActiveProgram, getNextProgramDay, listProgramDayExercises, updateWorkoutNotes, getWorkoutStreak, getWorkoutsThisWeek } from '@/lib/dao';
+import { ensureUser, createWorkout, addSet, listWorkoutSets, createExercise, listBlocksWithExercises, createBlock, addBlockExercise, listExercisesAvailableByEquipment, getExercise, findExerciseByName, listExercises, getNextSetIndex, updateSet, listBlockExercisesWithNames, listFavoriteExerciseIds, lastWorkingSetsForExercise, upsertMetric, getBestMetric, replaceBlockExercise, getUserUnit, computeWeeklyVolume, upsertWeeklyVolume, exerciseRecency, deleteSet, deleteBlock, swapBlockOrder, latestExerciseTopSet, getSetting, setSetting, deleteSetting, getTodayWorkout, getActiveProgram, getNextProgramDay, listProgramDayExercises, updateWorkoutNotes, getWorkoutStreak, getWorkoutsThisWeek, duplicateBlock } from '@/lib/dao';
 import * as Crypto from 'expo-crypto';
 import { suggestNextWeight, generateWarmupWeights, epley1RM } from '@/lib/progression';
 
@@ -542,6 +542,12 @@ export default function Today(){
     await refreshBlocksAndSets();
   }
 
+  async function handleDuplicateBlock(blockId: string) {
+    if (!dbCtx || !workoutId) return;
+    await duplicateBlock(dbCtx, blockId, workoutId);
+    await refreshBlocksAndSets();
+  }
+
   async function confirmSwapExercise() {
     if (!dbCtx || !showSwapModal || !selectedSwapExerciseId || !workoutId) {
       setShowSwapModal(null);
@@ -649,9 +655,14 @@ export default function Today(){
                     <Text style={styles.blockTitle}>{b.order_index}. {(exs[0]?.exercise_name) ?? 'Exercise'}</Text>
                     <Text style={styles.progressBadge}>{doneCount}/{totalCount}</Text>
                   </View>
-                  <Pressable onPress={()=>handleDeleteBlock(b.id)} style={styles.deleteBlockBtn}>
-                    <Text style={styles.deleteBlockBtnText}>Remove</Text>
-                  </Pressable>
+                  <View style={[styles.row, {gap:4}]}>
+                    <Pressable onPress={()=>handleDuplicateBlock(b.id)} style={styles.dupBlockBtn}>
+                      <Text style={styles.dupBlockBtnText}>Dup</Text>
+                    </Pressable>
+                    <Pressable onPress={()=>handleDeleteBlock(b.id)} style={styles.deleteBlockBtn}>
+                      <Text style={styles.deleteBlockBtnText}>Remove</Text>
+                    </Pressable>
+                  </View>
                 </View>
                 {exs.length===1 && (
                   <Pressable onPress={()=>openMakeSuperset(b.id)}><Text style={{color:'#0ea5a4'}}>Make Superset</Text></Pressable>
@@ -674,7 +685,8 @@ export default function Today(){
                           const completed = s.is_completed ? true : false;
                           const complete = s.reps!=null && s.weight!=null;
                           return (
-                            <View key={s.id} style={styles.setRow}>
+                            <View key={s.id} style={{gap:2}}>
+                            <View style={styles.setRow}>
                               <View style={styles.setBadge}><Text style={styles.setBadgeText}>{idx}</Text></View>
                               <View style={styles.setCell}>
                                 <Text style={styles.setCellLabel}>Reps</Text>
@@ -703,6 +715,14 @@ export default function Today(){
                                   <Text style={styles.deleteBtnText}>×</Text>
                                 </Pressable>
                               )}
+                            </View>
+                            {/* Per-set note */}
+                            <TextInput
+                              placeholder='note...'
+                              defaultValue={s.notes || ''}
+                              onEndEditing={async (e) => { const v = e.nativeEvent.text?.trim() || null; await updateSet(dbCtx, { id: s.id, notes: v }); }}
+                              style={styles.setNoteInput}
+                            />
                             </View>
                           );
                         })}
@@ -942,4 +962,7 @@ const styles = StyleSheet.create({
   statText:{fontSize:13,fontWeight:'600',color:'#6b7280'},
   statDot:{fontSize:13,color:'#d1d5db'},
   notesInput:{borderWidth:1,borderColor:'#d1d5db',borderRadius:8,padding:8,fontSize:14,minHeight:48,textAlignVertical:'top'},
+  dupBlockBtn:{paddingHorizontal:6,paddingVertical:2,backgroundColor:'#e0e7ff',borderRadius:4},
+  dupBlockBtnText:{color:'#4338ca',fontSize:11,fontWeight:'600'},
+  setNoteInput:{fontSize:11,color:'#6b7280',paddingVertical:1,paddingHorizontal:8,fontStyle:'italic',minHeight:18},
 });

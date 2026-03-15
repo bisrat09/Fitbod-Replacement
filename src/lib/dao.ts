@@ -181,12 +181,12 @@ export async function listBlocksWithExercises(ctx: Ctx, workoutId: string) {
 
 export async function updateSet(
   ctx: Ctx,
-  s: { id: string; weight?: number | null; reps?: number | null; rir?: number | null; tempo?: string | null; is_completed?: number | null }
+  s: { id: string; weight?: number | null; reps?: number | null; rir?: number | null; tempo?: string | null; is_completed?: number | null; notes?: string | null }
 ){
   const ts = nowIso();
   await ctx.db.runAsync(
-    `UPDATE sets SET weight=COALESCE(?,weight), reps=COALESCE(?,reps), rir=COALESCE(?,rir), tempo=COALESCE(?,tempo), is_completed=COALESCE(?,is_completed), updated_at=? WHERE id=? AND user_id=?`,
-    [s.weight ?? null, s.reps ?? null, s.rir ?? null, s.tempo ?? null, s.is_completed ?? null, ts, s.id, ctx.userId]
+    `UPDATE sets SET weight=COALESCE(?,weight), reps=COALESCE(?,reps), rir=COALESCE(?,rir), tempo=COALESCE(?,tempo), is_completed=COALESCE(?,is_completed), notes=COALESCE(?,notes), updated_at=? WHERE id=? AND user_id=?`,
+    [s.weight ?? null, s.reps ?? null, s.rir ?? null, s.tempo ?? null, s.is_completed ?? null, s.notes ?? null, ts, s.id, ctx.userId]
   );
 }
 
@@ -701,4 +701,201 @@ export async function listExercisesWithMetrics(ctx: Ctx) {
      ORDER BY ex.name`,
     [ctx.userId]
   );
+}
+
+// ========== ITERATION 11 ==========
+
+// Repeat a past workout: copy structure (blocks + exercises) into a new workout with fresh sets
+export async function repeatWorkout(ctx: Ctx, sourceWorkoutId: string, newWorkoutId: string, newDate: string) {
+  const ts = nowIso();
+  // Get source workout
+  const src = await ctx.db.getFirstAsync<any>(`SELECT * FROM workouts WHERE id=? AND user_id=?`, [sourceWorkoutId, ctx.userId]);
+  if (!src) return;
+  // Create new workout
+  await ctx.db.runAsync(
+    `INSERT INTO workouts (id,user_id,date,split,notes,created_at,updated_at) VALUES (?,?,?,?,?,?,?)`,
+    [newWorkoutId, ctx.userId, newDate, src.split ?? null, null, ts, ts]
+  );
+  // Copy blocks
+  const blocks = await ctx.db.getAllAsync<any>(
+    `SELECT * FROM workout_blocks WHERE user_id=? AND workout_id=? ORDER BY order_index`,
+    [ctx.userId, sourceWorkoutId]
+  );
+  let setIdx = 1;
+  for (const b of blocks) {
+    const newBlockId = `${newWorkoutId}_b${b.order_index}`;
+    await ctx.db.runAsync(
+      `INSERT INTO workout_blocks (id,user_id,workout_id,kind,order_index,notes) VALUES (?,?,?,?,?,?)`,
+      [newBlockId, ctx.userId, newWorkoutId, b.kind, b.order_index, b.notes]
+    );
+    // Copy block exercises
+    const blockExs = await ctx.db.getAllAsync<any>(
+      `SELECT * FROM block_exercises WHERE user_id=? AND block_id=? ORDER BY order_index`,
+      [ctx.userId, b.id]
+    );
+    for (const be of blockExs) {
+      const newBeId = `${newBlockId}_e${be.order_index}`;
+      await ctx.db.runAsync(
+        `INSERT INTO block_exercises (id,user_id,block_id,exercise_id,order_index) VALUES (?,?,?,?,?)`,
+        [newBeId, ctx.userId, newBlockId, be.exercise_id, be.order_index]
+      );
+      // Copy working sets (not warmups), use last top set weight or original weight
+      const srcSets = await ctx.db.getAllAsync<any>(
+        `SELECT * FROM sets WHERE user_id=? AND block_id=? AND exercise_id=? AND is_warmup=0 ORDER BY set_index`,
+        [ctx.userId, b.id, be.exercise_id]
+      );
+      const lastTop = await ctx.db.getFirstAsync<any>(
+        `SELECT s.* FROM sets s JOIN workouts w ON w.id=s.workout_id WHERE s.user_id=? AND s.exercise_id=? AND s.is_warmup=0 ORDER BY w.date DESC, s.weight DESC LIMIT 1`,
+        [ctx.userId, be.exercise_id]
+      );
+      for (const s of srcSets) {
+        const newSetId = `${newBlockId}_s${setIdx}`;
+        await ctx.db.runAsync(
+          `INSERT INTO sets (id,user_id,workout_id,exercise_id,set_index,weight,reps,rir,tempo,is_warmup,block_id,is_completed,created_at,updated_at) VALUES (?,?,?,?,?,?,?,?,?,0,?,0,?,?)`,
+          [newSetId, ctx.userId, newWorkoutId, be.exercise_id, setIdx, lastTop?.weight ?? s.weight, s.reps, s.rir, s.tempo ?? null, newBlockId, ts, ts]
+        );
+        setIdx++;
+      }
+    }
+  }
+}
+
+// Duplicate a block within the same workout
+export async function duplicateBlock(ctx: Ctx, blockId: string, workoutId: string) {
+  const ts = nowIso();
+  // Get source block
+  const src = await ctx.db.getFirstAsync<any>(
+    `SELECT * FROM workout_blocks WHERE id=? AND user_id=?`, [blockId, ctx.userId]
+  );
+  if (!src) return;
+  // Get max order_index
+  const maxRow = await ctx.db.getFirstAsync<{ mx: number }>(
+    `SELECT COALESCE(MAX(order_index),0) AS mx FROM workout_blocks WHERE user_id=? AND workout_id=?`,
+    [ctx.userId, workoutId]
+  );
+  const newOrder = (maxRow?.mx ?? 0) + 1;
+  const newBlockId = `${blockId}_dup${newOrder}`;
+  await ctx.db.runAsync(
+    `INSERT INTO workout_blocks (id,user_id,workout_id,kind,order_index,notes) VALUES (?,?,?,?,?,?)`,
+    [newBlockId, ctx.userId, workoutId, src.kind, newOrder, src.notes]
+  );
+  // Copy block exercises
+  const blockExs = await ctx.db.getAllAsync<any>(
+    `SELECT * FROM block_exercises WHERE user_id=? AND block_id=? ORDER BY order_index`,
+    [ctx.userId, blockId]
+  );
+  let nextIdx = await ctx.db.getFirstAsync<{ n: number }>(
+    `SELECT COALESCE(MAX(set_index),0)+1 AS n FROM sets WHERE user_id=? AND workout_id=?`,
+    [ctx.userId, workoutId]
+  );
+  let setIdx = nextIdx?.n ?? 1;
+  for (const be of blockExs) {
+    const newBeId = `${newBlockId}_e${be.order_index}`;
+    await ctx.db.runAsync(
+      `INSERT INTO block_exercises (id,user_id,block_id,exercise_id,order_index) VALUES (?,?,?,?,?)`,
+      [newBeId, ctx.userId, newBlockId, be.exercise_id, be.order_index]
+    );
+    // Copy sets (uncompleted)
+    const srcSets = await ctx.db.getAllAsync<any>(
+      `SELECT * FROM sets WHERE user_id=? AND block_id=? AND exercise_id=? AND is_warmup=0 ORDER BY set_index`,
+      [ctx.userId, blockId, be.exercise_id]
+    );
+    for (const s of srcSets) {
+      const newSetId = `${newBlockId}_s${setIdx}`;
+      await ctx.db.runAsync(
+        `INSERT INTO sets (id,user_id,workout_id,exercise_id,set_index,weight,reps,rir,tempo,is_warmup,block_id,is_completed,created_at,updated_at) VALUES (?,?,?,?,?,?,?,?,?,0,?,0,?,?)`,
+        [newSetId, ctx.userId, workoutId, be.exercise_id, setIdx, s.weight, s.reps, s.rir, s.tempo ?? null, newBlockId, ts, ts]
+      );
+      setIdx++;
+    }
+  }
+  return newBlockId;
+}
+
+// Check if a set was a PR at the time it was logged
+export async function getSetPRStatus(ctx: Ctx, workoutId: string) {
+  // Get all completed working sets for this workout with their est_1rm
+  const sets = await ctx.db.getAllAsync<any>(
+    `SELECT s.id, s.exercise_id, s.weight, s.reps, ex.name AS exercise_name
+     FROM sets s JOIN exercises ex ON ex.id=s.exercise_id
+     WHERE s.user_id=? AND s.workout_id=? AND s.is_warmup=0 AND s.is_completed=1 AND s.weight>0 AND s.reps>0`,
+    [ctx.userId, workoutId]
+  );
+  // For each set, check if its est_1rm matches the best ever for that exercise
+  const prSetIds = new Set<string>();
+  for (const s of sets) {
+    const est = s.weight * (1 + s.reps / 30); // Epley inline
+    const best = await ctx.db.getFirstAsync<{ est_1rm: number }>(
+      `SELECT MAX(est_1rm) AS est_1rm FROM metrics WHERE user_id=? AND exercise_id=?`,
+      [ctx.userId, s.exercise_id]
+    );
+    if (best && Math.abs(est - best.est_1rm) < 0.1) {
+      prSetIds.add(s.id);
+    }
+  }
+  return prSetIds;
+}
+
+// ========== ITERATION 12 ==========
+
+// Body weight tracking
+export async function logBodyWeight(ctx: Ctx, entry: { id: string; date: string; weight: number }) {
+  const ts = nowIso();
+  await ctx.db.runAsync(
+    `INSERT INTO body_weight (id,user_id,date,weight,created_at) VALUES (?,?,?,?,?)`,
+    [entry.id, ctx.userId, entry.date, entry.weight, ts]
+  );
+}
+
+export async function getBodyWeightHistory(ctx: Ctx, limit: number = 30) {
+  return ctx.db.getAllAsync<{ id: string; date: string; weight: number }>(
+    `SELECT id, date, weight FROM body_weight WHERE user_id=? ORDER BY date DESC LIMIT ?`,
+    [ctx.userId, limit]
+  );
+}
+
+export async function getLatestBodyWeight(ctx: Ctx) {
+  return ctx.db.getFirstAsync<{ weight: number; date: string }>(
+    `SELECT weight, date FROM body_weight WHERE user_id=? ORDER BY date DESC LIMIT 1`,
+    [ctx.userId]
+  );
+}
+
+export async function deleteBodyWeight(ctx: Ctx, id: string) {
+  await ctx.db.runAsync(`DELETE FROM body_weight WHERE id=? AND user_id=?`, [id, ctx.userId]);
+}
+
+// Calendar: get workout dates for a given month (YYYY-MM)
+export async function getWorkoutDatesForMonth(ctx: Ctx, yearMonth: string) {
+  const start = `${yearMonth}-01`;
+  // Get last day of month
+  const [y, m] = yearMonth.split('-').map(Number);
+  const lastDay = new Date(y, m, 0).getDate();
+  const end = `${yearMonth}-${String(lastDay).padStart(2, '0')}T23:59:59`;
+  const rows = await ctx.db.getAllAsync<{ day: string }>(
+    `SELECT DISTINCT substr(date, 1, 10) AS day FROM workouts WHERE user_id=? AND date >= ? AND date <= ? ORDER BY day`,
+    [ctx.userId, start, end]
+  );
+  return rows.map(r => r.day);
+}
+
+// Lifetime stats
+export async function getLifetimeStats(ctx: Ctx) {
+  const [workoutCount, setCount, volumeRow, topExercise, streakDays] = await Promise.all([
+    ctx.db.getFirstAsync<{ n: number }>(`SELECT COUNT(*) AS n FROM workouts WHERE user_id=?`, [ctx.userId]),
+    ctx.db.getFirstAsync<{ n: number }>(`SELECT COUNT(*) AS n FROM sets WHERE user_id=? AND is_warmup=0 AND is_completed=1`, [ctx.userId]),
+    ctx.db.getFirstAsync<{ vol: number }>(`SELECT COALESCE(SUM(weight * reps), 0) AS vol FROM sets WHERE user_id=? AND is_warmup=0 AND is_completed=1`, [ctx.userId]),
+    ctx.db.getFirstAsync<{ name: string; cnt: number }>(
+      `SELECT ex.name, COUNT(s.id) AS cnt FROM sets s JOIN exercises ex ON ex.id=s.exercise_id WHERE s.user_id=? AND s.is_warmup=0 AND s.is_completed=1 GROUP BY s.exercise_id ORDER BY cnt DESC LIMIT 1`,
+      [ctx.userId]
+    ),
+    getWorkoutStreak(ctx),
+  ]);
+  return {
+    totalWorkouts: workoutCount?.n ?? 0,
+    totalSets: setCount?.n ?? 0,
+    totalVolume: volumeRow?.vol ?? 0,
+    mostTrainedExercise: topExercise?.name ?? null,
+    currentStreak: streakDays,
+  };
 }
