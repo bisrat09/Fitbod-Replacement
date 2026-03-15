@@ -8,7 +8,9 @@
     "android": "expo run:android",
     "ios": "expo run:ios",
     "web": "expo start --web",
-    "lint": "eslint ."
+    "lint": "eslint .",
+    "test": "jest --verbose",
+    "test:watch": "jest --watch"
   },
   "dependencies": {
     "@expo/metro-runtime": "~6.1.2",
@@ -33,11 +35,14 @@
     "zustand": "4.5.4"
   },
   "devDependencies": {
+    "@types/jest": "^30.0.0",
     "@types/react": "^19.1.0",
-    "babel-preset-expo": "^11.0.0",
-    "typescript": "~5.9.2",
-    "eslint": "^8.57.0",
     "@typescript-eslint/eslint-plugin": "^7.6.0",
-    "@typescript-eslint/parser": "^7.6.0"
+    "@typescript-eslint/parser": "^7.6.0",
+    "babel-preset-expo": "^11.0.0",
+    "eslint": "^8.57.0",
+    "jest": "^30.3.0",
+    "ts-jest": "^29.4.6",
+    "typescript": "~5.9.2"
   }
 }
