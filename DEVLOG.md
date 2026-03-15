@@ -356,7 +356,35 @@ New DAO functions
 - `getWorkoutDatesForMonth(ctx, yearMonth)` — distinct workout dates in a month
 - `getLifetimeStats(ctx)` — aggregated lifetime statistics
 
+---
+
+# Fitlog Dev Log — 2026-03-14 (Iteration 13)
+
+Summary
+- Iteration 13: Haptic countdown, save-as-template, exercise archive, body weight prompt, best set highlights.
+
+Highlights
+- **Haptic countdown**: Rest timer vibrates at 3, 2, 1 seconds (short 100ms buzz) and double-buzz at 0. Timer text pulses larger/bolder red in final 3 seconds.
+- **Save workout as template**: In the finish modal, enter a name and tap "Save Template" to create a program from the current workout's structure. Copies all exercises with average reps/sets/RIR. Appears in Programs tab.
+- **Exercise archive**: Each exercise in the library has an "Archive" button. Archived exercises are hidden from pickers. Collapsible "Archived" section at the bottom with "Restore" to unarchive.
+- **Body weight prompt**: Finish modal includes an optional body weight input. If filled, logs the weight to body_weight table automatically.
+- **Best set highlight**: After finishing, sets with the highest est. 1RM per exercise get a gold badge ring. Computed via `getBestSetsInWorkout()`.
+- **Tests**: 7 new tests (133 total).
+
+Key files
+- `app/index.tsx`: Haptic countdown, best set badges, BW prompt, save template (+49 lines, 1018)
+- `app/exercises.tsx`: Archive/restore toggle + archived section (+79 lines, 189)
+- `src/lib/dao.ts`: 5 new functions (+78 lines, 980)
+- `src/__tests__/dao.test.ts`: 7 new tests (133 total)
+
+New DAO functions
+- `saveWorkoutAsTemplate(ctx, workoutId, name, programId)` — create program from workout
+- `archiveExercise(ctx, exerciseId)` — set is_archived=1
+- `unarchiveExercise(ctx, exerciseId)` — set is_archived=0
+- `listArchivedExercises(ctx)` — list archived exercises
+- `getBestSetsInWorkout(ctx, workoutId)` — set IDs with highest est 1RM per exercise
+
 Next Steps
 - UI polish: charts library for visual progress.
-- Workout sharing / social features.
 - Notification reminders.
+- Dark mode support.

@@ -21,6 +21,7 @@ import {
   repeatWorkout, duplicateBlock, getSetPRStatus,
   logBodyWeight, getBodyWeightHistory, getLatestBodyWeight, deleteBodyWeight,
   getWorkoutDatesForMonth, getLifetimeStats,
+  saveWorkoutAsTemplate, archiveExercise, unarchiveExercise, listArchivedExercises, getBestSetsInWorkout,
 } from '@/lib/dao';
 
 let mockDb: ReturnType<typeof createMockDb>;
@@ -1019,5 +1020,77 @@ describe('getLifetimeStats', () => {
     expect(result.totalSets).toBe(0);
     expect(result.totalVolume).toBe(0);
     expect(result.mostTrainedExercise).toBeNull();
+  });
+});
+
+// ============================================================
+// Iteration 13: Save workout as template
+// ============================================================
+describe('saveWorkoutAsTemplate', () => {
+  test('creates program from workout structure', async () => {
+    mockDb.db.getFirstAsync.mockResolvedValueOnce({ id: 'w1', split: 'push' }); // workout
+    mockDb.db.getAllAsync
+      .mockResolvedValueOnce([{ id: 'b1', order_index: 1 }]) // blocks
+      .mockResolvedValueOnce([{ exercise_id: 'ex1', set_count: 3, avg_reps: 8, avg_rir: 2 }]); // block exercises
+    await saveWorkoutAsTemplate(ctx, 'w1', 'My Template', 'prog1');
+    expect(mockDb.sqlContains('INSERT INTO programs')).toBe(true);
+    expect(mockDb.sqlContains('INSERT INTO program_days')).toBe(true);
+    expect(mockDb.sqlContains('INSERT INTO program_day_exercises')).toBe(true);
+  });
+
+  test('does nothing if workout not found', async () => {
+    mockDb.db.getFirstAsync.mockResolvedValueOnce(null);
+    await saveWorkoutAsTemplate(ctx, 'nonexistent', 'Test', 'prog1');
+    expect(mockDb.sqlContains('INSERT INTO programs')).toBe(false);
+  });
+});
+
+// ============================================================
+// Iteration 13: Exercise archive
+// ============================================================
+describe('archiveExercise', () => {
+  test('sets is_archived to 1', async () => {
+    await archiveExercise(ctx, 'ex1');
+    const sql = mockDb.db.runAsync.mock.calls[0][0];
+    expect(sql).toContain('is_archived=1');
+  });
+});
+
+describe('unarchiveExercise', () => {
+  test('sets is_archived to 0', async () => {
+    await unarchiveExercise(ctx, 'ex1');
+    const sql = mockDb.db.runAsync.mock.calls[0][0];
+    expect(sql).toContain('is_archived=0');
+  });
+});
+
+describe('listArchivedExercises', () => {
+  test('queries archived exercises', async () => {
+    await listArchivedExercises(ctx);
+    const sql = mockDb.db.getAllAsync.mock.calls[0][0];
+    expect(sql).toContain('is_archived=1');
+  });
+});
+
+// ============================================================
+// Iteration 13: Best set per exercise in workout
+// ============================================================
+describe('getBestSetsInWorkout', () => {
+  test('returns set IDs with highest est 1RM per exercise', async () => {
+    mockDb.db.getAllAsync.mockResolvedValueOnce([
+      { id: 's1', exercise_id: 'ex1', weight: 100, reps: 5 }, // est: 116.67
+      { id: 's2', exercise_id: 'ex1', weight: 90, reps: 8 },  // est: 114
+      { id: 's3', exercise_id: 'ex2', weight: 60, reps: 10 }, // est: 80
+    ]);
+    const result = await getBestSetsInWorkout(ctx, 'w1');
+    expect(result.has('s1')).toBe(true);  // best for ex1
+    expect(result.has('s2')).toBe(false); // not best
+    expect(result.has('s3')).toBe(true);  // only one for ex2
+  });
+
+  test('returns empty set when no completed sets', async () => {
+    mockDb.db.getAllAsync.mockResolvedValueOnce([]);
+    const result = await getBestSetsInWorkout(ctx, 'w1');
+    expect(result.size).toBe(0);
   });
 });

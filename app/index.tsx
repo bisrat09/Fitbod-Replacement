@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { View, Text, Button, TextInput, StyleSheet, Pressable, Vibration, Modal, ScrollView } from 'react-native';
 import { bootstrapDb } from '@/lib/bootstrap';
-import { ensureUser, createWorkout, addSet, listWorkoutSets, createExercise, listBlocksWithExercises, createBlock, addBlockExercise, listExercisesAvailableByEquipment, getExercise, findExerciseByName, listExercises, getNextSetIndex, updateSet, listBlockExercisesWithNames, listFavoriteExerciseIds, lastWorkingSetsForExercise, upsertMetric, getBestMetric, replaceBlockExercise, getUserUnit, computeWeeklyVolume, upsertWeeklyVolume, exerciseRecency, deleteSet, deleteBlock, swapBlockOrder, latestExerciseTopSet, getSetting, setSetting, deleteSetting, getTodayWorkout, getActiveProgram, getNextProgramDay, listProgramDayExercises, updateWorkoutNotes, getWorkoutStreak, getWorkoutsThisWeek, duplicateBlock } from '@/lib/dao';
+import { ensureUser, createWorkout, addSet, listWorkoutSets, createExercise, listBlocksWithExercises, createBlock, addBlockExercise, listExercisesAvailableByEquipment, getExercise, findExerciseByName, listExercises, getNextSetIndex, updateSet, listBlockExercisesWithNames, listFavoriteExerciseIds, lastWorkingSetsForExercise, upsertMetric, getBestMetric, replaceBlockExercise, getUserUnit, computeWeeklyVolume, upsertWeeklyVolume, exerciseRecency, deleteSet, deleteBlock, swapBlockOrder, latestExerciseTopSet, getSetting, setSetting, deleteSetting, getTodayWorkout, getActiveProgram, getNextProgramDay, listProgramDayExercises, updateWorkoutNotes, getWorkoutStreak, getWorkoutsThisWeek, duplicateBlock, saveWorkoutAsTemplate, logBodyWeight, getBestSetsInWorkout } from '@/lib/dao';
 import * as Crypto from 'expo-crypto';
 import { suggestNextWeight, generateWarmupWeights, epley1RM } from '@/lib/progression';
 
@@ -47,6 +47,11 @@ export default function Today(){
   const [elapsed, setElapsed] = useState(0);
   // Exercise picker search
   const [pickerSearch, setPickerSearch] = useState('');
+  // Finish modal extras
+  const [finishBwInput, setFinishBwInput] = useState('');
+  const [templateName, setTemplateName] = useState('');
+  const [templateSaved, setTemplateSaved] = useState(false);
+  const [bestSetIds, setBestSetIds] = useState<Set<string>>(new Set());
   // Workout split
   const SPLIT_OPTIONS = ['push', 'pull', 'legs', 'upper', 'lower', 'full'];
   const [split, setSplit] = useState('push');
@@ -210,10 +215,14 @@ export default function Today(){
         if(!st.running) return prev;
         const next = st.timeLeft<=1 ? 0 : st.timeLeft-1;
         const updated = { ...prev, [blockId]: { ...st, timeLeft: next, running: next>0 && st.running } };
+        // Haptic countdown: short buzz at 3, 2, 1
+        if(next > 0 && next <= 3){
+          setTimeout(()=>Vibration.vibrate(100),0);
+        }
         if(next===0){
           clearInterval(intervalRefs.current[blockId]);
           delete intervalRefs.current[blockId];
-          setTimeout(()=>Vibration.vibrate(400),0);
+          setTimeout(()=>Vibration.vibrate([0, 200, 100, 200]),0);
         }
         return updated;
       });
@@ -482,6 +491,12 @@ export default function Today(){
       await upsertWeeklyVolume(dbCtx, weekStart, mg, count);
     }
     setWeeklyVolume(vol);
+    // Get best sets for highlighting
+    const bests = await getBestSetsInWorkout(dbCtx, workoutId);
+    setBestSetIds(bests);
+    setTemplateSaved(false);
+    setTemplateName('');
+    setFinishBwInput('');
     setShowFinishModal(true);
   }
 
@@ -492,6 +507,13 @@ export default function Today(){
       delete intervalRefs.current[key];
     }
     setTimers({});
+    // Log body weight if provided
+    if (dbCtx && finishBwInput.trim()) {
+      const bw = parseFloat(finishBwInput);
+      if (!isNaN(bw) && bw > 0) {
+        await logBodyWeight(dbCtx, { id: Crypto.randomUUID(), date: new Date().toISOString(), weight: bw });
+      }
+    }
     // Save notes and clear persisted active workout
     if (dbCtx) {
       if (workoutNotes.trim() && workoutId) {
@@ -540,6 +562,12 @@ export default function Today(){
     if (swapIdx < 0 || swapIdx >= blocks.length) return;
     await swapBlockOrder(dbCtx, blockId, blocks[swapIdx].id);
     await refreshBlocksAndSets();
+  }
+
+  async function handleSaveAsTemplate() {
+    if (!dbCtx || !workoutId || !templateName.trim()) return;
+    await saveWorkoutAsTemplate(dbCtx, workoutId, templateName.trim(), Crypto.randomUUID());
+    setTemplateSaved(true);
   }
 
   async function handleDuplicateBlock(blockId: string) {
@@ -684,10 +712,11 @@ export default function Today(){
                           const idx = s.set_index;
                           const completed = s.is_completed ? true : false;
                           const complete = s.reps!=null && s.weight!=null;
+                          const isBest = bestSetIds.has(s.id);
                           return (
                             <View key={s.id} style={{gap:2}}>
                             <View style={styles.setRow}>
-                              <View style={styles.setBadge}><Text style={styles.setBadgeText}>{idx}</Text></View>
+                              <View style={[styles.setBadge, isBest && styles.setBadgeBest]}><Text style={[styles.setBadgeText, isBest && styles.setBadgeTextBest]}>{idx}</Text></View>
                               <View style={styles.setCell}>
                                 <Text style={styles.setCellLabel}>Reps</Text>
                                 <TextInput
@@ -737,7 +766,7 @@ export default function Today(){
                 })}
                 {/* Inline CTA removed; sticky action bar handles logging */}
                 <View style={styles.timerBox}>
-                  <Text style={timer.running ? styles.timerRunning : undefined}>Rest: {formatTime(timer.timeLeft)}</Text>
+                  <Text style={[timer.running ? styles.timerRunning : undefined, timer.running && timer.timeLeft <= 3 && timer.timeLeft > 0 && styles.timerUrgent]}>Rest: {formatTime(timer.timeLeft)}</Text>
                   <View style={styles.row}>
                     <Button title={timer.running?'Pause':'Resume'} onPress={()=>{ if(timer.timeLeft===0){ startRest(b.id, restDuration); } else { pauseResume(b.id); } }} />
                     <Button title='+30s' onPress={()=>setTimers(prev=>({...prev,[b.id]:{...prev[b.id],timeLeft:(prev[b.id]?.timeLeft??0)+30}}))} />
@@ -869,7 +898,23 @@ export default function Today(){
               <Text style={{color:'#4b5563',fontSize:13,fontStyle:'italic'}}>{workoutNotes}</Text>
             </View>
           ) : null}
-          <View style={[styles.row, {marginTop:12}]}>
+          {/* Body weight prompt */}
+          <View style={{marginTop:8,gap:4}}>
+            <Text style={{fontSize:12,color:'#6b7280'}}>Log body weight (optional)</Text>
+            <TextInput placeholder={`Body weight (${unit})`} value={finishBwInput} onChangeText={setFinishBwInput} keyboardType='numeric' style={styles.finishInput} />
+          </View>
+          {/* Save as template */}
+          <View style={{marginTop:4,gap:4}}>
+            {!templateSaved ? (
+              <View style={styles.row}>
+                <TextInput placeholder='Template name...' value={templateName} onChangeText={setTemplateName} style={[styles.finishInput, {flex:1}]} />
+                <Button title='Save Template' onPress={handleSaveAsTemplate} disabled={!templateName.trim()} />
+              </View>
+            ) : (
+              <Text style={{color:'#059669',fontWeight:'600',fontSize:13}}>Template saved!</Text>
+            )}
+          </View>
+          <View style={[styles.row, {marginTop:8}]}>
             <Button title='Back to Workout' onPress={()=>setShowFinishModal(false)} />
             <Button title='Done' color='#059669' onPress={confirmFinishWorkout} />
           </View>
@@ -965,4 +1010,8 @@ const styles = StyleSheet.create({
   dupBlockBtn:{paddingHorizontal:6,paddingVertical:2,backgroundColor:'#e0e7ff',borderRadius:4},
   dupBlockBtnText:{color:'#4338ca',fontSize:11,fontWeight:'600'},
   setNoteInput:{fontSize:11,color:'#6b7280',paddingVertical:1,paddingHorizontal:8,fontStyle:'italic',minHeight:18},
+  timerUrgent:{fontSize:18,fontWeight:'800',color:'#dc2626'},
+  finishInput:{borderWidth:1,borderColor:'#d1d5db',borderRadius:6,padding:6,fontSize:14},
+  setBadgeBest:{backgroundColor:'#fef3c7',borderWidth:1,borderColor:'#f59e0b'},
+  setBadgeTextBest:{color:'#d97706'},
 });

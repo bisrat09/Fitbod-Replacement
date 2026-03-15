@@ -836,6 +836,84 @@ export async function getSetPRStatus(ctx: Ctx, workoutId: string) {
   return prSetIds;
 }
 
+// ========== ITERATION 13 ==========
+
+// Save current workout as a program template
+export async function saveWorkoutAsTemplate(ctx: Ctx, workoutId: string, programName: string, programId: string) {
+  const ts = nowIso();
+  const workout = await ctx.db.getFirstAsync<any>(`SELECT * FROM workouts WHERE id=? AND user_id=?`, [workoutId, ctx.userId]);
+  if (!workout) return;
+  // Create program
+  await ctx.db.runAsync(
+    `INSERT INTO programs (id,user_id,name,is_active,created_at,updated_at) VALUES (?,?,?,0,?,?)`,
+    [programId, ctx.userId, programName, ts, ts]
+  );
+  // Create single day
+  const dayId = `${programId}_day1`;
+  await ctx.db.runAsync(
+    `INSERT INTO program_days (id,user_id,program_id,day_order,split,created_at,updated_at) VALUES (?,?,?,1,?,?,?)`,
+    [dayId, ctx.userId, programId, workout.split ?? 'full', ts, ts]
+  );
+  // Get blocks and exercises
+  const blocks = await ctx.db.getAllAsync<any>(
+    `SELECT * FROM workout_blocks WHERE user_id=? AND workout_id=? ORDER BY order_index`,
+    [ctx.userId, workoutId]
+  );
+  for (const b of blocks) {
+    const blockExs = await ctx.db.getAllAsync<any>(
+      `SELECT be.exercise_id, COUNT(s.id) AS set_count,
+         AVG(CASE WHEN s.is_warmup=0 THEN s.reps END) AS avg_reps,
+         AVG(CASE WHEN s.is_warmup=0 THEN s.rir END) AS avg_rir
+       FROM block_exercises be
+       LEFT JOIN sets s ON s.block_id=be.block_id AND s.exercise_id=be.exercise_id AND s.user_id=be.user_id
+       WHERE be.user_id=? AND be.block_id=?
+       GROUP BY be.exercise_id
+       ORDER BY be.order_index`,
+      [ctx.userId, b.id]
+    );
+    for (const ex of blockExs) {
+      const pdeId = `${dayId}_${ex.exercise_id}`;
+      await ctx.db.runAsync(
+        `INSERT INTO program_day_exercises (id,user_id,program_day_id,exercise_id,target_reps_min,target_reps_max,target_sets,target_rir,created_at,updated_at) VALUES (?,?,?,?,?,?,?,?,?,?)`,
+        [pdeId, ctx.userId, dayId, ex.exercise_id, Math.round(ex.avg_reps ?? 8), Math.round(ex.avg_reps ?? 8), ex.set_count ?? 3, Math.round(ex.avg_rir ?? 2), ts, ts]
+      );
+    }
+  }
+}
+
+// Archive / unarchive exercises
+export async function archiveExercise(ctx: Ctx, exerciseId: string) {
+  const ts = nowIso();
+  await ctx.db.runAsync(`UPDATE exercises SET is_archived=1, updated_at=? WHERE id=? AND user_id=?`, [ts, exerciseId, ctx.userId]);
+}
+
+export async function unarchiveExercise(ctx: Ctx, exerciseId: string) {
+  const ts = nowIso();
+  await ctx.db.runAsync(`UPDATE exercises SET is_archived=0, updated_at=? WHERE id=? AND user_id=?`, [ts, exerciseId, ctx.userId]);
+}
+
+export async function listArchivedExercises(ctx: Ctx) {
+  return ctx.db.getAllAsync<any>(`SELECT * FROM exercises WHERE user_id=? AND is_archived=1 ORDER BY name`, [ctx.userId]);
+}
+
+// Best set per exercise in a workout (highest est 1RM)
+export async function getBestSetsInWorkout(ctx: Ctx, workoutId: string) {
+  const sets = await ctx.db.getAllAsync<any>(
+    `SELECT s.id, s.exercise_id, s.weight, s.reps FROM sets s
+     WHERE s.user_id=? AND s.workout_id=? AND s.is_warmup=0 AND s.is_completed=1 AND s.weight>0 AND s.reps>0`,
+    [ctx.userId, workoutId]
+  );
+  // Group by exercise, find max est_1rm
+  const bestByEx: Record<string, { id: string; est: number }> = {};
+  for (const s of sets) {
+    const est = s.weight * (1 + s.reps / 30);
+    if (!bestByEx[s.exercise_id] || est > bestByEx[s.exercise_id].est) {
+      bestByEx[s.exercise_id] = { id: s.id, est };
+    }
+  }
+  return new Set(Object.values(bestByEx).map(v => v.id));
+}
+
 // ========== ITERATION 12 ==========
 
 // Body weight tracking
