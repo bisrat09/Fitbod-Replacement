@@ -10,13 +10,13 @@ type ThemeCtx = {
 };
 
 const ThemeContext = createContext<ThemeCtx>({
-  theme: 'light',
-  c: colors.light,
+  theme: 'dark',
+  c: colors.dark,
   toggle: () => {},
 });
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
-  const [theme, setTheme] = useState<Theme>('light');
+  const [theme, setTheme] = useState<Theme>('dark');
 
   useEffect(() => {
     (async () => {
@@ -24,7 +24,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
         const { db, userId } = await bootstrapDb();
         const ctx = { db, userId };
         const saved = await getSetting(ctx, 'theme');
-        if (saved === 'dark') setTheme('dark');
+        if (saved === 'light') setTheme('light');
       } catch {}
     })();
   }, []);

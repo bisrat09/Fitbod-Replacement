@@ -471,3 +471,34 @@ Next Steps
 - Run on device to catch runtime issues.
 - Refactor index.tsx into smaller components.
 - Add integration tests with real SQLite.
+
+---
+
+# Fitlog Dev Log — 2026-03-15 (UI Redesign Phase 1)
+
+Summary
+- Starting Fitbod-style UI redesign. Phase 1 (Theme & Foundation) complete.
+- Analyzed 12 Fitbod screenshots and documented full design spec in TASKS.md.
+- Created TASKS.md for cross-session continuity (design spec + phase checklist).
+
+Phase 1: Theme & Foundation
+
+- **Color palette updated** (`src/theme/colors.ts`): Swapped navy-based dark theme for Fitbod's iOS-style near-black. Key changes: bg `#0f172a` → `#1C1C1E`, card `#1e293b` → `#2C2C2E`, accent `#ef4444` → `#FF3B5C` (pink), green → `#34C759`, gold → `#FFD700`. Light theme also updated to match iOS system colors.
+- **Dark mode default** (`src/theme/ThemeContext.tsx`): Default theme changed from `'light'` to `'dark'`. Loads saved preference on startup — only switches to light if explicitly saved as `'light'`.
+- **4-tab layout** (`app/_layout.tsx`): Reduced from 5 tabs to 4: Workout (barbell), Log (calendar), Progress (trending-up), Settings (cog). Programs moved to hidden route (accessible from Settings). Emoji icons replaced with Ionicons via `@expo/vector-icons`.
+- **Typography constants** (`src/theme/typography.ts`): New file with font size scale (h1=28 through tiny=11) and weight constants (bold/semibold/medium/regular).
+
+Key files
+- `src/theme/colors.ts`: Full palette rewrite (72 lines)
+- `src/theme/ThemeContext.tsx`: Default dark + load logic inverted (51 lines)
+- `app/_layout.tsx`: 4 tabs with Ionicons (67 lines)
+- `src/theme/typography.ts`: New file (16 lines)
+- `TASKS.md`: New file — full Fitbod design spec from screenshots + 7-phase checklist
+- `CLAUDE.md`: Updated with current structure, redesign status, color palette docs
+
+Tests: 186 passing (unchanged — tests are logic-only, not UI)
+
+Next Steps
+- Phase 2: Create 12 reusable components in `src/components/`
+- Phase 3: Split + restyle Workout screen (index.tsx)
+- See TASKS.md for full phase breakdown
