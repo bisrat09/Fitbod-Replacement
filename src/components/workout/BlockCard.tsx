@@ -38,6 +38,7 @@ type BlockCardProps = {
   onTimerPauseResume: () => void;
   onTimerAdjust: (delta: number) => void;
   onTimerReset: () => void;
+  onExercisePress?: (exerciseId: string) => void;
   onImageFetched?: (exerciseId: string, url: string) => void;
 };
 
@@ -47,6 +48,7 @@ export function BlockCard({
   onLogSet, onAddWarmups, onAddDropSets, onSwapExercise,
   onDeleteSet, onSetUpdate, onSetFocus,
   onTimerPauseResume, onTimerAdjust, onTimerReset,
+  onExercisePress,
   onImageFetched,
 }: BlockCardProps) {
   const { c } = useTheme();
@@ -80,30 +82,38 @@ export function BlockCard({
   return (
     <Card done={allDone}>
       {/* Header */}
-      <Pressable onPress={onToggleCollapse} style={styles.header}>
-        <ExerciseImage
-          name={primaryExercise?.exercise_name ?? '?'}
-          imageUrl={primaryExercise?.image_url}
-          size={40}
-          onImageFetched={(url) => onImageFetched?.(primaryExercise?.exercise_id, url)}
-        />
-        <View style={styles.headerInfo}>
-          <Text style={[styles.exerciseName, { color: c.text }]} numberOfLines={1}>
-            {primaryExercise?.exercise_name ?? 'Exercise'}
-          </Text>
-          {subtitle !== '' && (
-            <Text style={[styles.exerciseSub, { color: c.textSecondary }]}>{subtitle}</Text>
-          )}
-        </View>
+      <View style={styles.header}>
+        <Pressable
+          onPress={() => onExercisePress?.(primaryExercise?.exercise_id)}
+          disabled={!onExercisePress}
+          style={styles.headerTapArea}
+        >
+          <ExerciseImage
+            name={primaryExercise?.exercise_name ?? '?'}
+            imageUrl={primaryExercise?.image_url}
+            size={40}
+            onImageFetched={(url) => onImageFetched?.(primaryExercise?.exercise_id, url)}
+          />
+          <View style={styles.headerInfo}>
+            <Text style={[styles.exerciseName, { color: c.text }]} numberOfLines={1}>
+              {primaryExercise?.exercise_name ?? 'Exercise'}
+            </Text>
+            {subtitle !== '' && (
+              <Text style={[styles.exerciseSub, { color: c.textSecondary }]}>{subtitle}</Text>
+            )}
+          </View>
+        </Pressable>
         <View style={styles.headerRight}>
-          <Text style={[styles.progressBadge, { color: c.textSecondary, backgroundColor: c.setBadgeBg }]}>
-            {doneCount}/{totalCount}
-          </Text>
+          <Pressable onPress={onToggleCollapse} hitSlop={8}>
+            <Text style={[styles.progressBadge, { color: c.textSecondary, backgroundColor: c.setBadgeBg }]}>
+              {doneCount}/{totalCount}
+            </Text>
+          </Pressable>
           <Pressable onPress={() => openMenu()} hitSlop={8}>
             <Ionicons name="ellipsis-horizontal" size={20} color={c.textSecondary} />
           </Pressable>
         </View>
-      </Pressable>
+      </View>
 
       {!collapsed && (
         <>
@@ -212,6 +222,12 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 10,
+  },
+  headerTapArea: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    flex: 1,
   },
   headerInfo: {
     flex: 1,

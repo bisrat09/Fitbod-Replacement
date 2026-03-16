@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { View, Text, TextInput, StyleSheet, ScrollView, Share, Vibration } from 'react-native';
+import { View, StyleSheet, ScrollView, Share, Vibration } from 'react-native';
 import { bootstrapDb } from '@/lib/bootstrap';
 import {
   ensureUser, createWorkout, addSet, listWorkoutSets, createExercise,
@@ -18,6 +18,10 @@ import {
   getRecentWorkoutSplits,
   updateExerciseImageUrl,
   getExerciseRecommendations,
+  updateExerciseNotes, getExerciseNotes,
+  updateExerciseRecommendation, getExerciseRecommendation,
+  updateUserUnit,
+  type Recommendation,
 } from '@/lib/dao';
 import * as Crypto from 'expo-crypto';
 import { SEED_EXERCISES } from '@/data/seedExercises';
@@ -28,11 +32,7 @@ import {
   type DurationOption,
 } from '@/lib/workoutGenerator';
 import { useTheme } from '@/theme/ThemeContext';
-import { fontSize, fontWeight as fw } from '@/theme/typography';
-import { Chip } from '@/components/Chip';
-import { PinkButton } from '@/components/PinkButton';
-import { ActionChip } from '@/components/ActionChip';
-import { WorkoutHeader, BlockCard, ExercisePickerSheet, FinishSheet, PlateCalcSheet, StickyBar, PreWorkoutView } from '@/components/workout';
+import { ActiveWorkoutView, ExercisePickerSheet, FinishSheet, PlateCalcSheet, StickyBar, PreWorkoutView } from '@/components/workout';
 
 // ── Picker state (unified add / superset / swap) ──
 type PickerState = {
@@ -64,7 +64,6 @@ export default function Today() {
   const [unit, setUnit] = useState<'lb' | 'kg'>('lb');
 
   // ── Rest timer ──
-  const REST_OPTIONS = [60, 90, 120, 180];
   const [restDuration, setRestDuration] = useState(120);
   const [timers, setTimers] = useState<Record<string, { timeLeft: number; running: boolean }>>({});
   const intervalRefs = useRef<Record<string, NodeJS.Timer>>({});
@@ -109,6 +108,10 @@ export default function Today() {
 
   // ── Workout notes ──
   const [workoutNotes, setWorkoutNotes] = useState('');
+
+  // ── Exercise options (notes + recommendations) ──
+  const [exerciseNotes, setExerciseNotes] = useState<Record<string, string>>({});
+  const [exerciseRecommendations, setExerciseRecommendations] = useState<Record<string, Recommendation>>({});
 
   // ── Preview exercises (pre-workout) ──
   type PreviewExercise = {
@@ -341,11 +344,21 @@ export default function Today() {
     const allExIds = new Set<string>();
     for (const exs of Object.values(blockExercises)) for (const e of exs) allExIds.add(e.exercise_id);
     const previews: Record<string, any[]> = {};
+    const notes: Record<string, string> = {};
+    const recs: Record<string, Recommendation> = {};
     for (const exId of allExIds) {
-      const rows = await lastWorkingSetsForExercise(dbCtx, exId, workoutId);
+      const [rows, note, rec] = await Promise.all([
+        lastWorkingSetsForExercise(dbCtx, exId, workoutId),
+        getExerciseNotes(dbCtx, exId),
+        getExerciseRecommendation(dbCtx, exId),
+      ]);
       if (rows.length > 0) previews[exId] = rows;
+      if (note) notes[exId] = note;
+      if (rec !== 'normal') recs[exId] = rec;
     }
     setLastSets(previews);
+    setExerciseNotes(notes);
+    setExerciseRecommendations(recs);
   }
 
   // ── Set operations ──
@@ -458,6 +471,49 @@ export default function Today() {
     }
     const rows = await listWorkoutSets(dbCtx, workoutId);
     setSets(rows);
+  }
+
+  // ── Exercise options (notes, recommendations, unit, remove) ──
+
+  async function handleExerciseNotesChange(exerciseId: string, notes: string) {
+    if (!dbCtx) return;
+    await updateExerciseNotes(dbCtx, exerciseId, notes);
+    setExerciseNotes(prev => ({ ...prev, [exerciseId]: notes }));
+  }
+
+  async function handleExerciseRecommendationChange(exerciseId: string, rec: Recommendation) {
+    if (!dbCtx) return;
+    await updateExerciseRecommendation(dbCtx, exerciseId, rec);
+    setExerciseRecommendations(prev => {
+      const next = { ...prev };
+      if (rec === 'normal') delete next[exerciseId];
+      else next[exerciseId] = rec;
+      return next;
+    });
+  }
+
+  async function handleUnitToggle() {
+    if (!dbCtx) return;
+    const newUnit = unit === 'lb' ? 'kg' : 'lb';
+    await updateUserUnit(dbCtx, newUnit);
+    setUnit(newUnit);
+  }
+
+  async function handleRemoveExercise(blockId: string, exerciseId: string) {
+    if (!dbCtx || !workoutId) return;
+    const exs = blockExercises[blockId] ?? [];
+    if (exs.length <= 1) {
+      await deleteBlock(dbCtx, blockId);
+    } else {
+      // Remove exercise from superset: delete its sets, then remove block_exercise row
+      const exSets = sets.filter((s: any) => s.block_id === blockId && s.exercise_id === exerciseId);
+      for (const s of exSets) await deleteSet(dbCtx, s.id);
+      await dbCtx.db.runAsync(
+        `DELETE FROM block_exercises WHERE block_id=? AND exercise_id=?`,
+        [blockId, exerciseId]
+      );
+    }
+    await refreshBlocksAndSets();
   }
 
   async function addDefaultWorkingSets(blockId: string, exerciseId: string) {
@@ -679,9 +735,9 @@ export default function Today() {
   return (
     <View style={[styles.container, { backgroundColor: c.bg }]}>
       <ScrollView contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps="handled">
-        {/* Active workout header */}
+        {/* Active workout view */}
         {workoutId && (
-          <WorkoutHeader
+          <ActiveWorkoutView
             prBanner={prBanner}
             elapsed={elapsed}
             workoutStartTime={workoutStartTime}
@@ -691,6 +747,49 @@ export default function Today() {
             suggestedDay={suggestedDay}
             programName={programName}
             unit={unit}
+            blocks={blocks}
+            blockExercises={blockExercises}
+            sets={sets}
+            timers={timers}
+            activeRowByBlock={activeRowByBlock}
+            collapsedBlocks={collapsedBlocks}
+            bestSetIds={bestSetIds}
+            lastSets={lastSets}
+            restDuration={restDuration}
+            weight={weight}
+            reps={reps}
+            rir={rir}
+            rirValue={rirValue}
+            onWeightChange={setWeight}
+            onRepsChange={setReps}
+            onRirChange={setRir}
+            onRestDurationChange={setRestDuration}
+            workoutNotes={workoutNotes}
+            onWorkoutNotesChange={setWorkoutNotes}
+            onAddExercise={() => openPicker('add')}
+            onFinishWorkout={openFinishWorkout}
+            onMoveBlock={(blockId, dir) => moveBlock(blockId, dir)}
+            onToggleCollapse={(blockId) => setCollapsedBlocks((prev) => { const next = new Set(prev); if (next.has(blockId)) next.delete(blockId); else next.add(blockId); return next; })}
+            onDeleteBlock={handleDeleteBlock}
+            onDuplicateBlock={handleDuplicateBlock}
+            onMakeSuperset={(blockId) => openPicker('superset', blockId)}
+            onLogSet={(blockId, exId) => logSetForBlock(blockId, exId)}
+            onAddWarmups={(blockId, exId) => addWarmups(blockId, exId)}
+            onAddDropSets={(blockId, exId) => addDropSets(blockId, exId)}
+            onSwapExercise={(blockId, exId) => openPicker('swap', blockId, exId)}
+            onDeleteSet={handleDeleteSet}
+            onSetUpdate={handleSetUpdate}
+            onSetFocus={(blockId, exId, row) => { setActiveBlockId(blockId); setActiveRowByBlock((prev) => ({ ...prev, [blockId]: { exerciseId: exId, row } })); }}
+            onTimerPauseResume={(blockId) => { const t = timers[blockId]; if (!t || t.timeLeft === 0) startRest(blockId, restDuration); else pauseResume(blockId); }}
+            onTimerAdjust={(blockId, delta) => setTimers((prev) => ({ ...prev, [blockId]: { ...prev[blockId], timeLeft: (prev[blockId]?.timeLeft ?? 0) + delta } }))}
+            onTimerReset={resetTimer}
+            onImageFetched={(exId, url) => { if (dbCtx) updateExerciseImageUrl(dbCtx, exId, url); }}
+            exerciseNotes={exerciseNotes}
+            exerciseRecommendations={exerciseRecommendations}
+            onExerciseNotesChange={handleExerciseNotesChange}
+            onExerciseRecommendationChange={handleExerciseRecommendationChange}
+            onUnitToggle={handleUnitToggle}
+            onRemoveExercise={handleRemoveExercise}
           />
         )}
 
@@ -717,111 +816,6 @@ export default function Today() {
             onSwapWorkout={refreshPreview}
             onImageFetched={(exId, url) => { if (dbCtx) updateExerciseImageUrl(dbCtx, exId, url); }}
           />
-        )}
-
-        {/* Active workout actions */}
-        {workoutId && (
-          <View style={styles.actionsRow}>
-            <View style={{ flex: 1 }}>
-              <PinkButton title="Add Exercise" onPress={() => openPicker('add')} fullWidth />
-            </View>
-            <ActionChip icon="checkmark-done-outline" label="Finish" onPress={openFinishWorkout} />
-          </View>
-        )}
-
-        {/* Rest duration (during workout) */}
-        {workoutId && (
-          <View style={styles.section}>
-            <Text style={[styles.label, { color: c.textSecondary }]}>Rest Timer</Text>
-            <View style={styles.chipsRow}>
-              {REST_OPTIONS.map((sec) => (
-                <Chip key={sec} label={`${sec}s`} selected={restDuration === sec} onPress={() => setRestDuration(sec)} size="sm" />
-              ))}
-            </View>
-          </View>
-        )}
-
-        {/* Global inputs */}
-        <View style={styles.inputsRow}>
-          <View style={styles.inputGroup}>
-            <Text style={[styles.inputLabel, { color: c.textSecondary }]}>Weight</Text>
-            <TextInput
-              value={weight}
-              onChangeText={setWeight}
-              keyboardType="numeric"
-              style={[styles.input, { backgroundColor: c.inputBg, borderColor: c.inputBorder, color: c.text }]}
-            />
-          </View>
-          <View style={styles.inputGroup}>
-            <Text style={[styles.inputLabel, { color: c.textSecondary }]}>Reps</Text>
-            <TextInput
-              value={reps}
-              onChangeText={setReps}
-              keyboardType="numeric"
-              style={[styles.input, { backgroundColor: c.inputBg, borderColor: c.inputBorder, color: c.text }]}
-            />
-          </View>
-          <View style={styles.inputGroup}>
-            <Text style={[styles.inputLabel, { color: c.textSecondary }]}>RIR</Text>
-            <View style={styles.chipsRow}>
-              {[3, 2, 1].map((v) => (
-                <Chip key={v} label={String(v)} selected={rirValue === v} onPress={() => setRir(String(v))} size="sm" />
-              ))}
-            </View>
-          </View>
-        </View>
-
-        {/* Exercise blocks */}
-        {blocks.length > 0 && (
-          <View style={styles.blocksContainer}>
-            {blocks.map((b: any) => (
-              <BlockCard
-                key={b.id}
-                block={b}
-                exercises={blockExercises[b.id] ?? (b.exercise_id ? [{ exercise_id: b.exercise_id, exercise_name: b.exercise_name }] : [])}
-                sets={sets.filter((s: any) => s.block_id === b.id)}
-                timer={timers[b.id] ?? { timeLeft: restDuration, running: false }}
-                activeRow={activeRowByBlock[b.id]}
-                collapsed={collapsedBlocks.has(b.id)}
-                unit={unit}
-                bestSetIds={bestSetIds}
-                lastSets={lastSets}
-                restDuration={restDuration}
-                onMoveUp={() => moveBlock(b.id, 'up')}
-                onMoveDown={() => moveBlock(b.id, 'down')}
-                onToggleCollapse={() => setCollapsedBlocks((prev) => { const next = new Set(prev); if (next.has(b.id)) next.delete(b.id); else next.add(b.id); return next; })}
-                onDelete={() => handleDeleteBlock(b.id)}
-                onDuplicate={() => handleDuplicateBlock(b.id)}
-                onMakeSuperset={() => openPicker('superset', b.id)}
-                onLogSet={(exId) => logSetForBlock(b.id, exId)}
-                onAddWarmups={(exId) => addWarmups(b.id, exId)}
-                onAddDropSets={(exId) => addDropSets(b.id, exId)}
-                onSwapExercise={(exId) => openPicker('swap', b.id, exId)}
-                onDeleteSet={handleDeleteSet}
-                onSetUpdate={handleSetUpdate}
-                onSetFocus={(exId, row) => { setActiveBlockId(b.id); setActiveRowByBlock((prev) => ({ ...prev, [b.id]: { exerciseId: exId, row } })); }}
-                onTimerPauseResume={() => { const t = timers[b.id]; if (!t || t.timeLeft === 0) startRest(b.id, restDuration); else pauseResume(b.id); }}
-                onTimerAdjust={(delta) => setTimers((prev) => ({ ...prev, [b.id]: { ...prev[b.id], timeLeft: (prev[b.id]?.timeLeft ?? 0) + delta } }))}
-                onTimerReset={() => resetTimer(b.id)}
-                onImageFetched={(exId, url) => { if (dbCtx) updateExerciseImageUrl(dbCtx, exId, url); }}
-              />
-            ))}
-          </View>
-        )}
-
-        {/* Workout notes */}
-        {workoutId && (
-          <View style={styles.section}>
-            <Text style={[styles.label, { color: c.textSecondary }]}>Notes</Text>
-            <TextInput
-              placeholder="How did this workout feel?"
-              value={workoutNotes}
-              onChangeText={setWorkoutNotes}
-              multiline
-              style={[styles.notesInput, { backgroundColor: c.inputBg, borderColor: c.inputBorder, color: c.text }]}
-              placeholderTextColor={c.textMuted}
-            />
-          </View>
         )}
       </ScrollView>
 
@@ -888,56 +882,5 @@ const styles = StyleSheet.create({
     padding: 16,
     paddingBottom: 120,
     gap: 12,
-  },
-  section: {
-    gap: 4,
-  },
-  label: {
-    fontSize: fontSize.small,
-    fontWeight: fw.medium,
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
-  },
-  chipsRow: {
-    flexDirection: 'row',
-    gap: 6,
-    flexWrap: 'wrap',
-  },
-  actionsRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  inputsRow: {
-    flexDirection: 'row',
-    gap: 12,
-    alignItems: 'flex-end',
-  },
-  inputGroup: {
-    gap: 4,
-  },
-  inputLabel: {
-    fontSize: fontSize.tiny,
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
-  },
-  input: {
-    borderWidth: 1,
-    borderRadius: 8,
-    padding: 8,
-    width: 70,
-    fontSize: fontSize.caption,
-    fontWeight: fw.semibold,
-  },
-  blocksContainer: {
-    gap: 12,
-  },
-  notesInput: {
-    borderWidth: 1,
-    borderRadius: 8,
-    padding: 10,
-    fontSize: fontSize.caption,
-    minHeight: 48,
-    textAlignVertical: 'top',
   },
 });

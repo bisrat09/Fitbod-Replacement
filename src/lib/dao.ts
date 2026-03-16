@@ -89,6 +89,21 @@ export async function updateExerciseImageUrl(ctx: Ctx, exerciseId: string, image
   );
 }
 
+export async function updateExerciseNotes(ctx: Ctx, exerciseId: string, notes: string) {
+  await ctx.db.runAsync(
+    `UPDATE exercises SET notes=?, updated_at=? WHERE id=? AND user_id=?`,
+    [notes, nowIso(), exerciseId, ctx.userId]
+  );
+}
+
+export async function getExerciseNotes(ctx: Ctx, exerciseId: string): Promise<string> {
+  const row = await ctx.db.getFirstAsync<{ notes: string | null }>(
+    `SELECT notes FROM exercises WHERE id=? AND user_id=?`,
+    [exerciseId, ctx.userId]
+  );
+  return row?.notes ?? '';
+}
+
 export type Recommendation = 'normal' | 'more' | 'less' | 'never';
 
 export async function updateExerciseRecommendation(ctx: Ctx, exerciseId: string, recommendation: Recommendation) {

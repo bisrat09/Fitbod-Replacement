@@ -199,16 +199,27 @@ Restructuring the workout screen into distinct pre-workout and active-workout vi
 - [x] Barrel exports updated in `src/components/workout/index.ts`
 - [x] 249 tests passing (10 new in `preWorkoutComponents.test.ts`)
 
-### Phase 3: Active Workout Screen — PENDING
-- [ ] ActiveWorkoutView component — exercise blocks, set rows, timer, notes
-- [ ] Further extraction from index.tsx
+### Phase 3: Active Workout Screen — DONE
+- [x] `ActiveWorkoutView` component (196 lines) — WorkoutHeader, actions row (Add Exercise + Finish), rest timer chips, global inputs (weight/reps/RIR), BlockCard list, workout notes
+- [x] `index.tsx` refactored: inline active workout JSX replaced with `<ActiveWorkoutView />`, removed unused imports (`Text`, `TextInput`, `Chip`, `PinkButton`, `ActionChip`), `REST_OPTIONS` constant, and 10 dead styles. File reduced from ~943 to ~820 lines
+- [x] Barrel export updated in `src/components/workout/index.ts`
+- [x] 249 tests passing
 
-### Phase 4: Exercise Detail Modal — PENDING
-- [ ] Full-screen modal with hero image, set rows, log set
+### Phase 4: Exercise Detail Modal — DONE
+- [x] `ExerciseDetailModal` component (195 lines) — full-screen `pageSheet` modal with hero image (120px ExerciseImage), superset badge, exercise name, progress text, action chips (rest timer, replace, warm-up), column headers, SetRow list, + Add Set, RestTimer overlay
+- [x] `BlockCard` updated — split header into tap-to-detail (exercise image+name) and tap-to-collapse (progress badge); added `onExercisePress` callback + `headerTapArea` style
+- [x] `ActiveWorkoutView` updated — manages `detailTarget` state (`{ blockId, exerciseId } | null`), resolves exercise data from blocks/sets/timers, renders `ExerciseDetailModal` with all callbacks wired
+- [x] Barrel export updated in `src/components/workout/index.ts`
+- [x] 249 tests passing
 
-### Phase 5: Exercise Menus — PENDING
-- [ ] ExerciseOptionsSheet (notes, warmup, units, recommend more/less)
-- [ ] ExerciseMoreSheet (history, replace, more)
+### Phase 5: Exercise Menus — DONE
+- [x] `ExerciseOptionsSheet` component — BottomSheet with notes input, Add Warm-up, unit toggle (lb/kg segmented), recommendation chips (More/Less/Never with toggle behavior), Remove from Workout (danger)
+- [x] `ExerciseDetailModal` — added "More" (⋯) ActionChip to open options sheet
+- [x] `ActiveWorkoutView` — manages `showOptions` state, wires ExerciseOptionsSheet with exercise notes/recommendations/unit/remove callbacks
+- [x] `index.tsx` — new handlers: `handleExerciseNotesChange`, `handleExerciseRecommendationChange`, `handleUnitToggle`, `handleRemoveExercise`; loads notes/recs in `fetchLastTimePreviews`
+- [x] DAO: `updateExerciseNotes()`, `getExerciseNotes()` added to `dao.ts`
+- [x] Barrel export updated in `src/components/workout/index.ts`
+- [x] 249 tests passing
 
 ### Phase 6: Polish + Tests + Cleanup — PENDING
 - [ ] Final index.tsx cleanup, remove dead code

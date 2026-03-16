@@ -140,11 +140,14 @@ See TASKS.md for the full Fitbod design spec and phase checklist.
 - **Phase 6: Settings & Equipment** — DONE (grouped sections, segmented controls, Switch, toggle rows)
 - **Phase 7: Polish & Cleanup** — DONE (all hardcoded hex removed, consistent spacing)
 
-## New Workout Flow Redesign — IN PROGRESS
+## New Workout Flow Redesign — Phases 1-5 DONE
 See TASKS.md for full phase breakdown.
 - **Phase 1: DB Migration + Data Layer** — DONE (recommendation column, workoutGenerator.ts, DAO functions)
 - **Phase 2: Pre-Workout Screen** — DONE (PreWorkoutView, TargetMuscles, ExerciseListItem, preview generation)
-- **Phase 3-6** — PENDING (ActiveWorkoutView, Exercise Detail Modal, Exercise Menus, Polish)
+- **Phase 3: Active Workout Screen** — DONE (ActiveWorkoutView extraction, index.tsx ~943→~820 lines)
+- **Phase 4: Exercise Detail Modal** — DONE (full-screen pageSheet, hero image, action chips, SetRow list, RestTimer overlay, BlockCard header split)
+- **Phase 5: Exercise Menus** — DONE (ExerciseOptionsSheet with notes, warmup, unit toggle, recommendation chips, remove)
+- **Phase 6: Polish + Tests + Cleanup** — PENDING
 
 ### Smart Workout Generator (`src/lib/workoutGenerator.ts`)
 - `suggestSplit()` — picks stalest split from workout history
@@ -158,3 +161,9 @@ See TASKS.md for full phase breakdown.
 - `less` — deprioritized
 - `never` — excluded entirely
 - DAO: `updateExerciseRecommendation()`, `getExerciseRecommendation()`, `getExerciseRecommendations()`
+- DAO: `updateExerciseNotes()`, `getExerciseNotes()` — exercise-level notes persisted to SQLite
+
+### Workout Components (`src/components/workout/`)
+- `WorkoutHeader`, `BlockCard`, `ExercisePickerSheet`, `ExerciseDetailModal`
+- `FinishSheet`, `PlateCalcSheet`, `StickyBar`, `PreWorkoutView`, `ActiveWorkoutView`
+- `TargetMuscles`, `ExerciseListItem`, `ExerciseOptionsSheet`

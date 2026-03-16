@@ -1,9 +1,12 @@
 export { WorkoutHeader } from './WorkoutHeader';
 export { BlockCard } from './BlockCard';
 export { ExercisePickerSheet } from './ExercisePickerSheet';
+export { ExerciseDetailModal } from './ExerciseDetailModal';
 export { FinishSheet } from './FinishSheet';
 export { PlateCalcSheet } from './PlateCalcSheet';
 export { StickyBar } from './StickyBar';
 export { PreWorkoutView } from './PreWorkoutView';
+export { ActiveWorkoutView } from './ActiveWorkoutView';
 export { TargetMuscles, computeTargetMuscles } from './TargetMuscles';
 export { ExerciseListItem } from './ExerciseListItem';
+export { ExerciseOptionsSheet } from './ExerciseOptionsSheet';
