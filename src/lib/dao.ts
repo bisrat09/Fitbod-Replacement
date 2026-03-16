@@ -89,6 +89,49 @@ export async function updateExerciseImageUrl(ctx: Ctx, exerciseId: string, image
   );
 }
 
+export type Recommendation = 'normal' | 'more' | 'less' | 'never';
+
+export async function updateExerciseRecommendation(ctx: Ctx, exerciseId: string, recommendation: Recommendation) {
+  await ctx.db.runAsync(
+    `UPDATE exercises SET recommendation=?, updated_at=? WHERE id=? AND user_id=?`,
+    [recommendation, nowIso(), exerciseId, ctx.userId]
+  );
+}
+
+export async function getExerciseRecommendation(ctx: Ctx, exerciseId: string): Promise<Recommendation> {
+  const row = await ctx.db.getFirstAsync<{ recommendation: string }>(
+    `SELECT recommendation FROM exercises WHERE id=? AND user_id=?`,
+    [exerciseId, ctx.userId]
+  );
+  const val = row?.recommendation;
+  if (val === 'more' || val === 'less' || val === 'never') return val;
+  return 'normal';
+}
+
+export async function getExerciseRecommendations(ctx: Ctx): Promise<Map<string, Recommendation>> {
+  const rows = await ctx.db.getAllAsync<{ id: string; recommendation: string }>(
+    `SELECT id, recommendation FROM exercises WHERE user_id=? AND recommendation != 'normal'`,
+    [ctx.userId]
+  );
+  const map = new Map<string, Recommendation>();
+  for (const r of rows) {
+    if (r.recommendation === 'more' || r.recommendation === 'less' || r.recommendation === 'never') {
+      map.set(r.id, r.recommendation);
+    }
+  }
+  return map;
+}
+
+export async function listExerciseHistory(ctx: Ctx, exerciseId: string, limit = 5) {
+  return ctx.db.getAllAsync<any>(
+    `SELECT s.weight, s.reps, s.rir, s.is_warmup, s.is_completed, s.notes, w.date
+     FROM sets s JOIN workouts w ON s.workout_id = w.id
+     WHERE s.user_id=? AND s.exercise_id=? AND s.is_completed=1 AND s.is_warmup=0
+     ORDER BY w.date DESC, s.set_index ASC LIMIT ?`,
+    [ctx.userId, exerciseId, limit * 5]
+  );
+}
+
 export async function listExercises(ctx: Ctx, q?: string) {
   if (q && q.trim().length) {
     return ctx.db.getAllAsync(`SELECT * FROM exercises WHERE user_id=? AND name LIKE ? AND is_archived=0 ORDER BY name`, [ctx.userId, `%${q}%`]);

@@ -22,8 +22,10 @@ export function ExerciseImage({ name, imageUrl, size = 40, onImageFetched }: Exe
   // Seed cache if we have a pre-loaded URL
   useEffect(() => {
     if (imageUrl) {
+      const proxied = proxyUrl(imageUrl);
+      console.log(`[IMG] ${name}: SQLite → ${proxied.substring(0, 60)}...`);
       cacheExerciseGif(name, imageUrl);
-      setUrl(proxyUrl(imageUrl));
+      setUrl(proxied);
       setFailed(false);
     }
   }, [imageUrl, name]);
@@ -34,9 +36,14 @@ export function ExerciseImage({ name, imageUrl, size = 40, onImageFetched }: Exe
     let cancelled = false;
 
     fetchExerciseGif(name).then((gifUrl) => {
-      if (cancelled || !gifUrl) return;
-      setUrl(gifUrl);
-      onImageFetched?.(gifUrl);
+      if (cancelled) return;
+      if (gifUrl) {
+        console.log(`[IMG] ${name}: map → ${gifUrl.substring(0, 60)}...`);
+        setUrl(gifUrl);
+        onImageFetched?.(gifUrl);
+      } else {
+        console.log(`[IMG] ${name}: NO MATCH in map`);
+      }
     });
 
     return () => { cancelled = true; };
@@ -47,7 +54,11 @@ export function ExerciseImage({ name, imageUrl, size = 40, onImageFetched }: Exe
       <Image
         source={{ uri: url }}
         style={[styles.image, { width: size, height: size, borderRadius: size / 2 }]}
-        onError={() => setFailed(true)}
+        onError={(e) => {
+          console.log(`[IMG] ${name}: FAILED — ${(e.nativeEvent as any)?.error || 'unknown'}`);
+          setFailed(true);
+        }}
+        onLoad={() => console.log(`[IMG] ${name}: OK`)}
         resizeMode="cover"
       />
     );

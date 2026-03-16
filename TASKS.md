@@ -178,6 +178,44 @@
 
 ---
 
+## New Workout Flow Redesign — IN PROGRESS
+
+Restructuring the workout screen into distinct pre-workout and active-workout views with smart exercise preview, Fitbod-style "Up Next" screen, and recommendation-aware generation.
+
+### Phase 1: DB Migration + Data Layer — DONE
+- [x] Migration `008_exercise_recommendation.ts` — adds `recommendation` column (`normal`/`more`/`less`/`never`) to exercises table
+- [x] DAO functions: `updateExerciseRecommendation()`, `getExerciseRecommendation()`, `getExerciseRecommendations()`
+- [x] `workoutGenerator.ts` — new pure logic module: `suggestSplit()` (stalest split wins), `selectExercises()` (60/40 compound/isolation, respects favorites + recency + recommendations)
+- [x] `DURATION_EXERCISE_COUNT`, `DURATION_OPTIONS`, `SPLIT_MUSCLES`, `formatStaleness()` exported
+- [x] 239 tests passing (5 new in `workoutGenerator.test.ts`)
+
+### Phase 2: Pre-Workout Screen — DONE
+- [x] `PreWorkoutView` component — "Up Next" header, Swap button, duration/split chips, exercise list preview, Start/Quick Start buttons
+- [x] `TargetMuscles` component — horizontal scroll of muscle badges with percentages
+- [x] `ExerciseListItem` component — exercise image, name, subtitle, menu button
+- [x] `targetMuscles.ts` utility — extracted pure `computeTargetMuscles()` for testability
+- [x] `index.tsx` refactored: inline pre-workout JSX replaced with `<PreWorkoutView />`, `refreshPreview()` generates preview exercises using `selectExercises` + `progressiveOverload` without DB writes
+- [x] `WorkoutHeader` now only renders during active workout (no duplication with PreWorkoutView)
+- [x] Barrel exports updated in `src/components/workout/index.ts`
+- [x] 249 tests passing (10 new in `preWorkoutComponents.test.ts`)
+
+### Phase 3: Active Workout Screen — PENDING
+- [ ] ActiveWorkoutView component — exercise blocks, set rows, timer, notes
+- [ ] Further extraction from index.tsx
+
+### Phase 4: Exercise Detail Modal — PENDING
+- [ ] Full-screen modal with hero image, set rows, log set
+
+### Phase 5: Exercise Menus — PENDING
+- [ ] ExerciseOptionsSheet (notes, warmup, units, recommend more/less)
+- [ ] ExerciseMoreSheet (history, replace, more)
+
+### Phase 6: Polish + Tests + Cleanup — PENDING
+- [ ] Final index.tsx cleanup, remove dead code
+- [ ] Additional test coverage
+
+---
+
 ## Backlog
 - [ ] On-device testing pass
 - [ ] Add integration tests with real SQLite

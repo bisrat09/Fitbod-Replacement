@@ -120,13 +120,19 @@ export function selectExercises(
   split: string,
   count: number,
   recency: RecencyEntry[],
-  favoriteIds: Set<string>
+  favoriteIds: Set<string>,
+  recommendations?: Map<string, string>
 ): AvailableExercise[] {
   const targetMuscles = new Set(SPLIT_MUSCLES[split] ?? SPLIT_MUSCLES.full);
   const recencyMap = new Map(recency.map((r) => [r.exercise_id, r.last_used]));
 
+  // Filter out 'never' recommended exercises
+  const filtered = recommendations
+    ? availableExercises.filter((ex) => recommendations.get(ex.id) !== 'never')
+    : availableExercises;
+
   // Filter to exercises matching the split's muscles
-  const matching = availableExercises.filter((ex) => {
+  const matching = filtered.filter((ex) => {
     const exMuscles = ex.muscle_groups.split(',').map((s) => s.trim());
     return exMuscles.some((m) => targetMuscles.has(m));
   });
@@ -140,6 +146,15 @@ export function selectExercises(
       const aFav = favoriteIds.has(a.id) ? 0 : 1;
       const bFav = favoriteIds.has(b.id) ? 0 : 1;
       if (aFav !== bFav) return aFav - bFav;
+
+      // Recommendation boost/penalty
+      if (recommendations) {
+        const aRec = recommendations.get(a.id);
+        const bRec = recommendations.get(b.id);
+        const aBoost = aRec === 'more' ? 0 : aRec === 'less' ? 2 : 1;
+        const bBoost = bRec === 'more' ? 0 : bRec === 'less' ? 2 : 1;
+        if (aBoost !== bBoost) return aBoost - bBoost;
+      }
 
       // Stalest first (never used = earliest possible date)
       const aDate = recencyMap.get(a.id) ?? '0000-00-00';
@@ -163,7 +178,7 @@ export function selectExercises(
   if (selected.length < count) {
     const selectedIds = new Set(selected.map((e) => e.id));
     const remaining = sortByPriority(
-      availableExercises.filter((ex) => !selectedIds.has(ex.id))
+      filtered.filter((ex) => !selectedIds.has(ex.id))
     );
     for (const ex of remaining) {
       if (selected.length >= count) break;

@@ -17,6 +17,7 @@ import {
   repeatWorkout, listWorkoutDetail, updateWorkoutDuration,
   getRecentWorkoutSplits,
   updateExerciseImageUrl,
+  getExerciseRecommendations,
 } from '@/lib/dao';
 import * as Crypto from 'expo-crypto';
 import { SEED_EXERCISES } from '@/data/seedExercises';
@@ -31,7 +32,7 @@ import { fontSize, fontWeight as fw } from '@/theme/typography';
 import { Chip } from '@/components/Chip';
 import { PinkButton } from '@/components/PinkButton';
 import { ActionChip } from '@/components/ActionChip';
-import { WorkoutHeader, BlockCard, ExercisePickerSheet, FinishSheet, PlateCalcSheet, StickyBar } from '@/components/workout';
+import { WorkoutHeader, BlockCard, ExercisePickerSheet, FinishSheet, PlateCalcSheet, StickyBar, PreWorkoutView } from '@/components/workout';
 
 // ── Picker state (unified add / superset / swap) ──
 type PickerState = {
@@ -69,7 +70,6 @@ export default function Today() {
   const intervalRefs = useRef<Record<string, NodeJS.Timer>>({});
 
   // ── Split & program ──
-  const SPLIT_OPTIONS = ['push', 'pull', 'legs', 'upper', 'lower', 'full'];
   const [split, setSplit] = useState('push');
   const [suggestedDay, setSuggestedDay] = useState<any>(null);
 
@@ -109,6 +109,18 @@ export default function Today() {
 
   // ── Workout notes ──
   const [workoutNotes, setWorkoutNotes] = useState('');
+
+  // ── Preview exercises (pre-workout) ──
+  type PreviewExercise = {
+    id: string;
+    name: string;
+    muscle_groups: string;
+    image_url?: string | null;
+    sets: number;
+    reps: number;
+    weight: number;
+  };
+  const [previewExercises, setPreviewExercises] = useState<PreviewExercise[]>([]);
 
   // ═══════════════════════════════════════════════
   // ── Bootstrap ──
@@ -189,6 +201,35 @@ export default function Today() {
   // Refresh blocks/sets when workout changes
   useEffect(() => { if (dbCtx && workoutId) refreshBlocksAndSets(); }, [dbCtx, workoutId]);
   useEffect(() => { fetchLastTimePreviews(); }, [blockExercises]);
+
+  // Generate preview exercises for pre-workout screen
+  async function refreshPreview() {
+    if (!dbCtx || workoutId) return;
+    const exerciseCount = DURATION_EXERCISE_COUNT[duration] ?? 10;
+    const [available, recency, favIds, recs] = await Promise.all([
+      listExercisesAvailableByEquipment(dbCtx),
+      exerciseRecency(dbCtx),
+      listFavoriteExerciseIds(dbCtx),
+      getExerciseRecommendations(dbCtx),
+    ]);
+    const selected = selectExercises(available, split, exerciseCount, recency, new Set(favIds), recs);
+    const previews: PreviewExercise[] = [];
+    for (const ex of selected) {
+      const last = await lastWorkingSetsForExercise(dbCtx, ex.id);
+      const prog = progressiveOverload(last, ex.is_compound === 1, 2.5);
+      previews.push({
+        id: ex.id, name: ex.name, muscle_groups: ex.muscle_groups,
+        image_url: (ex as any).video_url ?? null,
+        sets: 3, reps: prog.reps, weight: prog.weight || (parseFloat(weight) || 0),
+      });
+    }
+    setPreviewExercises(previews);
+  }
+
+  useEffect(() => {
+    if (!dbCtx || workoutId || programName) return;
+    refreshPreview();
+  }, [dbCtx, workoutId, split, duration, programName]);
 
   // ═══════════════════════════════════════════════
   // ── Core workout functions ──
@@ -638,67 +679,48 @@ export default function Today() {
   return (
     <View style={[styles.container, { backgroundColor: c.bg }]}>
       <ScrollView contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps="handled">
-        {/* Header */}
-        <WorkoutHeader
-          prBanner={prBanner}
-          elapsed={elapsed}
-          workoutStartTime={workoutStartTime}
-          workoutId={workoutId}
-          streak={streak}
-          weekCount={weekCount}
-          suggestedDay={suggestedDay}
-          programName={programName}
-          unit={unit}
-        />
-
-        {/* Pre-workout: auto-suggestion, duration, split */}
-        {!workoutId && (
-          <>
-            {/* Auto-suggestion banner (no program active) */}
-            {!programName && autoSuggestion && (
-              <View style={[styles.suggestionBanner, { backgroundColor: c.card, borderColor: c.accent }]}>
-                <Text style={[styles.suggestionText, { color: c.accent }]}>
-                  Suggested: {autoSuggestion.split.toUpperCase()} — {formatStaleness(autoSuggestion.daysSince)}
-                </Text>
-              </View>
-            )}
-
-            {/* Duration selector (no program active) */}
-            {!programName && (
-              <View style={styles.section}>
-                <Text style={[styles.label, { color: c.textSecondary }]}>Duration</Text>
-                <View style={styles.chipsRow}>
-                  {DURATION_OPTIONS.map((d) => (
-                    <Chip key={d} label={`${d} min`} selected={duration === d} onPress={() => handleDurationChange(d)} size="sm" />
-                  ))}
-                </View>
-                <Text style={[styles.exerciseCountHint, { color: c.textMuted }]}>
-                  {DURATION_EXERCISE_COUNT[duration]} exercises
-                </Text>
-              </View>
-            )}
-
-            {/* Split selector (override) */}
-            <View style={styles.section}>
-              <Text style={[styles.label, { color: c.textSecondary }]}>Split</Text>
-              <View style={styles.chipsRow}>
-                {SPLIT_OPTIONS.map((s) => (
-                  <Chip key={s} label={s.toUpperCase()} selected={split === s} onPress={() => setSplit(s)} size="sm" />
-                ))}
-              </View>
-            </View>
-          </>
+        {/* Active workout header */}
+        {workoutId && (
+          <WorkoutHeader
+            prBanner={prBanner}
+            elapsed={elapsed}
+            workoutStartTime={workoutStartTime}
+            workoutId={workoutId}
+            streak={streak}
+            weekCount={weekCount}
+            suggestedDay={suggestedDay}
+            programName={programName}
+            unit={unit}
+          />
         )}
 
-        {/* Action buttons */}
-        {!workoutId ? (
-          <View style={styles.actionsRow}>
-            <View style={{ flex: 1 }}>
-              <PinkButton title="Start Workout" onPress={startWorkout} fullWidth />
-            </View>
-            <ActionChip icon="flash-outline" label="Quick Start" onPress={handleQuickStart} />
-          </View>
-        ) : (
+        {/* Pre-workout view */}
+        {!workoutId && (
+          <PreWorkoutView
+            previewExercises={previewExercises}
+            split={split}
+            duration={duration}
+            unit={unit}
+            autoSuggestionText={
+              !programName && autoSuggestion
+                ? `Suggested: ${autoSuggestion.split.toUpperCase()} — ${formatStaleness(autoSuggestion.daysSince)}`
+                : null
+            }
+            programName={programName}
+            streak={streak}
+            weekCount={weekCount}
+            onDurationChange={handleDurationChange}
+            onSplitChange={setSplit}
+            onStartWorkout={startWorkout}
+            onQuickStart={handleQuickStart}
+            onEquipmentPress={() => import('expo-router').then((m) => m.router.push('/equipment'))}
+            onSwapWorkout={refreshPreview}
+            onImageFetched={(exId, url) => { if (dbCtx) updateExerciseImageUrl(dbCtx, exId, url); }}
+          />
+        )}
+
+        {/* Active workout actions */}
+        {workoutId && (
           <View style={styles.actionsRow}>
             <View style={{ flex: 1 }}>
               <PinkButton title="Add Exercise" onPress={() => openPicker('add')} fullWidth />
@@ -706,12 +728,6 @@ export default function Today() {
             <ActionChip icon="checkmark-done-outline" label="Finish" onPress={openFinishWorkout} />
           </View>
         )}
-
-        {/* Utility links */}
-        <View style={styles.utilRow}>
-          <ActionChip icon="barbell-outline" label="Equipment" onPress={() => import('expo-router').then((m) => m.router.push('/equipment'))} />
-          <ActionChip icon="calculator-outline" label="Plates" onPress={() => setShowPlateCalc(true)} />
-        </View>
 
         {/* Rest duration (during workout) */}
         {workoutId && (
@@ -892,10 +908,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 8,
   },
-  utilRow: {
-    flexDirection: 'row',
-    gap: 8,
-  },
   inputsRow: {
     flexDirection: 'row',
     gap: 12,
@@ -927,20 +939,5 @@ const styles = StyleSheet.create({
     fontSize: fontSize.caption,
     minHeight: 48,
     textAlignVertical: 'top',
-  },
-  suggestionBanner: {
-    borderWidth: 1,
-    borderRadius: 8,
-    paddingVertical: 8,
-    paddingHorizontal: 12,
-  },
-  suggestionText: {
-    fontSize: fontSize.caption,
-    fontWeight: fw.semibold,
-    textAlign: 'center',
-  },
-  exerciseCountHint: {
-    fontSize: fontSize.tiny,
-    marginTop: 2,
   },
 });

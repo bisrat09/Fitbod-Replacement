@@ -51,17 +51,22 @@ src/components/         # Reusable Fitbod-style components
     FinishSheet.tsx     # Workout summary + stats
     PlateCalcSheet.tsx  # Plate calculator
     StickyBar.tsx       # Bottom sticky Log Set button + timer
+    PreWorkoutView.tsx  # Pre-workout planning: Up Next, exercises preview, target muscles
+    TargetMuscles.tsx   # Horizontal scroll muscle badges with percentages
+    ExerciseListItem.tsx # Exercise row: image, name, subtitle, menu
 src/theme/              # Theming (Fitbod-style)
   colors.ts             # Light + dark palettes (Fitbod colors + textOnAccent, goldText)
   ThemeContext.tsx       # Theme provider + useTheme hook (dark default)
   typography.ts         # Font size + weight constants
 src/lib/                # Core logic
-  dao.ts                # All database queries (~1025 lines)
+  dao.ts                # All database queries (~1050 lines)
   db.ts                 # DB init + migration runner
   fitlog_schema.ts      # Base schema v1 as TypeScript string
   bootstrap.ts          # Startup: opens DB, runs migrations, init userId
   progression.ts        # Weight suggestion, Epley 1RM, warmups
-  migrations/           # Incremental schema migrations (v2-v7)
+  workoutGenerator.ts   # Smart split suggestion + exercise selection (pure logic)
+  targetMuscles.ts      # Muscle group percentage computation (pure logic)
+  migrations/           # Incremental schema migrations (v2-v8)
 ```
 
 ## Key Conventions
@@ -74,8 +79,11 @@ src/lib/                # Core logic
 - **Theme**: Use `useTheme()` hook for colors. Never hardcode hex values — use `c.bg`, `c.card`, `c.accent`, etc.
 - **Dark mode default**: App defaults to dark theme (Fitbod-style).
 
-## Schema (v7)
+## Schema (v8)
 Core tables: `users`, `exercises`, `workouts`, `sets`, `workout_blocks`, `block_exercises`, `user_equipment`, `user_favorite_exercises`, `metrics`, `weekly_volume`, `programs`, `program_days`, `program_day_exercises`, `settings`, `app_meta`, `body_weight`.
+
+### v8 Addition
+- `exercises.recommendation` column — `TEXT NOT NULL DEFAULT 'normal'`, values: `normal`/`more`/`less`/`never`
 
 ## Color Palette (Fitbod-style)
 ```
@@ -101,7 +109,7 @@ Hidden routes: Programs, Exercises, Equipment, Recent (Log)
 ```bash
 npm start              # Expo dev server
 npm start -- --clear   # Clear cache
-npm test               # 234 tests
+npm test               # 249 tests
 npm run build:gifmap   # Regenerate exercise GIF map from ExerciseDB API
 npx expo run:ios       # Build + run iOS
 npx expo-doctor        # Check dependencies
@@ -130,4 +138,23 @@ See TASKS.md for the full Fitbod design spec and phase checklist.
 - **Phase 4: History & Workout Summary** — DONE (dark cards, themed calendar, PR badges)
 - **Phase 5: Progress, Programs, Exercises** — DONE (Card components, ExerciseInitial, gold PRs)
 - **Phase 6: Settings & Equipment** — DONE (grouped sections, segmented controls, Switch, toggle rows)
-- **Phase 7: Polish & Cleanup** — DONE (all hardcoded hex removed, consistent spacing, 234 tests passing)
+- **Phase 7: Polish & Cleanup** — DONE (all hardcoded hex removed, consistent spacing)
+
+## New Workout Flow Redesign — IN PROGRESS
+See TASKS.md for full phase breakdown.
+- **Phase 1: DB Migration + Data Layer** — DONE (recommendation column, workoutGenerator.ts, DAO functions)
+- **Phase 2: Pre-Workout Screen** — DONE (PreWorkoutView, TargetMuscles, ExerciseListItem, preview generation)
+- **Phase 3-6** — PENDING (ActiveWorkoutView, Exercise Detail Modal, Exercise Menus, Polish)
+
+### Smart Workout Generator (`src/lib/workoutGenerator.ts`)
+- `suggestSplit()` — picks stalest split from workout history
+- `selectExercises()` — 60% compound / 40% isolation, respects favorites, recency, recommendations
+- `SPLIT_MUSCLES` — maps each split to target muscle groups
+- `DURATION_EXERCISE_COUNT` — 30m=5, 45m=8, 60m=10, 90m=14 exercises
+
+### Exercise Recommendations (`exercises.recommendation` column)
+- `normal` (default) — no special treatment
+- `more` — prioritized in workout generation
+- `less` — deprioritized
+- `never` — excluded entirely
+- DAO: `updateExerciseRecommendation()`, `getExerciseRecommendation()`, `getExerciseRecommendations()`

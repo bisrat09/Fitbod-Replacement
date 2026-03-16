@@ -20,7 +20,7 @@ const cache = new Map<string, string | null>();
  * wsrv.nl is a free, open-source image proxy with valid certificates.
  */
 export function proxyUrl(url: string): string {
-  if (url.includes('static.exercisedb.dev')) {
+  if (url.includes('static.exercisedb.dev') && !url.startsWith('https://wsrv.nl/')) {
     // wsrv.nl proxies the image with valid TLS; n=-1 preserves GIF animation
     return `https://wsrv.nl/?url=${encodeURIComponent(url)}&n=-1`;
   }

@@ -239,6 +239,65 @@ describe('selectExercises', () => {
   });
 });
 
+// ── selectExercises with recommendations ──
+
+describe('selectExercises with recommendations', () => {
+  const makeEx = (
+    id: string,
+    name: string,
+    mg: string,
+    compound: number
+  ): AvailableExercise => ({
+    id,
+    name,
+    muscle_groups: mg,
+    is_compound: compound,
+    required_equipment: null,
+  });
+
+  const exercises = [
+    makeEx('bp', 'Bench Press', 'chest', 1),
+    makeEx('ohp', 'Overhead Press', 'delts', 1),
+    makeEx('fly', 'Cable Fly', 'chest', 0),
+    makeEx('lr', 'Lateral Raise', 'delts', 0),
+    makeEx('td', 'Tricep Dip', 'triceps', 1),
+  ];
+
+  test('filters out "never" recommended exercises', () => {
+    const recs = new Map([['bp', 'never']]);
+    const result = selectExercises(exercises, 'push', 5, [], new Set(), recs);
+    expect(result.find((e) => e.id === 'bp')).toBeUndefined();
+  });
+
+  test('"more" exercises are prioritized', () => {
+    const recs = new Map([['lr', 'more']]);
+    const result = selectExercises(exercises, 'push', 3, [], new Set(), recs);
+    // lr should be included even though it's an isolation and might otherwise be cut
+    expect(result.find((e) => e.id === 'lr')).toBeDefined();
+  });
+
+  test('"less" exercises are deprioritized', () => {
+    const recs = new Map([['bp', 'less']]);
+    const result = selectExercises(exercises, 'push', 2, [], new Set(), recs);
+    // With only 2 slots and bp deprioritized, other compounds should be preferred
+    const bpIdx = result.findIndex((e) => e.id === 'bp');
+    const ohpIdx = result.findIndex((e) => e.id === 'ohp');
+    if (bpIdx >= 0 && ohpIdx >= 0) {
+      expect(ohpIdx).toBeLessThan(bpIdx);
+    }
+  });
+
+  test('works without recommendations (backward compatible)', () => {
+    const result = selectExercises(exercises, 'push', 3, [], new Set());
+    expect(result.length).toBe(3);
+  });
+
+  test('empty recommendations map has no effect', () => {
+    const result = selectExercises(exercises, 'push', 3, [], new Set(), new Map());
+    expect(result.length).toBe(3);
+  });
+});
+
 // ── formatStaleness ──
 
 describe('formatStaleness', () => {

@@ -35,6 +35,9 @@ export const colors = {
     completedBg: '#E8FAE8',
     textOnAccent: '#FFFFFF',
     goldText: '#78350F',
+    stopButton: '#FF3B30',
+    heroOverlay: 'rgba(0,0,0,0.5)',
+    timerDot: '#FF3B30',
   },
   dark: {
     bg: '#1C1C1E',
@@ -70,6 +73,9 @@ export const colors = {
     completedBg: '#1A3A1A',
     textOnAccent: '#FFFFFF',
     goldText: '#78350F',
+    stopButton: '#FF453A',
+    heroOverlay: 'rgba(0,0,0,0.5)',
+    timerDot: '#FF453A',
   },
 };
 
