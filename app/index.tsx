@@ -4,7 +4,7 @@ import { bootstrapDb } from '@/lib/bootstrap';
 import {
   ensureUser, createWorkout, addSet, listWorkoutSets, createExercise,
   listBlocksWithExercises, createBlock, addBlockExercise,
-  listExercisesAvailableByEquipment, getExercise, findExerciseByName,
+  listExercisesAvailableByEquipment, getExercise,
   getNextSetIndex, updateSet, listBlockExercisesWithNames,
   listFavoriteExerciseIds, lastWorkingSetsForExercise, upsertMetric,
   getBestMetric, replaceBlockExercise, getUserUnit, computeWeeklyVolume,
@@ -15,9 +15,17 @@ import {
   getWorkoutsThisWeek, duplicateBlock, saveWorkoutAsTemplate,
   logBodyWeight, getBestSetsInWorkout, getMostRecentWorkoutId,
   repeatWorkout, listWorkoutDetail, updateWorkoutDuration,
+  getRecentWorkoutSplits,
+  updateExerciseImageUrl,
 } from '@/lib/dao';
 import * as Crypto from 'expo-crypto';
-import { suggestNextWeight, epley1RM, formatWorkoutSummary, roundToIncrement, generateWarmupWeights } from '@/lib/progression';
+import { SEED_EXERCISES } from '@/data/seedExercises';
+import { suggestNextWeight, epley1RM, formatWorkoutSummary, roundToIncrement, generateWarmupWeights, progressiveOverload } from '@/lib/progression';
+import {
+  suggestSplit, selectExercises, formatStaleness,
+  DURATION_EXERCISE_COUNT, DURATION_OPTIONS,
+  type DurationOption,
+} from '@/lib/workoutGenerator';
 import { useTheme } from '@/theme/ThemeContext';
 import { fontSize, fontWeight as fw } from '@/theme/typography';
 import { Chip } from '@/components/Chip';
@@ -64,6 +72,13 @@ export default function Today() {
   const SPLIT_OPTIONS = ['push', 'pull', 'legs', 'upper', 'lower', 'full'];
   const [split, setSplit] = useState('push');
   const [suggestedDay, setSuggestedDay] = useState<any>(null);
+
+  // ── Auto-generation ──
+  const [duration, setDuration] = useState<DurationOption>(60);
+  const [autoSuggestion, setAutoSuggestion] = useState<{
+    split: string;
+    daysSince: number | null;
+  } | null>(null);
   const [programName, setProgramName] = useState<string | null>(null);
 
   // ── PR banner ──
@@ -105,36 +120,22 @@ export default function Today() {
       const ctx = { db, userId };
       await ensureUser(ctx, { id: userId, display_name: 'You', unit: 'lb' });
 
-      // Seed demo exercises
-      const seed = [
-        { name: 'Barbell Bench Press', req: 'barbell,bench', mg: 'chest,triceps,front_delts' },
-        { name: 'Dumbbell Bench Press', req: 'dumbbells,bench', mg: 'chest,triceps,front_delts' },
-        { name: 'Back Squat', req: 'barbell,rack', mg: 'quads,glutes,hamstrings' },
-        { name: 'Pull-up', req: 'pullup_bar', mg: 'lats,biceps,upper_back' },
-        { name: 'Cable Row', req: 'cable', mg: 'lats,upper_back,biceps' },
-        { name: 'Overhead Press', req: 'barbell,rack', mg: 'delts,triceps,upper_chest' },
-        { name: 'Deadlift', req: 'barbell', mg: 'hamstrings,glutes,lower_back,upper_back' },
-        { name: 'Romanian Deadlift', req: 'barbell', mg: 'hamstrings,glutes,lower_back' },
-        { name: 'Lat Pulldown', req: 'cable', mg: 'lats,biceps,upper_back' },
-        { name: 'Lateral Raise', req: 'dumbbells', mg: 'delts' },
-        { name: 'Barbell Curl', req: 'barbell', mg: 'biceps' },
-        { name: 'Tricep Pushdown', req: 'cable', mg: 'triceps' },
-        { name: 'Leg Press', req: 'rack', mg: 'quads,glutes' },
-        { name: 'Leg Curl', req: 'cable', mg: 'hamstrings' },
-        { name: 'Face Pull', req: 'cable', mg: 'rear_delts,upper_back' },
-        { name: 'Dips', req: '', mg: 'chest,triceps,front_delts' },
-        { name: 'Incline Dumbbell Press', req: 'dumbbells,bench', mg: 'upper_chest,triceps,front_delts' },
-        { name: 'Barbell Row', req: 'barbell', mg: 'upper_back,lats,biceps' },
-        { name: 'Front Squat', req: 'barbell,rack', mg: 'quads,glutes,core' },
-        { name: 'Hip Thrust', req: 'barbell,bench', mg: 'glutes,hamstrings' },
-      ];
-      for (const s of seed) {
-        const existing = await findExerciseByName(ctx, s.name);
-        if (existing) continue;
-        await createExercise(ctx, {
-          id: Crypto.randomUUID(), name: s.name, muscle_groups: s.mg,
-          is_compound: 1, required_equipment: s.req, tags: 'primary', default_increment: 2.5,
-        });
+      // Seed exercise library (batch check for efficiency)
+      const existingRows = await ctx.db.getAllAsync<{ name: string }>(
+        `SELECT name FROM exercises WHERE user_id = ?`,
+        [ctx.userId]
+      );
+      const existingNames = new Set(existingRows.map(r => r.name));
+      const toInsert = SEED_EXERCISES.filter(s => !existingNames.has(s.name));
+      if (toInsert.length > 0) {
+        await ctx.db.execAsync('BEGIN TRANSACTION');
+        for (const s of toInsert) {
+          await createExercise(ctx, {
+            id: Crypto.randomUUID(), name: s.name, muscle_groups: s.mg,
+            is_compound: s.compound, default_increment: 2.5,
+          });
+        }
+        await ctx.db.execAsync('COMMIT');
       }
 
       const userUnit = await getUserUnit(ctx);
@@ -148,6 +149,19 @@ export default function Today() {
         setProgramName(prog.name);
         const nextDay = await getNextProgramDay(ctx, prog.id);
         if (nextDay) { setSuggestedDay(nextDay); setSplit(nextDay.split || 'push'); }
+      } else {
+        // Auto-suggest split when no program is active
+        const recentWorkouts = await getRecentWorkoutSplits(ctx);
+        const suggestion = suggestSplit(recentWorkouts);
+        setAutoSuggestion(suggestion);
+        setSplit(suggestion.split);
+        const savedDuration = await getSetting(ctx, 'preferred_duration');
+        if (savedDuration) {
+          const d = parseInt(savedDuration);
+          if ((DURATION_OPTIONS as readonly number[]).includes(d)) {
+            setDuration(d as DurationOption);
+          }
+        }
       }
 
       const activeWid = await getSetting(ctx, 'active_workout_id');
@@ -191,9 +205,10 @@ export default function Today() {
     await createWorkout(dbCtx, { id, date: new Date().toISOString(), split });
     await setSetting(dbCtx, 'active_workout_id', id);
     await setSetting(dbCtx, 'workout_start_time', String(now));
-    setWorkoutId(id); setSets([]); setBlocks([]);
-    setWorkoutStartTime(now); setElapsed(0);
 
+    // Populate exercises BEFORE setting workoutId in state.
+    // Otherwise React flushes the state update during awaits,
+    // triggering refreshBlocksAndSets() before exercises are in the DB.
     if (suggestedDay) {
       const dayExs = await listProgramDayExercises(dbCtx, suggestedDay.id);
       for (let i = 0; i < dayExs.length; i++) {
@@ -212,7 +227,51 @@ export default function Today() {
           nextIdx++;
         }
       }
+    } else {
+      await autoPopulateExercises(id);
     }
+
+    // Now set state — useEffect will fire refreshBlocksAndSets() and find the populated workout
+    setWorkoutId(id); setSets([]); setBlocks([]);
+    setWorkoutStartTime(now); setElapsed(0);
+  }
+
+  async function autoPopulateExercises(workoutId: string) {
+    if (!dbCtx) return;
+    const exerciseCount = DURATION_EXERCISE_COUNT[duration] ?? 10;
+    const [available, recency, favIds] = await Promise.all([
+      listExercisesAvailableByEquipment(dbCtx),
+      exerciseRecency(dbCtx),
+      listFavoriteExerciseIds(dbCtx),
+    ]);
+
+    const selected = selectExercises(
+      available, split, exerciseCount, recency, new Set(favIds)
+    );
+
+    for (let i = 0; i < selected.length; i++) {
+      const blockId = Crypto.randomUUID();
+      const beId = Crypto.randomUUID();
+      await createBlock(dbCtx, { id: blockId, workout_id: workoutId, kind: 'single', order_index: i + 1, notes: null });
+      await addBlockExercise(dbCtx, { id: beId, block_id: blockId, exercise_id: selected[i].id, order_index: 1 });
+      let nextIdx = await getNextSetIndex(dbCtx, workoutId);
+      const lastSets = await lastWorkingSetsForExercise(dbCtx, selected[i].id);
+      const ex = await getExercise(dbCtx, selected[i].id);
+      const inc = (ex as any)?.default_increment ?? 2.5;
+      const prog = progressiveOverload(lastSets, selected[i].is_compound === 1, inc);
+      const w = prog.weight || (parseFloat(weight) || 0);
+      const r = prog.reps;
+      const rirVal = 2;
+      for (let s = 0; s < 3; s++) {
+        await addSet(dbCtx, { id: Crypto.randomUUID(), workout_id: workoutId, exercise_id: selected[i].id, set_index: nextIdx, weight: w, reps: r, rir: rirVal, is_warmup: 0, block_id: blockId });
+        nextIdx++;
+      }
+    }
+  }
+
+  async function handleDurationChange(d: DurationOption) {
+    setDuration(d);
+    if (dbCtx) await setSetting(dbCtx, 'preferred_duration', String(d));
   }
 
   async function handleQuickStart() {
@@ -253,6 +312,24 @@ export default function Today() {
   async function handleSetUpdate(setId: string, updates: Record<string, any>) {
     if (!dbCtx || !workoutId) return;
     await updateSet(dbCtx, { id: setId, ...updates });
+
+    // Auto-fill weight to subsequent uncompleted sets of the same exercise
+    if (updates.weight !== undefined) {
+      const updatedSet = sets.find((s: any) => s.id === setId);
+      if (updatedSet) {
+        const exSets = sets.filter((s: any) =>
+          s.exercise_id === updatedSet.exercise_id &&
+          s.block_id === updatedSet.block_id
+        );
+        const updatedIdx = exSets.findIndex((s: any) => s.id === setId);
+        for (let i = updatedIdx + 1; i < exSets.length; i++) {
+          if (!exSets[i].is_completed) {
+            await updateSet(dbCtx, { id: exSets[i].id, weight: updates.weight });
+          }
+        }
+      }
+    }
+
     const rows = await listWorkoutSets(dbCtx, workoutId);
     setSets(rows);
   }
@@ -345,12 +422,16 @@ export default function Today() {
   async function addDefaultWorkingSets(blockId: string, exerciseId: string) {
     if (!dbCtx || !workoutId) return;
     let nextIdx = await getNextSetIndex(dbCtx, workoutId);
-    const lastTop = await latestExerciseTopSet(dbCtx, exerciseId) as any;
-    const w = lastTop?.weight ?? (parseFloat(weight) || 0);
-    const r = lastTop?.reps ?? (parseInt(reps) || 0);
-    const rirVal = lastTop?.rir ?? (isNaN(parseInt(rir)) ? null : parseInt(rir));
+    const lastSets = await lastWorkingSetsForExercise(dbCtx, exerciseId, workoutId);
+    const ex = await getExercise(dbCtx, exerciseId);
+    const inc = (ex as any)?.default_increment ?? 2.5;
+    const isCompound = (ex as any)?.is_compound === 1;
+    const prog = progressiveOverload(lastSets, isCompound, inc);
+    const w = prog.weight || (parseFloat(weight) || 0);
+    const r = prog.reps;
+    const rirVal = 2;
     for (let i = 0; i < 3; i++) {
-      await addSet(dbCtx, { id: Crypto.randomUUID(), workout_id: workoutId, exercise_id: exerciseId, set_index: nextIdx, weight: w, reps: r, rir: rirVal as any, is_warmup: 0, block_id: blockId });
+      await addSet(dbCtx, { id: Crypto.randomUUID(), workout_id: workoutId, exercise_id: exerciseId, set_index: nextIdx, weight: w, reps: r, rir: rirVal, is_warmup: 0, block_id: blockId });
       nextIdx++;
     }
   }
@@ -570,16 +651,43 @@ export default function Today() {
           unit={unit}
         />
 
-        {/* Split selector (pre-workout) */}
+        {/* Pre-workout: auto-suggestion, duration, split */}
         {!workoutId && (
-          <View style={styles.section}>
-            <Text style={[styles.label, { color: c.textSecondary }]}>Split</Text>
-            <View style={styles.chipsRow}>
-              {SPLIT_OPTIONS.map((s) => (
-                <Chip key={s} label={s.toUpperCase()} selected={split === s} onPress={() => setSplit(s)} size="sm" />
-              ))}
+          <>
+            {/* Auto-suggestion banner (no program active) */}
+            {!programName && autoSuggestion && (
+              <View style={[styles.suggestionBanner, { backgroundColor: c.card, borderColor: c.accent }]}>
+                <Text style={[styles.suggestionText, { color: c.accent }]}>
+                  Suggested: {autoSuggestion.split.toUpperCase()} — {formatStaleness(autoSuggestion.daysSince)}
+                </Text>
+              </View>
+            )}
+
+            {/* Duration selector (no program active) */}
+            {!programName && (
+              <View style={styles.section}>
+                <Text style={[styles.label, { color: c.textSecondary }]}>Duration</Text>
+                <View style={styles.chipsRow}>
+                  {DURATION_OPTIONS.map((d) => (
+                    <Chip key={d} label={`${d} min`} selected={duration === d} onPress={() => handleDurationChange(d)} size="sm" />
+                  ))}
+                </View>
+                <Text style={[styles.exerciseCountHint, { color: c.textMuted }]}>
+                  {DURATION_EXERCISE_COUNT[duration]} exercises
+                </Text>
+              </View>
+            )}
+
+            {/* Split selector (override) */}
+            <View style={styles.section}>
+              <Text style={[styles.label, { color: c.textSecondary }]}>Split</Text>
+              <View style={styles.chipsRow}>
+                {SPLIT_OPTIONS.map((s) => (
+                  <Chip key={s} label={s.toUpperCase()} selected={split === s} onPress={() => setSplit(s)} size="sm" />
+                ))}
+              </View>
             </View>
-          </View>
+          </>
         )}
 
         {/* Action buttons */}
@@ -679,6 +787,7 @@ export default function Today() {
                 onTimerPauseResume={() => { const t = timers[b.id]; if (!t || t.timeLeft === 0) startRest(b.id, restDuration); else pauseResume(b.id); }}
                 onTimerAdjust={(delta) => setTimers((prev) => ({ ...prev, [b.id]: { ...prev[b.id], timeLeft: (prev[b.id]?.timeLeft ?? 0) + delta } }))}
                 onTimerReset={() => resetTimer(b.id)}
+                onImageFetched={(exId, url) => { if (dbCtx) updateExerciseImageUrl(dbCtx, exId, url); }}
               />
             ))}
           </View>
@@ -818,5 +927,20 @@ const styles = StyleSheet.create({
     fontSize: fontSize.caption,
     minHeight: 48,
     textAlignVertical: 'top',
+  },
+  suggestionBanner: {
+    borderWidth: 1,
+    borderRadius: 8,
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+  },
+  suggestionText: {
+    fontSize: fontSize.caption,
+    fontWeight: fw.semibold,
+    textAlign: 'center',
+  },
+  exerciseCountHint: {
+    fontSize: fontSize.tiny,
+    marginTop: 2,
   },
 });

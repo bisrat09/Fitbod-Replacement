@@ -3,18 +3,19 @@ import { Pressable, Text, View, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '@/theme/ThemeContext';
 import { fontSize, fontWeight } from '@/theme/typography';
-import { ExerciseInitial } from './ExerciseInitial';
+import { ExerciseImage } from './ExerciseImage';
 
 type ExerciseCardProps = {
   name: string;
   subtitle?: string; // e.g. "3 sets · 10 reps · 155 lb"
   muscleGroups?: string;
+  imageUrl?: string | null;
   onPress?: () => void;
   onMorePress?: () => void;
   selected?: boolean;
 };
 
-export function ExerciseCard({ name, subtitle, muscleGroups, onPress, onMorePress, selected }: ExerciseCardProps) {
+export function ExerciseCard({ name, subtitle, muscleGroups, imageUrl, onPress, onMorePress, selected }: ExerciseCardProps) {
   const { c } = useTheme();
   return (
     <Pressable
@@ -25,7 +26,7 @@ export function ExerciseCard({ name, subtitle, muscleGroups, onPress, onMorePres
         selected && { backgroundColor: c.accentLight },
       ]}
     >
-      <ExerciseInitial name={name} size={44} />
+      <ExerciseImage name={name} imageUrl={imageUrl} size={44} />
       <View style={styles.info}>
         <Text style={[styles.name, { color: c.text }]} numberOfLines={1}>{name}</Text>
         {subtitle && <Text style={[styles.subtitle, { color: c.textSecondary }]} numberOfLines={1}>{subtitle}</Text>}

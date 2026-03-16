@@ -82,6 +82,13 @@ export async function createExercise(
   );
 }
 
+export async function updateExerciseImageUrl(ctx: Ctx, exerciseId: string, imageUrl: string) {
+  await ctx.db.runAsync(
+    `UPDATE exercises SET video_url=?, updated_at=? WHERE id=? AND user_id=?`,
+    [imageUrl, nowIso(), exerciseId, ctx.userId]
+  );
+}
+
 export async function listExercises(ctx: Ctx, q?: string) {
   if (q && q.trim().length) {
     return ctx.db.getAllAsync(`SELECT * FROM exercises WHERE user_id=? AND name LIKE ? AND is_archived=0 ORDER BY name`, [ctx.userId, `%${q}%`]);
@@ -242,7 +249,7 @@ export async function listExercisesAvailableByEquipment(ctx: Ctx) {
 
 export async function listBlockExercisesWithNames(ctx: Ctx, blockId: string) {
   return ctx.db.getAllAsync<any>(
-    `SELECT be.*, ex.name AS exercise_name
+    `SELECT be.*, ex.name AS exercise_name, ex.video_url AS image_url
      FROM block_exercises be
      JOIN exercises ex ON ex.id = be.exercise_id
      WHERE be.user_id=? AND be.block_id=?
@@ -605,6 +612,16 @@ export async function getNextProgramDay(ctx: Ctx, programId: string) {
   const lastIdx = days.findIndex((d: any) => d.split === lastWorkout.split);
   const nextIdx = lastIdx >= 0 ? (lastIdx + 1) % days.length : 0;
   return days[nextIdx];
+}
+
+// Smart workout generation: recent workout splits for rotation logic
+export async function getRecentWorkoutSplits(ctx: Ctx, days: number = 14) {
+  const cutoff = new Date();
+  cutoff.setDate(cutoff.getDate() - days);
+  return ctx.db.getAllAsync<{ split: string | null; date: string }>(
+    `SELECT split, date FROM workouts WHERE user_id=? AND date >= ? ORDER BY date DESC`,
+    [ctx.userId, cutoff.toISOString()]
+  );
 }
 
 // ========== PROGRESS / METRICS ==========

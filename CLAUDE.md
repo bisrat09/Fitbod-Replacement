@@ -101,7 +101,8 @@ Hidden routes: Programs, Exercises, Equipment, Recent (Log)
 ```bash
 npm start              # Expo dev server
 npm start -- --clear   # Clear cache
-npm test               # 186 tests
+npm test               # 234 tests
+npm run build:gifmap   # Regenerate exercise GIF map from ExerciseDB API
 npx expo run:ios       # Build + run iOS
 npx expo-doctor        # Check dependencies
 ```
@@ -113,6 +114,14 @@ npx expo-doctor        # Check dependencies
 - If adding a table or column, create a migration in `src/lib/migrations/`.
 - TypeScript with explicit types on public helpers; avoid `any` where practical.
 
+## Exercise Images
+- **Static GIF map:** `src/data/exerciseGifMap.json` — 1,699 entries (92% coverage)
+- **Build script:** `scripts/buildGifMap.mjs` — fetches ExerciseDB, fuzzy-matches to seed exercises
+- **Runtime:** `src/lib/exerciseImages.ts` — static map lookup, `proxyUrl()` wraps all `static.exercisedb.dev` URLs through `wsrv.nl`
+- **Component:** `src/components/ExerciseImage.tsx` — Image with wsrv.nl proxy + ExerciseInitial fallback
+- **TLS issue:** `static.exercisedb.dev` cert is broken; all URLs proxied through `wsrv.nl` (free image proxy)
+- **SQLite persistence:** `video_url` column in exercises table, `updateExerciseImageUrl()` in dao.ts
+
 ## UI Redesign Status — ALL PHASES COMPLETE
 See TASKS.md for the full Fitbod design spec and phase checklist.
 - **Phase 1: Theme & Foundation** — DONE (colors, dark default, 4-tab Ionicons, typography)
@@ -121,4 +130,4 @@ See TASKS.md for the full Fitbod design spec and phase checklist.
 - **Phase 4: History & Workout Summary** — DONE (dark cards, themed calendar, PR badges)
 - **Phase 5: Progress, Programs, Exercises** — DONE (Card components, ExerciseInitial, gold PRs)
 - **Phase 6: Settings & Equipment** — DONE (grouped sections, segmented controls, Switch, toggle rows)
-- **Phase 7: Polish & Cleanup** — DONE (all hardcoded hex removed, consistent spacing, 186 tests passing)
+- **Phase 7: Polish & Cleanup** — DONE (all hardcoded hex removed, consistent spacing, 234 tests passing)

@@ -10,7 +10,8 @@
     "web": "expo start --web",
     "lint": "eslint .",
     "test": "jest --verbose",
-    "test:watch": "jest --watch"
+    "test:watch": "jest --watch",
+    "build:gifmap": "node scripts/buildGifMap.mjs"
   },
   "dependencies": {
     "@expo/metro-runtime": "~6.1.2",

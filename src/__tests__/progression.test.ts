@@ -1,4 +1,4 @@
-import { epley1RM, roundToIncrement, suggestNextWeight, warmupPlan, generateWarmupWeights, calculatePlates, formatWorkoutSummary } from '@/lib/progression';
+import { epley1RM, roundToIncrement, suggestNextWeight, warmupPlan, generateWarmupWeights, calculatePlates, formatWorkoutSummary, progressiveOverload, REP_RANGE } from '@/lib/progression';
 
 // ============================================================
 // Iteration 1: Epley 1RM formula
@@ -315,5 +315,150 @@ describe('formatWorkoutSummary', () => {
     // Should only have one set line
     const matches = text.match(/100 kg × 5/g);
     expect(matches).toHaveLength(1);
+  });
+});
+
+// ============================================================
+// Progressive overload (double progression)
+// ============================================================
+describe('REP_RANGE', () => {
+  test('compound range is 6-10', () => {
+    expect(REP_RANGE.compound).toEqual({ min: 6, max: 10 });
+  });
+
+  test('isolation range is 10-15', () => {
+    expect(REP_RANGE.isolation).toEqual({ min: 10, max: 15 });
+  });
+});
+
+describe('progressiveOverload', () => {
+  describe('no history', () => {
+    test('compound: returns 0 weight and 6 reps', () => {
+      expect(progressiveOverload([], true, 2.5))
+        .toEqual({ weight: 0, reps: 6, progressed: false });
+    });
+
+    test('isolation: returns 0 weight and 10 reps', () => {
+      expect(progressiveOverload([], false, 2.5))
+        .toEqual({ weight: 0, reps: 10, progressed: false });
+    });
+  });
+
+  describe('all sets completed at top of range → bump weight', () => {
+    test('compound: 3x10 @ 100 → 102.5 x 6', () => {
+      const sets = [
+        { weight: 100, reps: 10, is_completed: 1 },
+        { weight: 100, reps: 10, is_completed: 1 },
+        { weight: 100, reps: 10, is_completed: 1 },
+      ];
+      expect(progressiveOverload(sets, true, 2.5))
+        .toEqual({ weight: 102.5, reps: 6, progressed: true });
+    });
+
+    test('isolation: 3x15 @ 30 → 32.5 x 10', () => {
+      const sets = [
+        { weight: 30, reps: 15, is_completed: 1 },
+        { weight: 30, reps: 15, is_completed: 1 },
+        { weight: 30, reps: 15, is_completed: 1 },
+      ];
+      expect(progressiveOverload(sets, false, 2.5))
+        .toEqual({ weight: 32.5, reps: 10, progressed: true });
+    });
+
+    test('uses 5 lb increment', () => {
+      const sets = [
+        { weight: 185, reps: 10, is_completed: 1 },
+        { weight: 185, reps: 10, is_completed: 1 },
+        { weight: 185, reps: 10, is_completed: 1 },
+      ];
+      expect(progressiveOverload(sets, true, 5))
+        .toEqual({ weight: 190, reps: 6, progressed: true });
+    });
+
+    test('exceeding top of range still triggers progression', () => {
+      const sets = [
+        { weight: 100, reps: 12, is_completed: 1 },
+        { weight: 100, reps: 11, is_completed: 1 },
+      ];
+      expect(progressiveOverload(sets, true, 2.5))
+        .toEqual({ weight: 102.5, reps: 6, progressed: true });
+    });
+  });
+
+  describe('not all sets at top → keep weight, add reps', () => {
+    test('avg 8 reps → target 9', () => {
+      const sets = [
+        { weight: 100, reps: 8, is_completed: 1 },
+        { weight: 100, reps: 8, is_completed: 1 },
+        { weight: 100, reps: 7, is_completed: 1 },
+      ];
+      // avg = round(7.67) = 8, target = 9
+      expect(progressiveOverload(sets, true, 2.5))
+        .toEqual({ weight: 100, reps: 9, progressed: false });
+    });
+
+    test('caps target at max (compound)', () => {
+      const sets = [
+        { weight: 100, reps: 9, is_completed: 1 },
+        { weight: 100, reps: 10, is_completed: 1 },
+        { weight: 100, reps: 9, is_completed: 1 },
+      ];
+      // avg = round(9.33) = 9, target = min(10, 10) = 10
+      expect(progressiveOverload(sets, true, 2.5))
+        .toEqual({ weight: 100, reps: 10, progressed: false });
+    });
+
+    test('caps target at max (isolation)', () => {
+      const sets = [
+        { weight: 30, reps: 14, is_completed: 1 },
+        { weight: 30, reps: 14, is_completed: 1 },
+        { weight: 30, reps: 15, is_completed: 1 },
+      ];
+      // avg = round(14.33) = 14, target = 15
+      expect(progressiveOverload(sets, false, 2.5))
+        .toEqual({ weight: 30, reps: 15, progressed: false });
+    });
+
+    test('floors target at min', () => {
+      const sets = [
+        { weight: 100, reps: 4, is_completed: 1 },
+        { weight: 100, reps: 5, is_completed: 1 },
+      ];
+      // avg = round(4.5) = 5, target = max(6, 6) = 6
+      expect(progressiveOverload(sets, true, 2.5))
+        .toEqual({ weight: 100, reps: 6, progressed: false });
+    });
+  });
+
+  describe('uncompleted sets', () => {
+    test('ignores uncompleted sets for evaluation', () => {
+      const sets = [
+        { weight: 100, reps: 10, is_completed: 1 },
+        { weight: 100, reps: 10, is_completed: 1 },
+        { weight: 100, reps: 8, is_completed: 0 }, // didn't finish
+      ];
+      // Only 2 completed, both at 10 → all hit top → progress
+      expect(progressiveOverload(sets, true, 2.5))
+        .toEqual({ weight: 102.5, reps: 6, progressed: true });
+    });
+
+    test('all uncompleted → keep weight, min reps', () => {
+      const sets = [
+        { weight: 100, reps: 8, is_completed: 0 },
+        { weight: 100, reps: 8, is_completed: 0 },
+      ];
+      expect(progressiveOverload(sets, true, 2.5))
+        .toEqual({ weight: 100, reps: 6, progressed: false });
+    });
+  });
+
+  test('uses highest weight from completed sets', () => {
+    const sets = [
+      { weight: 95, reps: 10, is_completed: 1 },
+      { weight: 100, reps: 10, is_completed: 1 },
+      { weight: 100, reps: 10, is_completed: 1 },
+    ];
+    expect(progressiveOverload(sets, true, 2.5))
+      .toEqual({ weight: 102.5, reps: 6, progressed: true });
   });
 });

@@ -4,7 +4,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '@/theme/ThemeContext';
 import { fontSize, fontWeight } from '@/theme/typography';
 import { Card } from '../Card';
-import { ExerciseInitial } from '../ExerciseInitial';
+import { ExerciseImage } from '../ExerciseImage';
 import { SetRow } from '../SetRow';
 import { SupersetHeader } from '../SupersetHeader';
 import { RestTimer } from '../RestTimer';
@@ -13,7 +13,7 @@ import { SettingsRow } from '../SettingsRow';
 
 type BlockCardProps = {
   block: { id: string; order_index: number };
-  exercises: Array<{ exercise_id: string; exercise_name: string }>;
+  exercises: Array<{ exercise_id: string; exercise_name: string; image_url?: string | null }>;
   sets: any[];
   timer: { timeLeft: number; running: boolean };
   activeRow?: { exerciseId: string; row: number };
@@ -38,6 +38,7 @@ type BlockCardProps = {
   onTimerPauseResume: () => void;
   onTimerAdjust: (delta: number) => void;
   onTimerReset: () => void;
+  onImageFetched?: (exerciseId: string, url: string) => void;
 };
 
 export function BlockCard({
@@ -46,6 +47,7 @@ export function BlockCard({
   onLogSet, onAddWarmups, onAddDropSets, onSwapExercise,
   onDeleteSet, onSetUpdate, onSetFocus,
   onTimerPauseResume, onTimerAdjust, onTimerReset,
+  onImageFetched,
 }: BlockCardProps) {
   const { c } = useTheme();
   const [showMenu, setShowMenu] = useState(false);
@@ -79,7 +81,12 @@ export function BlockCard({
     <Card done={allDone}>
       {/* Header */}
       <Pressable onPress={onToggleCollapse} style={styles.header}>
-        <ExerciseInitial name={primaryExercise?.exercise_name ?? '?'} size={40} />
+        <ExerciseImage
+          name={primaryExercise?.exercise_name ?? '?'}
+          imageUrl={primaryExercise?.image_url}
+          size={40}
+          onImageFetched={(url) => onImageFetched?.(primaryExercise?.exercise_id, url)}
+        />
         <View style={styles.headerInfo}>
           <Text style={[styles.exerciseName, { color: c.text }]} numberOfLines={1}>
             {primaryExercise?.exercise_name ?? 'Exercise'}
@@ -112,7 +119,12 @@ export function BlockCard({
                 {/* Show name for superset sub-exercises */}
                 {isSuperset && (
                   <View style={styles.subExHeader}>
-                    <ExerciseInitial name={ex.exercise_name} size={28} />
+                    <ExerciseImage
+                      name={ex.exercise_name}
+                      imageUrl={ex.image_url}
+                      size={28}
+                      onImageFetched={(url) => onImageFetched?.(ex.exercise_id, url)}
+                    />
                     <Text style={[styles.subExName, { color: c.text }]}>{ex.exercise_name}</Text>
                   </View>
                 )}

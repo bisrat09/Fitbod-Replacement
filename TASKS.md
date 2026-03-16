@@ -155,6 +155,29 @@
 
 ---
 
+## Exercise Images — IN PROGRESS
+
+### Static GIF Map — DONE
+- [x] Build script `scripts/buildGifMap.mjs` — fetches all 1500 ExerciseDB exercises, fuzzy-matches to seed data
+- [x] Static JSON map `src/data/exerciseGifMap.json` — 1,699 entries (92% of 1,081 seed exercises matched)
+- [x] `src/lib/exerciseImages.ts` — loads static map, proxies URLs through wsrv.nl, no runtime API calls
+- [x] `src/components/ExerciseImage.tsx` — shows GIF with fallback to ExerciseInitial circle
+- [x] Wired into BlockCard + ExerciseCard (replaced ExerciseInitial)
+- [x] `onImageFetched` callback persists URLs to SQLite `video_url` column
+
+### TLS Fix — DONE
+- [x] `static.exercisedb.dev` has broken TLS — all URLs proxied through `wsrv.nl` (free image proxy)
+- [x] wsrv.nl confirmed working: HTTP 200, valid SSL (verified via curl)
+- [x] Exported `proxyUrl()` from `exerciseImages.ts`
+- [x] `ExerciseImage.tsx` now proxies `imageUrl` prop (from SQLite) before rendering — fixes old un-proxied `video_url` values
+
+### Remaining
+- [ ] Clear Metro cache (`npx expo start --clear`) and test on device — old cached code with runtime API calls + console.logs still running
+- [ ] If wsrv.nl fails on device network, try alternative proxy (`images.weserv.nl` or self-hosted)
+- [ ] 87 unmatched exercises (niche: balance trainer, partner, foam roll, stretches) — not in ExerciseDB
+
+---
+
 ## Backlog
 - [ ] On-device testing pass
 - [ ] Add integration tests with real SQLite
