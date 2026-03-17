@@ -34,7 +34,7 @@ export function ExerciseListItem({
       onPress={onPress}
       style={[styles.container, { borderBottomColor: c.cardBorder }]}
     >
-      <ExerciseImage name={name} imageUrl={imageUrl} size={56} onImageFetched={onImageFetched} />
+      <ExerciseImage name={name} imageUrl={imageUrl} size={68} onImageFetched={onImageFetched} />
       <View style={styles.info}>
         <Text style={[styles.name, { color: allDone ? c.green : c.text }]} numberOfLines={2}>
           {name}
@@ -61,18 +61,18 @@ const styles = StyleSheet.create({
   container: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: 10,
+    paddingVertical: 14,
     paddingHorizontal: 4,
-    gap: 12,
+    gap: 14,
     borderBottomWidth: StyleSheet.hairlineWidth,
   },
   info: {
     flex: 1,
-    gap: 3,
+    gap: 4,
   },
   name: {
     fontSize: fontSize.body,
-    fontWeight: fontWeight.semibold,
+    fontWeight: fontWeight.bold,
   },
   subtitle: {
     fontSize: fontSize.caption,

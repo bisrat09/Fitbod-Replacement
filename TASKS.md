@@ -178,7 +178,7 @@
 
 ---
 
-## New Workout Flow Redesign — IN PROGRESS
+## New Workout Flow Redesign — ALL 6 PHASES COMPLETE
 
 Restructuring the workout screen into distinct pre-workout and active-workout views with smart exercise preview, Fitbod-style "Up Next" screen, and recommendation-aware generation.
 
@@ -221,9 +221,17 @@ Restructuring the workout screen into distinct pre-workout and active-workout vi
 - [x] Barrel export updated in `src/components/workout/index.ts`
 - [x] 249 tests passing
 
-### Phase 6: Polish + Tests + Cleanup — PENDING
-- [ ] Final index.tsx cleanup, remove dead code
-- [ ] Additional test coverage
+### Phase 6: Polish + Tests + Cleanup — DONE
+- [x] Removed dead imports from `index.tsx`: `useMemo`, `roundToIncrement`, `swapBlockOrder`, `duplicateBlock`
+- [x] Removed dead state: `activeBlockId`, `collapsedBlocks`, `autoSuggestion`
+- [x] Removed dead functions: `addDropSets`, `handleDeleteBlock`, `handleDuplicateBlock`, `moveBlock`
+- [x] Removed dead memo: `rirValue`
+- [x] Cleaned stale `setActiveBlockId` references from `logActiveSet`, `onSetFocus`, `confirmFinishWorkout`
+- [x] Removed dead re-export of `computeTargetMuscles` from `TargetMuscles.tsx`
+- [x] Cleaned barrel export in `src/components/workout/index.ts`
+- [x] `index.tsx` reduced from ~860 to 814 lines
+- [x] Added 26 new tests in `workoutFlow.test.ts` (generator edge cases, targetMuscles edge cases, generator+targetMuscles integration, SPLIT_MUSCLES completeness)
+- [x] 275 tests passing (was 249)
 
 ---
 

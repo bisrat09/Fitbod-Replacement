@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { View, StyleSheet, ScrollView, Share, Vibration } from 'react-native';
 import { bootstrapDb } from '@/lib/bootstrap';
 import {
@@ -9,10 +9,10 @@ import {
   listFavoriteExerciseIds, lastWorkingSetsForExercise, upsertMetric,
   getBestMetric, replaceBlockExercise, getUserUnit, computeWeeklyVolume,
   upsertWeeklyVolume, exerciseRecency, deleteSet, deleteBlock,
-  swapBlockOrder, latestExerciseTopSet, getSetting, setSetting,
+  latestExerciseTopSet, getSetting, setSetting,
   deleteSetting, getActiveProgram, getNextProgramDay,
   listProgramDayExercises, updateWorkoutNotes, getWorkoutStreak,
-  getWorkoutsThisWeek, duplicateBlock, saveWorkoutAsTemplate,
+  getWorkoutsThisWeek, saveWorkoutAsTemplate,
   logBodyWeight, getBestSetsInWorkout, getMostRecentWorkoutId,
   repeatWorkout, listWorkoutDetail, updateWorkoutDuration,
   getRecentWorkoutSplits,
@@ -25,14 +25,15 @@ import {
 } from '@/lib/dao';
 import * as Crypto from 'expo-crypto';
 import { SEED_EXERCISES } from '@/data/seedExercises';
-import { suggestNextWeight, epley1RM, formatWorkoutSummary, roundToIncrement, generateWarmupWeights, progressiveOverload } from '@/lib/progression';
+import { suggestNextWeight, epley1RM, formatWorkoutSummary, generateWarmupWeights, progressiveOverload } from '@/lib/progression';
 import {
-  suggestSplit, selectExercises, formatStaleness,
+  suggestSplit, selectExercises,
   DURATION_EXERCISE_COUNT, DURATION_OPTIONS,
   type DurationOption,
 } from '@/lib/workoutGenerator';
 import { useTheme } from '@/theme/ThemeContext';
-import { ActiveWorkoutView, ExercisePickerSheet, FinishSheet, PlateCalcSheet, StickyBar, PreWorkoutView } from '@/components/workout';
+import { ActiveWorkoutView, ExercisePickerSheet, FinishSheet, PlateCalcSheet, PreWorkoutView } from '@/components/workout';
+import { RestTimer } from '@/components/RestTimer';
 
 // ── Picker state (unified add / superset / swap) ──
 type PickerState = {
@@ -52,10 +53,8 @@ export default function Today() {
   const [sets, setSets] = useState<any[]>([]);
   const [blocks, setBlocks] = useState<any[]>([]);
   const [blockExercises, setBlockExercises] = useState<Record<string, any[]>>({});
-  const [activeBlockId, setActiveBlockId] = useState<string | null>(null);
   const [activeRowByBlock, setActiveRowByBlock] = useState<Record<string, { exerciseId: string; row: number }>>({});
   const [lastSets, setLastSets] = useState<Record<string, any[]>>({});
-  const [collapsedBlocks, setCollapsedBlocks] = useState<Set<string>>(new Set());
 
   // ── Global inputs ──
   const [weight, setWeight] = useState('185');
@@ -74,10 +73,6 @@ export default function Today() {
 
   // ── Auto-generation ──
   const [duration, setDuration] = useState<DurationOption>(60);
-  const [autoSuggestion, setAutoSuggestion] = useState<{
-    split: string;
-    daysSince: number | null;
-  } | null>(null);
   const [programName, setProgramName] = useState<string | null>(null);
 
   // ── PR banner ──
@@ -168,7 +163,6 @@ export default function Today() {
         // Auto-suggest split when no program is active
         const recentWorkouts = await getRecentWorkoutSplits(ctx);
         const suggestion = suggestSplit(recentWorkouts);
-        setAutoSuggestion(suggestion);
         setSplit(suggestion.split);
         const savedDuration = await getSetting(ctx, 'preferred_duration');
         if (savedDuration) {
@@ -237,10 +231,6 @@ export default function Today() {
   // ═══════════════════════════════════════════════
   // ── Core workout functions ──
   // ═══════════════════════════════════════════════
-
-  function formatTime(sec: number) {
-    return `${String(Math.floor(sec / 60)).padStart(2, '0')}:${String(sec % 60).padStart(2, '0')}`;
-  }
 
   async function startWorkout() {
     if (!dbCtx || workoutId) return;
@@ -418,17 +408,19 @@ export default function Today() {
     await updateSet(dbCtx, { id: s.id, is_completed: 1 });
     const rows = await listWorkoutSets(dbCtx, workoutId!);
     setSets(rows);
-    startRest(blockId, restDuration);
 
     // PR detection
     const exName = (blockExercises[blockId] ?? []).find((e: any) => e.exercise_id === active.exerciseId)?.exercise_name ?? '';
     if (s.weight > 0 && s.reps > 0 && !s.is_warmup) checkForPR(active.exerciseId, exName, s.weight, s.reps);
 
-    // Auto-advance
+    // Auto-advance — only start rest timer if more sets remain in the same exercise
     const nextIncomplete = perExSets.findIndex((s: any, idx: number) => idx > active.row && !s.is_completed);
     if (nextIncomplete >= 0) {
+      startRest(blockId, restDuration);
       setActiveRowByBlock(prev => ({ ...prev, [blockId]: { exerciseId: active.exerciseId, row: nextIncomplete } }));
     } else {
+      // All sets done for this exercise — stop any running rest timer
+      resetTimer(blockId);
       const exs = blockExercises[blockId] ?? [];
       const idxEx = exs.findIndex((e: any) => e.exercise_id === active.exerciseId);
       let advanced = false;
@@ -440,7 +432,7 @@ export default function Today() {
         const idxBlock = blocks.findIndex((x: any) => x.id === blockId);
         for (let bi = idxBlock + 1; bi < blocks.length && !advanced; bi++) {
           const nextEx = (blockExercises[blocks[bi].id] ?? [])[0];
-          if (nextEx) { setActiveBlockId(blocks[bi].id); setActiveRowByBlock(prev => ({ ...prev, [blocks[bi].id]: { exerciseId: nextEx.exercise_id, row: 0 } })); advanced = true; }
+          if (nextEx) { setActiveRowByBlock(prev => ({ ...prev, [blocks[bi].id]: { exerciseId: nextEx.exercise_id, row: 0 } })); advanced = true; }
         }
       }
     }
@@ -453,20 +445,6 @@ export default function Today() {
     let nextIdx = await getNextSetIndex(dbCtx, workoutId);
     for (const w of warmups) {
       await addSet(dbCtx, { id: Crypto.randomUUID(), workout_id: workoutId, exercise_id: exerciseId, set_index: nextIdx, weight: w.weight, reps: w.reps, rir: null as any, is_warmup: 1, block_id: blockId });
-      nextIdx++;
-    }
-    const rows = await listWorkoutSets(dbCtx, workoutId);
-    setSets(rows);
-  }
-
-  async function addDropSets(blockId: string, exerciseId: string) {
-    if (!dbCtx || !workoutId) return;
-    const baseWeight = parseFloat(weight) || 0;
-    const ex = await getExercise(dbCtx, exerciseId);
-    const inc = ex?.default_increment ?? 2.5;
-    let nextIdx = await getNextSetIndex(dbCtx, workoutId);
-    for (const pct of [0.8, 0.6, 0.4]) {
-      await addSet(dbCtx, { id: Crypto.randomUUID(), workout_id: workoutId, exercise_id: exerciseId, set_index: nextIdx, weight: roundToIncrement(baseWeight * pct, inc), reps: parseInt(reps) || 8, rir: 0, is_warmup: 0, block_id: blockId });
       nextIdx++;
     }
     const rows = await listWorkoutSets(dbCtx, workoutId);
@@ -531,28 +509,6 @@ export default function Today() {
       await addSet(dbCtx, { id: Crypto.randomUUID(), workout_id: workoutId, exercise_id: exerciseId, set_index: nextIdx, weight: w, reps: r, rir: rirVal, is_warmup: 0, block_id: blockId });
       nextIdx++;
     }
-  }
-
-  // ── Block operations ──
-
-  async function handleDeleteBlock(blockId: string) {
-    if (!dbCtx || !workoutId) return;
-    await deleteBlock(dbCtx, blockId);
-    await refreshBlocksAndSets();
-  }
-
-  async function handleDuplicateBlock(blockId: string) {
-    if (!dbCtx || !workoutId) return;
-    await duplicateBlock(dbCtx, blockId, workoutId);
-    await refreshBlocksAndSets();
-  }
-
-  async function moveBlock(blockId: string, direction: 'up' | 'down') {
-    const idx = blocks.findIndex((b: any) => b.id === blockId);
-    const swapIdx = direction === 'up' ? idx - 1 : idx + 1;
-    if (idx < 0 || swapIdx < 0 || swapIdx >= blocks.length) return;
-    await swapBlockOrder(dbCtx, blockId, blocks[swapIdx].id);
-    await refreshBlocksAndSets();
   }
 
   // ── Rest timer ──
@@ -687,7 +643,7 @@ export default function Today() {
       setStreak(s); setWeekCount(wc);
     }
     setWorkoutId(null); setSets([]); setBlocks([]); setBlockExercises({});
-    setActiveBlockId(null); setActiveRowByBlock({}); setLastSets({});
+    setActiveRowByBlock({}); setLastSets({});
     setShowFinishModal(false); setWorkoutStartTime(null); setElapsed(0); setWorkoutNotes('');
   }
 
@@ -707,26 +663,6 @@ export default function Today() {
     await saveWorkoutAsTemplate(dbCtx, workoutId, templateName.trim(), Crypto.randomUUID());
     setTemplateSaved(true);
   }
-
-  // ── Sticky bar logic ──
-  const stickyBarState = useMemo(() => {
-    const active = activeBlockId ? activeRowByBlock[activeBlockId] : null;
-    let valid = false, label = 'Log Set', handler: (() => void) | undefined;
-    if (active && activeBlockId) {
-      const perExSets = sets.filter((s: any) => s.block_id === activeBlockId && s.exercise_id === active.exerciseId);
-      if (active.row >= 0 && active.row < perExSets.length) {
-        const s = perExSets[active.row];
-        valid = s?.reps != null && s?.weight != null;
-        label = active.row === perExSets.length - 1 ? 'Log Set & Next Exercise' : 'Log Set';
-        handler = () => logActiveSet(activeBlockId);
-      }
-    }
-    const runningTimer = activeBlockId ? timers[activeBlockId] : null;
-    const timerText = runningTimer?.running && runningTimer.timeLeft > 0 ? formatTime(runningTimer.timeLeft) : undefined;
-    return { valid, label, handler, timerText };
-  }, [activeBlockId, activeRowByBlock, sets, timers]);
-
-  const rirValue = useMemo(() => parseInt(rir) || 0, [rir]);
 
   // ═══════════════════════════════════════════════
   // ── Render ──
@@ -751,35 +687,17 @@ export default function Today() {
             blockExercises={blockExercises}
             sets={sets}
             timers={timers}
-            activeRowByBlock={activeRowByBlock}
-            collapsedBlocks={collapsedBlocks}
             bestSetIds={bestSetIds}
             lastSets={lastSets}
             restDuration={restDuration}
-            weight={weight}
-            reps={reps}
-            rir={rir}
-            rirValue={rirValue}
-            onWeightChange={setWeight}
-            onRepsChange={setReps}
-            onRirChange={setRir}
-            onRestDurationChange={setRestDuration}
-            workoutNotes={workoutNotes}
-            onWorkoutNotesChange={setWorkoutNotes}
             onAddExercise={() => openPicker('add')}
             onFinishWorkout={openFinishWorkout}
-            onMoveBlock={(blockId, dir) => moveBlock(blockId, dir)}
-            onToggleCollapse={(blockId) => setCollapsedBlocks((prev) => { const next = new Set(prev); if (next.has(blockId)) next.delete(blockId); else next.add(blockId); return next; })}
-            onDeleteBlock={handleDeleteBlock}
-            onDuplicateBlock={handleDuplicateBlock}
-            onMakeSuperset={(blockId) => openPicker('superset', blockId)}
             onLogSet={(blockId, exId) => logSetForBlock(blockId, exId)}
             onAddWarmups={(blockId, exId) => addWarmups(blockId, exId)}
-            onAddDropSets={(blockId, exId) => addDropSets(blockId, exId)}
             onSwapExercise={(blockId, exId) => openPicker('swap', blockId, exId)}
             onDeleteSet={handleDeleteSet}
             onSetUpdate={handleSetUpdate}
-            onSetFocus={(blockId, exId, row) => { setActiveBlockId(blockId); setActiveRowByBlock((prev) => ({ ...prev, [blockId]: { exerciseId: exId, row } })); }}
+            onSetFocus={(blockId, exId, row) => { setActiveRowByBlock((prev) => ({ ...prev, [blockId]: { exerciseId: exId, row } })); }}
             onTimerPauseResume={(blockId) => { const t = timers[blockId]; if (!t || t.timeLeft === 0) startRest(blockId, restDuration); else pauseResume(blockId); }}
             onTimerAdjust={(blockId, delta) => setTimers((prev) => ({ ...prev, [blockId]: { ...prev[blockId], timeLeft: (prev[blockId]?.timeLeft ?? 0) + delta } }))}
             onTimerReset={resetTimer}
@@ -790,6 +708,7 @@ export default function Today() {
             onExerciseRecommendationChange={handleExerciseRecommendationChange}
             onUnitToggle={handleUnitToggle}
             onRemoveExercise={handleRemoveExercise}
+            onCompleteActiveSet={(blockId) => logActiveSet(blockId)}
           />
         )}
 
@@ -800,11 +719,6 @@ export default function Today() {
             split={split}
             duration={duration}
             unit={unit}
-            autoSuggestionText={
-              !programName && autoSuggestion
-                ? `Suggested: ${autoSuggestion.split.toUpperCase()} — ${formatStaleness(autoSuggestion.daysSince)}`
-                : null
-            }
             programName={programName}
             streak={streak}
             weekCount={weekCount}
@@ -819,13 +733,23 @@ export default function Today() {
         )}
       </ScrollView>
 
-      {/* Sticky bottom bar */}
-      <StickyBar
-        label={stickyBarState.label}
-        onPress={stickyBarState.handler ?? (() => {})}
-        disabled={!stickyBarState.valid}
-        timerText={stickyBarState.timerText}
-      />
+      {/* Floating rest timer — only during active workout */}
+      {workoutId && (() => {
+        const entry = Object.entries(timers).find(([, t]) => t.running && t.timeLeft > 0);
+        if (!entry) return null;
+        const [blockId, timer] = entry;
+        return (
+          <View style={styles.floatingTimer}>
+            <RestTimer
+              timeLeft={timer.timeLeft}
+              running={timer.running}
+              onPauseResume={() => { const t = timers[blockId]; if (!t || t.timeLeft === 0) startRest(blockId, restDuration); else pauseResume(blockId); }}
+              onAdjust={(delta) => setTimers((prev) => ({ ...prev, [blockId]: { ...prev[blockId], timeLeft: (prev[blockId]?.timeLeft ?? 0) + delta } }))}
+              onDismiss={() => resetTimer(blockId)}
+            />
+          </View>
+        );
+      })()}
 
       {/* Exercise picker (add / superset / swap) */}
       <ExercisePickerSheet
@@ -882,5 +806,9 @@ const styles = StyleSheet.create({
     padding: 16,
     paddingBottom: 120,
     gap: 12,
+  },
+  floatingTimer: {
+    paddingHorizontal: 16,
+    paddingBottom: 8,
   },
 });

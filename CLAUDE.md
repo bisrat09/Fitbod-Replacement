@@ -109,7 +109,7 @@ Hidden routes: Programs, Exercises, Equipment, Recent (Log)
 ```bash
 npm start              # Expo dev server
 npm start -- --clear   # Clear cache
-npm test               # 249 tests
+npm test               # 275 tests
 npm run build:gifmap   # Regenerate exercise GIF map from ExerciseDB API
 npx expo run:ios       # Build + run iOS
 npx expo-doctor        # Check dependencies
@@ -140,14 +140,14 @@ See TASKS.md for the full Fitbod design spec and phase checklist.
 - **Phase 6: Settings & Equipment** — DONE (grouped sections, segmented controls, Switch, toggle rows)
 - **Phase 7: Polish & Cleanup** — DONE (all hardcoded hex removed, consistent spacing)
 
-## New Workout Flow Redesign — Phases 1-5 DONE
+## New Workout Flow Redesign — ALL 6 PHASES COMPLETE
 See TASKS.md for full phase breakdown.
 - **Phase 1: DB Migration + Data Layer** — DONE (recommendation column, workoutGenerator.ts, DAO functions)
 - **Phase 2: Pre-Workout Screen** — DONE (PreWorkoutView, TargetMuscles, ExerciseListItem, preview generation)
 - **Phase 3: Active Workout Screen** — DONE (ActiveWorkoutView extraction, index.tsx ~943→~820 lines)
 - **Phase 4: Exercise Detail Modal** — DONE (full-screen pageSheet, hero image, action chips, SetRow list, RestTimer overlay, BlockCard header split)
 - **Phase 5: Exercise Menus** — DONE (ExerciseOptionsSheet with notes, warmup, unit toggle, recommendation chips, remove)
-- **Phase 6: Polish + Tests + Cleanup** — PENDING
+- **Phase 6: Polish + Tests + Cleanup** — DONE (dead code removal, 26 new tests, index.tsx 860→814 lines)
 
 ### Smart Workout Generator (`src/lib/workoutGenerator.ts`)
 - `suggestSplit()` — picks stalest split from workout history

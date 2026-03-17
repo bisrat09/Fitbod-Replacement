@@ -3,12 +3,11 @@ import { View, Text, ScrollView, Pressable, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '@/theme/ThemeContext';
 import { fontSize, fontWeight } from '@/theme/typography';
-import { Chip } from '../Chip';
 import { PinkButton } from '../PinkButton';
 import { ActionChip } from '../ActionChip';
+import { Chip } from '../Chip';
 import { TargetMuscles } from './TargetMuscles';
 import { ExerciseListItem } from './ExerciseListItem';
-import { SupersetHeader } from '../SupersetHeader';
 import {
   DURATION_OPTIONS,
   DURATION_EXERCISE_COUNT,
@@ -30,7 +29,6 @@ type PreWorkoutViewProps = {
   split: string;
   duration: DurationOption;
   unit: 'lb' | 'kg';
-  autoSuggestionText?: string | null;
   programName: string | null;
   streak: number;
   weekCount: number;
@@ -51,7 +49,6 @@ export function PreWorkoutView({
   split,
   duration,
   unit,
-  autoSuggestionText,
   programName,
   streak,
   weekCount,
@@ -103,28 +100,31 @@ export function PreWorkoutView({
         </View>
       )}
 
-      {/* Auto-suggestion banner */}
-      {!programName && autoSuggestionText && (
-        <View style={[styles.suggestionBanner, { backgroundColor: c.card, borderColor: c.accent }]}>
-          <Text style={[styles.suggestionText, { color: c.accent }]}>
-            {autoSuggestionText}
-          </Text>
-        </View>
-      )}
-
-      {/* Filter chips */}
-      <View style={styles.chipsRow}>
-        {!programName && DURATION_OPTIONS.map((d) => (
-          <Chip
-            key={d}
-            label={d >= 60 ? `${d / 60}h` : `${d}m`}
-            selected={duration === d}
-            onPress={() => onDurationChange(d)}
-            size="sm"
-          />
-        ))}
-        <Chip label="Equipment" selected={false} onPress={onEquipmentPress} size="sm" />
-      </View>
+      {/* Filter chips — duration as dropdown, equipment */}
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.chipsRow}>
+        {!programName && (
+          <Pressable
+            onPress={() => {
+              const idx = DURATION_OPTIONS.indexOf(duration);
+              const next = DURATION_OPTIONS[(idx + 1) % DURATION_OPTIONS.length];
+              onDurationChange(next);
+            }}
+            style={[styles.dropdownChip, { backgroundColor: c.chipBg, borderColor: c.chipBorder }]}
+          >
+            <Text style={[styles.dropdownText, { color: c.text }]}>
+              {duration >= 60 ? `${duration / 60}h` : `${duration}m`}
+            </Text>
+            <Ionicons name="chevron-down" size={14} color={c.textSecondary} />
+          </Pressable>
+        )}
+        <Pressable
+          onPress={onEquipmentPress}
+          style={[styles.dropdownChip, { backgroundColor: c.chipBg, borderColor: c.chipBorder }]}
+        >
+          <Text style={[styles.dropdownText, { color: c.text }]}>Equipment</Text>
+          <Ionicons name="chevron-down" size={14} color={c.textSecondary} />
+        </Pressable>
+      </ScrollView>
 
       {/* Split selector */}
       {!programName && (
@@ -218,21 +218,22 @@ const styles = StyleSheet.create({
   statText: {
     fontSize: fontSize.small,
   },
-  suggestionBanner: {
-    borderWidth: 1,
-    borderRadius: 8,
-    paddingVertical: 8,
-    paddingHorizontal: 12,
-  },
-  suggestionText: {
-    fontSize: fontSize.caption,
-    fontWeight: fontWeight.semibold,
-    textAlign: 'center',
-  },
   chipsRow: {
     flexDirection: 'row',
-    gap: 6,
-    flexWrap: 'wrap',
+    gap: 8,
+  },
+  dropdownChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    borderRadius: 999,
+    borderWidth: 1,
+  },
+  dropdownText: {
+    fontSize: fontSize.caption,
+    fontWeight: fontWeight.semibold,
   },
   exerciseList: {
     gap: 0,

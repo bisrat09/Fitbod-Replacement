@@ -4,8 +4,6 @@ import { useTheme } from '@/theme/ThemeContext';
 import { fontSize, fontWeight } from '@/theme/typography';
 import { computeTargetMuscles } from '@/lib/targetMuscles';
 
-export { computeTargetMuscles } from '@/lib/targetMuscles';
-
 type TargetMusclesProps = {
   exercises: { muscle_groups: string }[];
 };

@@ -6,6 +6,7 @@ import { fontSize, fontWeight } from '@/theme/typography';
 import { ExerciseImage } from '../ExerciseImage';
 import { SetRow } from '../SetRow';
 import { ActionChip } from '../ActionChip';
+import { PinkButton } from '../PinkButton';
 import { RestTimer } from '../RestTimer';
 
 type ExerciseDetailModalProps = {
@@ -40,6 +41,7 @@ type ExerciseDetailModalProps = {
   onTimerAdjust: (delta: number) => void;
   onTimerReset: () => void;
   onImageFetched?: (url: string) => void;
+  onCompleteSet?: () => void;
 };
 
 export function ExerciseDetailModal({
@@ -50,13 +52,16 @@ export function ExerciseDetailModal({
   onSetUpdate, onSetFocus, onDeleteSet, onAddSet,
   onAddWarmups, onSwapExercise, onOpenOptions,
   onTimerPauseResume, onTimerAdjust, onTimerReset,
-  onImageFetched,
+  onImageFetched, onCompleteSet,
 }: ExerciseDetailModalProps) {
   const { c } = useTheme();
 
   const workingSets = sets.filter((s: any) => !s.is_warmup);
   const doneCount = workingSets.filter((s: any) => s.is_completed).length;
   const totalCount = workingSets.length;
+  const allDone = totalCount > 0 && doneCount === totalCount;
+  const nextIncomplete = sets.find((s: any) => !s.is_completed && s.reps != null && s.weight != null);
+  const canLog = !!nextIncomplete && !allDone;
 
   return (
     <Modal visible={visible} animationType="slide" presentationStyle="pageSheet" onRequestClose={onClose}>
@@ -141,6 +146,18 @@ export function ExerciseDetailModal({
             <Text style={[styles.addSetText, { color: c.accent }]}>Add Set</Text>
           </Pressable>
         </ScrollView>
+
+        {/* Log Set button */}
+        {onCompleteSet && !allDone && (
+          <View style={styles.logSetBar}>
+            <PinkButton
+              title={doneCount === totalCount - 1 ? 'Log Set & Next Exercise' : 'Log Set'}
+              onPress={onCompleteSet}
+              fullWidth
+              disabled={!canLog}
+            />
+          </View>
+        )}
 
         {/* Rest timer overlay */}
         {timer && (timer.running || timer.timeLeft !== restDuration) && timer.timeLeft > 0 && (
@@ -246,9 +263,14 @@ const styles = StyleSheet.create({
     fontSize: fontSize.caption,
     fontWeight: fontWeight.semibold,
   },
+  logSetBar: {
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    paddingBottom: 24,
+  },
   timerOverlay: {
     position: 'absolute',
-    bottom: 24,
+    bottom: 80,
     left: 16,
     right: 16,
   },

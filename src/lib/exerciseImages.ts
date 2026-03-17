@@ -17,14 +17,21 @@ const cache = new Map<string, string | null>();
 
 /**
  * Proxy ExerciseDB GIF URLs through wsrv.nl to avoid TLS errors.
- * wsrv.nl is a free, open-source image proxy with valid certificates.
+ * Unwraps any stale double-proxied URLs stored in SQLite from previous sessions.
  */
 export function proxyUrl(url: string): string {
-  if (url.includes('static.exercisedb.dev') && !url.startsWith('https://wsrv.nl/')) {
-    // wsrv.nl proxies the image with valid TLS; n=-1 preserves GIF animation
-    return `https://wsrv.nl/?url=${encodeURIComponent(url)}&n=-1`;
+  // Unwrap any existing wsrv.nl proxy layers to get the raw URL
+  let raw = url;
+  while (raw.startsWith('https://wsrv.nl/?url=')) {
+    const match = raw.match(/^https:\/\/wsrv\.nl\/\?url=([^&]+)/);
+    if (!match) break;
+    raw = decodeURIComponent(match[1]);
   }
-  return url;
+  // Proxy the raw URL if it's from exercisedb
+  if (raw.includes('static.exercisedb.dev')) {
+    return `https://wsrv.nl/?url=${encodeURIComponent(raw)}&n=-1`;
+  }
+  return raw;
 }
 
 // Seed cache from the static map (with proxied URLs)
@@ -39,13 +46,68 @@ function normalize(name: string): string {
   return name.toLowerCase().trim().replace(/\s+/g, ' ');
 }
 
+// Noise words to ignore during fuzzy matching
+const NOISE = new Set([
+  'the', 'a', 'an', 'with', 'and', 'for', 'on', 'to', 'of', 'in', 'at', 'by',
+]);
+
+/**
+ * Extract significant words (>2 chars, not noise) from a normalized name.
+ */
+function significantWords(name: string): string[] {
+  return normalize(name)
+    .replace(/[(),-]/g, ' ')
+    .split(/\s+/)
+    .filter(w => w.length > 2 && !NOISE.has(w));
+}
+
+// Pre-compute significant words for every map entry (once at startup)
+const mapEntries: { name: string; words: string[]; url: string }[] = [];
+for (const [name, url] of Object.entries(gifMap)) {
+  mapEntries.push({ name, words: significantWords(name), url: url as string });
+}
+
+/**
+ * Fuzzy-match an exercise name against the gif map using word overlap.
+ * Returns the best match URL (proxied) or null if none is good enough.
+ */
+function fuzzyMatch(exerciseName: string): string | null {
+  const words = significantWords(exerciseName);
+  if (words.length < 2) return null; // Too few words to match reliably
+
+  let bestUrl: string | null = null;
+  let bestScore = 0;
+
+  for (const entry of mapEntries) {
+    const shared = words.filter(w => entry.words.includes(w)).length;
+    if (shared < 2) continue; // Require at least 2 shared words
+    const score = shared / Math.max(words.length, entry.words.length);
+    if (score > bestScore) {
+      bestScore = score;
+      bestUrl = entry.url;
+    }
+  }
+
+  // Require at least 50% overlap
+  if (bestScore < 0.5) return null;
+  return bestUrl ? proxyUrl(bestUrl) : null;
+}
+
 /**
  * Look up exercise GIF URL from the static map.
+ * Falls back to fuzzy word-overlap matching if exact match fails.
  * Returns the proxied GIF URL or null if no match found.
  */
 export async function fetchExerciseGif(exerciseName: string): Promise<string | null> {
   const key = normalize(exerciseName);
-  return cache.get(key) ?? null;
+
+  // Check cache (includes exact matches and previous fuzzy results)
+  if (cache.has(key)) return cache.get(key)!;
+
+  // Fuzzy match fallback
+  const fuzzyUrl = fuzzyMatch(exerciseName);
+  cache.set(key, fuzzyUrl); // Cache even null to avoid re-scanning
+  return fuzzyUrl;
 }
 
 /**

@@ -7,6 +7,6 @@ export { PlateCalcSheet } from './PlateCalcSheet';
 export { StickyBar } from './StickyBar';
 export { PreWorkoutView } from './PreWorkoutView';
 export { ActiveWorkoutView } from './ActiveWorkoutView';
-export { TargetMuscles, computeTargetMuscles } from './TargetMuscles';
+export { TargetMuscles } from './TargetMuscles';
 export { ExerciseListItem } from './ExerciseListItem';
 export { ExerciseOptionsSheet } from './ExerciseOptionsSheet';
