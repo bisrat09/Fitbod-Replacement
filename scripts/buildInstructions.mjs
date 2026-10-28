@@ -70,6 +70,7 @@ const ALIASES = {
   'Hanging Leg Raise': 'Hanging Leg Raise',
   'Dumbbell Front Raise': 'Front Dumbbell Raise',
   'Leg Extension': 'Leg Extensions',
+  'Hip Thrust': 'Barbell Hip Thrust',
 };
 
 function seedNames() {

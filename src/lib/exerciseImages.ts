@@ -34,10 +34,29 @@ export function proxyUrl(url: string): string {
   return raw;
 }
 
-// Seed cache from the static map (with proxied URLs)
-for (const [name, url] of Object.entries(gifMap)) {
-  cache.set(name, proxyUrl(url as string));
+/**
+ * GIFs the name-matching got wrong, found by a visual audit of Bisrat's 61 most-used
+ * exercises (2026-10-28), e.g. Leg Press → rear-delt machine, Back Squat → seated press.
+ * A wrong demo is worse than none: these never show a GIF, even one cached in SQLite.
+ */
+const WRONG_GIFS = new Set([
+  'leg extension', 'leg press', 'machine leg press', 'cable rope tricep extension',
+  'machine fly', 'glute kickback machine', 'hip thrust', 'barbell hip thrust',
+  'machine bicep curl', 'back squat', 'hack squat', 'pulse back squat',
+  'barbell shoulder press', 'machine shoulder press', 'dumbbell shoulder press',
+  'machine tricep extension', 'machine tricep dip', 'dumbbell bicep curl',
+  'cable face pull', 'cable crossover fly', 'bicycle crunch', 'cable bicep curl',
+]);
+
+export function isGifBlocked(exerciseName: string): boolean {
+  return WRONG_GIFS.has(normalize(exerciseName));
 }
+
+// Seed cache from the static map (with proxied URLs); blocked names cache as null
+for (const [name, url] of Object.entries(gifMap)) {
+  cache.set(name, WRONG_GIFS.has(name) ? null : proxyUrl(url as string));
+}
+for (const name of WRONG_GIFS) cache.set(name, null);
 
 /**
  * Normalize name for comparison: lowercase, trim, collapse spaces.
@@ -114,5 +133,6 @@ export async function fetchExerciseGif(exerciseName: string): Promise<string | n
  * Seed the cache with a known URL (e.g. loaded from SQLite).
  */
 export function cacheExerciseGif(exerciseName: string, gifUrl: string) {
+  if (isGifBlocked(exerciseName)) return;
   cache.set(normalize(exerciseName), proxyUrl(gifUrl));
 }

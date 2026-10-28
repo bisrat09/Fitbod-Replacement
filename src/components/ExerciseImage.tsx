@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { Image, StyleSheet } from 'react-native';
 import { ExerciseInitial } from './ExerciseInitial';
-import { fetchExerciseGif, cacheExerciseGif, proxyUrl } from '@/lib/exerciseImages';
+import { fetchExerciseGif, cacheExerciseGif, proxyUrl, isGifBlocked } from '@/lib/exerciseImages';
+import { getExerciseInstructions, exercisePhotoUrls } from '@/lib/exerciseInstructions';
 
 type ExerciseImageProps = {
   name: string;
@@ -15,9 +16,31 @@ type ExerciseImageProps = {
 };
 
 /**
- * Shows an exercise GIF if available, falls back to colored-initial circle.
+ * Circle thumbnails prefer the sharp, strictly matched free-exercise-db photo;
+ * otherwise the ExerciseDB GIF (unless audited as wrong); otherwise the initial.
+ * The square demo shape always means the GIF (the demo cycles photos itself).
  */
-export function ExerciseImage({ name, imageUrl, size = 40, onImageFetched, shape = 'circle' }: ExerciseImageProps) {
+export function ExerciseImage(props: ExerciseImageProps) {
+  const photo = props.shape === 'square' ? null : exercisePhotoUrls(getExerciseInstructions(props.name))[0] ?? null;
+  if (photo) return <ExercisePhoto name={props.name} uri={photo} size={props.size ?? 40} />;
+  if (isGifBlocked(props.name)) return props.shape === 'square' ? null : <ExerciseInitial name={props.name} size={props.size ?? 40} />;
+  return <ExerciseGif {...props} />;
+}
+
+function ExercisePhoto({ name, uri, size }: { name: string; uri: string; size: number }) {
+  const [failed, setFailed] = useState(false);
+  if (failed) return <ExerciseInitial name={name} size={size} />;
+  return (
+    <Image
+      source={{ uri }}
+      style={[styles.image, { width: size, height: size, borderRadius: size / 2 }]}
+      onError={() => setFailed(true)}
+      resizeMode="cover"
+    />
+  );
+}
+
+function ExerciseGif({ name, imageUrl, size = 40, onImageFetched, shape = 'circle' }: ExerciseImageProps) {
   const [url, setUrl] = useState<string | null>(imageUrl ? proxyUrl(imageUrl) : null);
   const [failed, setFailed] = useState(false);
 

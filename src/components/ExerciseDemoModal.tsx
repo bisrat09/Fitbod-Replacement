@@ -5,6 +5,7 @@ import { useTheme } from '@/theme/ThemeContext';
 import { fontSize, fontWeight } from '@/theme/typography';
 import { ExerciseImage } from './ExerciseImage';
 import { getExerciseInstructions, exercisePhotoUrls, exerciseVideoSearchUrl } from '@/lib/exerciseInstructions';
+import { isGifBlocked } from '@/lib/exerciseImages';
 
 type ExerciseDemoModalProps = {
   visible: boolean;
@@ -74,14 +75,14 @@ export function ExerciseDemoModal({ visible, onClose, name, imageUrl }: Exercise
                   </Text>
                 )}
               </View>
-              <Pressable
+              {!isGifBlocked(name) && <Pressable
                 onPress={() => setMode(mode === 'photos' ? 'animation' : 'photos')}
                 style={[styles.modeChip, { backgroundColor: c.chipBg, borderColor: c.chipBorder }]}
               >
                 <Text style={[styles.modeChipText, { color: c.text }]}>
                   {mode === 'photos' ? 'Show animation' : 'Show photos'}
                 </Text>
-              </Pressable>
+              </Pressable>}
             </View>
           )}
 
