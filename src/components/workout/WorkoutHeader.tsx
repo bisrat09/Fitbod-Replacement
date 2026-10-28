@@ -32,7 +32,7 @@ export function WorkoutHeader({
       {/* Title */}
       <View style={styles.titleRow}>
         <Text style={[styles.title, { color: c.text }]}>
-          {workoutId ? 'Up Next' : 'Workout'}
+          {workoutId ? 'Today\'s Workout' : 'Workout'}
         </Text>
         {workoutId && workoutStartTime && (
           <Text style={[styles.elapsed, { color: c.textSecondary }]}>
@@ -45,7 +45,7 @@ export function WorkoutHeader({
       {prBanner && (
         <View style={[styles.prBanner, { backgroundColor: c.gold }]}>
           <Text style={[styles.prText, { color: c.goldText }]}>
-            NEW PR! {prBanner.exerciseName} — Est. 1RM: {prBanner.est1rm} {unit}
+            NEW PR! {prBanner.exerciseName} — Estimated Max: {prBanner.est1rm} {unit}
           </Text>
         </View>
       )}

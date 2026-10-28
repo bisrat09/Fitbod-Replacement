@@ -3,11 +3,11 @@
 ## Working Protocol
 - Always read TASKS.md before starting work
 - Update TASKS.md after every completed phase
-- TASKS.md has the full Fitbod design spec — never ask for screenshots
+- TASKS.md has the design spec and phase checklist
 - Keep `DEVLOG.md` and `AGENTS.md` updated after each iteration
 
 ## Project Overview
-Fitlog is an offline-first fitness workout logging app built with Expo Router + React Native + SQLite. It's a Fitbod replacement — no cloud, fully local data. Currently undergoing a UI redesign to match Fitbod's visual style.
+Fitlog is a full-featured offline fitness tracker built with Expo Router + React Native + SQLite. No cloud, fully local data.
 
 ## Tech Stack
 - **Framework**: Expo SDK 54 + React Native 0.81.4 + React 19.1.0
@@ -30,7 +30,7 @@ app/                    # Screens (Expo Router)
   exercises.tsx         # Exercise library with search + custom creation (hidden route)
   equipment.tsx         # Equipment toggle rows with icons (hidden route)
   log.tsx               # Recent sets with ExerciseInitial circles (hidden route)
-src/components/         # Reusable Fitbod-style components
+src/components/         # Reusable UI components
   Card.tsx              # Dark surface card with border, optional done state
   Chip.tsx              # Filter chip pill (selected/unselected)
   PinkButton.tsx        # Pink accent CTA button
@@ -54,8 +54,8 @@ src/components/         # Reusable Fitbod-style components
     PreWorkoutView.tsx  # Pre-workout planning: Up Next, exercises preview, target muscles
     TargetMuscles.tsx   # Horizontal scroll muscle badges with percentages
     ExerciseListItem.tsx # Exercise row: image, name, subtitle, menu
-src/theme/              # Theming (Fitbod-style)
-  colors.ts             # Light + dark palettes (Fitbod colors + textOnAccent, goldText)
+src/theme/              # Theming
+  colors.ts             # Light + dark palettes (textOnAccent, goldText)
   ThemeContext.tsx       # Theme provider + useTheme hook (dark default)
   typography.ts         # Font size + weight constants
 src/lib/                # Core logic
@@ -77,7 +77,7 @@ src/lib/                # Core logic
 - **DAO pattern**: All DB access goes through `src/lib/dao.ts`. No raw SQL in screens.
 - **Path alias**: `@/*` maps to `src/*` (configured in tsconfig).
 - **Theme**: Use `useTheme()` hook for colors. Never hardcode hex values — use `c.bg`, `c.card`, `c.accent`, etc.
-- **Dark mode default**: App defaults to dark theme (Fitbod-style).
+- **Dark mode default**: App defaults to dark theme.
 
 ## Schema (v8)
 Core tables: `users`, `exercises`, `workouts`, `sets`, `workout_blocks`, `block_exercises`, `user_equipment`, `user_favorite_exercises`, `metrics`, `weekly_volume`, `programs`, `program_days`, `program_day_exercises`, `settings`, `app_meta`, `body_weight`.
@@ -85,12 +85,12 @@ Core tables: `users`, `exercises`, `workouts`, `sets`, `workout_blocks`, `block_
 ### v8 Addition
 - `exercises.recommendation` column — `TEXT NOT NULL DEFAULT 'normal'`, values: `normal`/`more`/`less`/`never`
 
-## Color Palette (Fitbod-style)
+## Color Palette
 ```
 Dark theme (default):
   bg: #1C1C1E          card: #2C2C2E        cardBorder: #3A3A3C
   text: #FFFFFF        textSecondary: #8E8E93  textMuted: #636366
-  accent: #FF3B5C      green: #34C759       gold: #FFD700
+  accent: #FF6D00      green: #34C759       gold: #FFD700
   textOnAccent: #FFFFFF (white text on colored backgrounds)
   goldText: #78350F    (dark brown text on gold badges)
 ```
@@ -131,7 +131,7 @@ npx expo-doctor        # Check dependencies
 - **SQLite persistence:** `video_url` column in exercises table, `updateExerciseImageUrl()` in dao.ts
 
 ## UI Redesign Status — ALL PHASES COMPLETE
-See TASKS.md for the full Fitbod design spec and phase checklist.
+See TASKS.md for the design spec and phase checklist.
 - **Phase 1: Theme & Foundation** — DONE (colors, dark default, 4-tab Ionicons, typography)
 - **Phase 2: Reusable Components** — DONE (Card, Chip, SetRow, ExerciseCard, BottomSheet, etc.)
 - **Phase 3: Workout Screen Redesign** — DONE (split into 6 sub-components)

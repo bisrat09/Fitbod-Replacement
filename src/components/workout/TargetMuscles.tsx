@@ -16,7 +16,7 @@ export function TargetMuscles({ exercises }: TargetMusclesProps) {
 
   return (
     <View style={styles.container}>
-      <Text style={[styles.title, { color: c.text }]}>Target Muscles</Text>
+      <Text style={[styles.title, { color: c.text }]}>Muscle Focus</Text>
       <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.scroll}>
         {targets.map((t) => (
           <View key={t.muscle} style={styles.badge}>

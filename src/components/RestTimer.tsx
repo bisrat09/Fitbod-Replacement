@@ -25,29 +25,33 @@ export function RestTimer({ timeLeft, running, onPauseResume, onAdjust, onDismis
   return (
     <View style={[styles.container, { backgroundColor: c.card, borderColor: c.cardBorder }]}>
       <View style={styles.header}>
-        <Text style={[styles.label, { color: c.textSecondary }]}>Rest</Text>
         <Pressable onPress={onDismiss} hitSlop={8}>
           <Ionicons name="close" size={20} color={c.textSecondary} />
         </Pressable>
+        <Text style={[styles.label, { color: c.textSecondary }]}>Rest Period</Text>
       </View>
 
-      <Text style={[styles.time, { color: urgent ? c.danger : c.text }]}>
-        {formatTime(timeLeft)}
-      </Text>
+      <View style={styles.body}>
+        <Text style={[styles.time, { color: urgent ? c.danger : c.text }]}>
+          {formatTime(timeLeft)}
+        </Text>
 
-      <View style={styles.controls}>
-        <Pressable onPress={() => onAdjust(-10)} style={[styles.adjustBtn, { backgroundColor: c.chipBg }]}>
-          <Text style={[styles.adjustText, { color: c.text }]}>-10s</Text>
-        </Pressable>
-
-        <Pressable onPress={onPauseResume} style={[styles.playBtn, { backgroundColor: c.accent }]}>
-          <Ionicons name={running ? 'pause' : 'play'} size={24} color={c.textOnAccent} />
-        </Pressable>
-
-        <Pressable onPress={() => onAdjust(10)} style={[styles.adjustBtn, { backgroundColor: c.chipBg }]}>
-          <Text style={[styles.adjustText, { color: c.text }]}>+10s</Text>
-        </Pressable>
+        <View style={styles.adjustStack}>
+          <Pressable onPress={() => onAdjust(10)} style={[styles.adjustBtn, { backgroundColor: c.chipBg }]}>
+            <Text style={[styles.adjustText, { color: c.text }]}>+10s</Text>
+          </Pressable>
+          <Pressable onPress={() => onAdjust(-10)} style={[styles.adjustBtn, { backgroundColor: c.chipBg }]}>
+            <Text style={[styles.adjustText, { color: c.text }]}>-10s</Text>
+          </Pressable>
+        </View>
       </View>
+
+      <Pressable onPress={onPauseResume} style={[styles.pauseBar, { backgroundColor: c.accent }]}>
+        <Ionicons name={running ? 'pause' : 'play'} size={22} color={c.textOnAccent} />
+        <Text style={[styles.pauseBarText, { color: c.textOnAccent }]}>
+          {running ? 'Pause' : 'Resume'}
+        </Text>
+      </Pressable>
     </View>
   );
 }
@@ -57,14 +61,12 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderRadius: 16,
     padding: 16,
-    alignItems: 'center',
-    gap: 8,
+    gap: 12,
   },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
-    width: '100%',
+    gap: 10,
   },
   label: {
     fontSize: fontSize.caption,
@@ -72,15 +74,19 @@ const styles = StyleSheet.create({
     textTransform: 'uppercase',
     letterSpacing: 0.5,
   },
+  body: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
   time: {
     fontSize: 48,
     fontWeight: fontWeight.bold,
     fontVariant: ['tabular-nums'],
   },
-  controls: {
-    flexDirection: 'row',
+  adjustStack: {
     alignItems: 'center',
-    gap: 16,
+    gap: 8,
   },
   adjustBtn: {
     paddingVertical: 8,
@@ -91,11 +97,17 @@ const styles = StyleSheet.create({
     fontSize: fontSize.caption,
     fontWeight: fontWeight.semibold,
   },
-  playBtn: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
+  pauseBar: {
+    flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
+    gap: 8,
+    paddingVertical: 12,
+    borderRadius: 10,
+    width: '100%',
+  },
+  pauseBarText: {
+    fontSize: fontSize.body,
+    fontWeight: fontWeight.semibold,
   },
 });

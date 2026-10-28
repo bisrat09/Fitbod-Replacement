@@ -5,7 +5,6 @@ import { useTheme } from '@/theme/ThemeContext';
 import { fontSize, fontWeight } from '@/theme/typography';
 import { ExerciseImage } from '../ExerciseImage';
 import { SetRow } from '../SetRow';
-import { ActionChip } from '../ActionChip';
 import { PinkButton } from '../PinkButton';
 import { RestTimer } from '../RestTimer';
 
@@ -17,7 +16,7 @@ type ExerciseDetailModalProps = {
   exerciseId: string;
   exerciseName: string;
   imageUrl?: string | null;
-  supersetLabel?: string | null; // e.g. "SUPERSET · 1 of 2"
+  supersetLabel?: string | null; // e.g. "Part 1 of 2 (Superset)"
 
   // Sets
   sets: any[];
@@ -66,42 +65,50 @@ export function ExerciseDetailModal({
   return (
     <Modal visible={visible} animationType="slide" presentationStyle="pageSheet" onRequestClose={onClose}>
       <View style={[styles.container, { backgroundColor: c.bg }]}>
-        {/* Hero area */}
-        <View style={[styles.hero, { backgroundColor: c.card }]}>
-          <ExerciseImage
-            name={exerciseName}
-            imageUrl={imageUrl}
-            size={120}
-            onImageFetched={onImageFetched}
-          />
-
-          {/* Close button */}
+        {/* Compact header */}
+        <View style={[styles.header, { backgroundColor: c.card, borderBottomColor: c.cardBorder }]}>
+          <View style={styles.headerLeft}>
+            <ExerciseImage
+              name={exerciseName}
+              imageUrl={imageUrl}
+              size={48}
+              onImageFetched={onImageFetched}
+            />
+            <View style={styles.headerTitleGroup}>
+              <Text style={[styles.exerciseName, { color: c.text }]} numberOfLines={2}>{exerciseName}</Text>
+              {supersetLabel && (
+                <Text style={[styles.supersetBadge, { color: c.textSecondary }]}>
+                  {supersetLabel}
+                </Text>
+              )}
+              <Text style={[styles.progress, { color: c.textSecondary }]}>
+                {doneCount} of {totalCount} sets completed
+              </Text>
+            </View>
+          </View>
           <Pressable onPress={onClose} style={[styles.closeBtn, { backgroundColor: c.chipBg }]} hitSlop={8}>
             <Ionicons name="close" size={22} color={c.text} />
           </Pressable>
-
-          {/* Superset badge */}
-          {supersetLabel && (
-            <Text style={[styles.supersetBadge, { color: c.textSecondary }]}>
-              {supersetLabel}
-            </Text>
-          )}
-
-          {/* Exercise name */}
-          <Text style={[styles.exerciseName, { color: c.text }]}>{exerciseName}</Text>
-
-          {/* Progress */}
-          <Text style={[styles.progress, { color: c.textSecondary }]}>
-            {doneCount} of {totalCount} sets completed
-          </Text>
         </View>
 
-        {/* Action chips */}
-        <View style={styles.chipsRow}>
-          <ActionChip icon="time-outline" label={formatRestLabel(restDuration)} onPress={onTimerPauseResume} />
-          <ActionChip icon="swap-horizontal" label="Replace" onPress={onSwapExercise} />
-          <ActionChip icon="flame-outline" label="Warm-up" onPress={onAddWarmups} />
-          <ActionChip icon="ellipsis-horizontal" label="More" onPress={onOpenOptions} />
+        {/* Action menu (vertical list) */}
+        <View style={[styles.actionMenu, { borderBottomColor: c.cardBorder }]}>
+          <Pressable style={styles.actionMenuItem} onPress={onTimerPauseResume}>
+            <Ionicons name="time-outline" size={20} color={c.textSecondary} />
+            <Text style={[styles.actionMenuLabel, { color: c.text }]}>Rest Timer — {formatRestLabel(restDuration)}</Text>
+          </Pressable>
+          <Pressable style={styles.actionMenuItem} onPress={onSwapExercise}>
+            <Ionicons name="swap-horizontal" size={20} color={c.textSecondary} />
+            <Text style={[styles.actionMenuLabel, { color: c.text }]}>Replace Exercise</Text>
+          </Pressable>
+          <Pressable style={styles.actionMenuItem} onPress={onAddWarmups}>
+            <Ionicons name="flame-outline" size={20} color={c.textSecondary} />
+            <Text style={[styles.actionMenuLabel, { color: c.text }]}>Add Warm-up Sets</Text>
+          </Pressable>
+          <Pressable style={styles.actionMenuItem} onPress={onOpenOptions}>
+            <Ionicons name="ellipsis-horizontal" size={20} color={c.textSecondary} />
+            <Text style={[styles.actionMenuLabel, { color: c.text }]}>More Options</Text>
+          </Pressable>
         </View>
 
         {/* Sets */}
@@ -143,7 +150,7 @@ export function ExerciseDetailModal({
           {/* + Add Set */}
           <Pressable onPress={onAddSet} style={styles.addSetBtn}>
             <Ionicons name="add" size={16} color={c.accent} />
-            <Text style={[styles.addSetText, { color: c.accent }]}>Add Set</Text>
+            <Text style={[styles.addSetText, { color: c.accent }]}>Add Another Set</Text>
           </Pressable>
         </ScrollView>
 
@@ -186,43 +193,57 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
-  hero: {
+  header: {
+    flexDirection: 'row',
     alignItems: 'center',
-    paddingTop: 48,
-    paddingBottom: 16,
-    gap: 8,
+    justifyContent: 'space-between',
+    paddingTop: 16,
+    paddingBottom: 12,
+    paddingHorizontal: 16,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+  },
+  headerLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    flex: 1,
+  },
+  headerTitleGroup: {
+    flex: 1,
+    gap: 2,
   },
   closeBtn: {
-    position: 'absolute',
-    top: 16,
-    right: 16,
     width: 32,
     height: 32,
     borderRadius: 16,
     alignItems: 'center',
     justifyContent: 'center',
+    marginLeft: 12,
   },
   supersetBadge: {
     fontSize: fontSize.small,
     fontWeight: fontWeight.semibold,
-    textTransform: 'uppercase',
-    letterSpacing: 1,
   },
   exerciseName: {
-    fontSize: fontSize.h2,
+    fontSize: fontSize.body,
     fontWeight: fontWeight.bold,
-    textAlign: 'center',
-    paddingHorizontal: 24,
   },
   progress: {
     fontSize: fontSize.caption,
   },
-  chipsRow: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    gap: 8,
-    paddingVertical: 12,
+  actionMenu: {
+    paddingVertical: 4,
     paddingHorizontal: 16,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+  },
+  actionMenuItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    paddingVertical: 10,
+  },
+  actionMenuLabel: {
+    fontSize: fontSize.body,
   },
   setsScroll: {
     flex: 1,

@@ -69,20 +69,22 @@ export function PreWorkoutView({
       {/* Header */}
       <View style={styles.header}>
         <View style={styles.headerLeft}>
-          <Text style={[styles.title, { color: c.text }]}>Up Next</Text>
-          <Text style={[styles.subtitle, { color: c.textSecondary }]}>
-            {exerciseCount} Exercises
-          </Text>
+          <Text style={[styles.title, { color: c.text }]}>Today's Workout</Text>
         </View>
         <View style={styles.headerRight}>
           {onSwapWorkout && (
             <Pressable onPress={onSwapWorkout} style={styles.swapBtn}>
               <Ionicons name="swap-horizontal" size={16} color={c.accent} />
-              <Text style={[styles.swapText, { color: c.accent }]}>Swap</Text>
+              <Text style={[styles.swapText, { color: c.accent }]}>Change</Text>
             </Pressable>
           )}
         </View>
       </View>
+
+      {/* Stats summary row */}
+      <Text style={[styles.summaryText, { color: c.textSecondary }]}>
+        {exerciseCount} exercises · ~{duration}min · {split.charAt(0).toUpperCase() + split.slice(1)}
+      </Text>
 
       {/* Stats row */}
       {(streak > 0 || weekCount > 0) && (
@@ -100,7 +102,22 @@ export function PreWorkoutView({
         </View>
       )}
 
-      {/* Filter chips — duration as dropdown, equipment */}
+      {/* Split selector — horizontal row above exercise list */}
+      {!programName && (
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.splitRow}>
+          {SPLIT_OPTIONS.map((s) => (
+            <Chip
+              key={s}
+              label={s.charAt(0).toUpperCase() + s.slice(1)}
+              selected={split === s}
+              onPress={() => onSplitChange(s)}
+              size="sm"
+            />
+          ))}
+        </ScrollView>
+      )}
+
+      {/* Filter chips — duration toggle, equipment */}
       <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.chipsRow}>
         {!programName && (
           <Pressable
@@ -126,26 +143,6 @@ export function PreWorkoutView({
         </Pressable>
       </ScrollView>
 
-      {/* Split selector */}
-      {!programName && (
-        <View style={styles.chipsRow}>
-          {SPLIT_OPTIONS.map((s) => (
-            <Chip
-              key={s}
-              label={s.charAt(0).toUpperCase() + s.slice(1)}
-              selected={split === s}
-              onPress={() => onSplitChange(s)}
-              size="sm"
-            />
-          ))}
-        </View>
-      )}
-
-      {/* Target Muscles */}
-      {previewExercises.length > 0 && (
-        <TargetMuscles exercises={previewExercises} />
-      )}
-
       {/* Exercise list */}
       {previewExercises.length > 0 && (
         <View style={styles.exerciseList}>
@@ -162,12 +159,17 @@ export function PreWorkoutView({
         </View>
       )}
 
+      {/* Muscle Focus — below exercise list */}
+      {previewExercises.length > 0 && (
+        <TargetMuscles exercises={previewExercises} />
+      )}
+
       {/* Action buttons */}
       <View style={styles.actionsRow}>
         <View style={{ flex: 1 }}>
-          <PinkButton title="Start Workout" onPress={onStartWorkout} fullWidth />
+          <PinkButton title="Begin Workout" onPress={onStartWorkout} fullWidth />
         </View>
-        <ActionChip icon="flash-outline" label="Quick Start" onPress={onQuickStart} />
+        <ActionChip icon="flash-outline" label="Jump In" onPress={onQuickStart} />
       </View>
     </View>
   );
@@ -194,8 +196,14 @@ const styles = StyleSheet.create({
     fontSize: fontSize.h1,
     fontWeight: fontWeight.bold,
   },
-  subtitle: {
+  summaryText: {
     fontSize: fontSize.caption,
+    fontWeight: fontWeight.semibold,
+  },
+  splitRow: {
+    flexDirection: 'row',
+    gap: 8,
+    paddingVertical: 2,
   },
   swapBtn: {
     flexDirection: 'row',
