@@ -168,3 +168,25 @@ Restructuring the workout screen into distinct pre-workout and active-workout vi
   - [ ] BISRAT-CONTEXT.md updated
   - [ ] Git committed and pushed
   - [ ] Posted to #engineering
+
+---
+
+## Ship to iPhone — IN PROGRESS (2026-10-28)
+
+Goal: replace the paid Fitbod subscription. Bisrat has an active Apple Developer account (Team ZU5M6MDDB7, renews 2027-09-10).
+
+### Generator fixes — DONE 2026-10-28
+- [x] Split suggestion stuck: PPL users were always suggested "upper" (never-trained splits outside the rotation won). Now only families the user trains count
+- [x] Never-done exercises sorted first (1000-exercise library meant unfamiliar moves every workout). Now done-before (stalest first) beats never-done
+- [x] Max 2 exercises per primary muscle (relaxed when variety runs out); compounds ordered first
+- [x] Started workout now uses the same recommendations as the preview (they could differ)
+- [x] Preview used hardcoded 2.5 increment; now per-exercise default_increment
+- [x] 281 tests passing
+
+### Next
+- [ ] Fitbod CSV history importer (needs Bisrat's export: Fitbod > Settings > Export workout data). Seed names already match Fitbod names
+- [ ] First-time exercise starts at fallback weight (global input). Mostly solved by the importer
+- [ ] Upgrade Expo SDK 54 to current
+- [ ] Native build + TestFlight. Blocked: needs Bisrat to approve EAS account, or install Xcode on Mac Mini
+- [ ] Muscle-recovery tracking (Fitbod-style freshness per muscle)
+- [ ] Pre-existing: 29 TypeScript errors (expo-file-system documentDirectory API change, Timer types)

@@ -25,6 +25,8 @@ export const DURATION_EXERCISE_COUNT: Record<number, number> = {
   90: 14,
 };
 
+export const MAX_PER_PRIMARY_MUSCLE = 2;
+
 export const DURATION_OPTIONS = [30, 45, 60, 90] as const;
 export type DurationOption = (typeof DURATION_OPTIONS)[number];
 
@@ -52,14 +54,18 @@ export type RecencyEntry = {
 
 const SPLIT_PRIORITY = ['push', 'pull', 'legs', 'upper', 'lower', 'full'];
 
+// Splits that rotate together. Training any member pulls the whole family
+// into the user's rotation; families never touched are ignored.
+const SPLIT_FAMILIES = [['push', 'pull', 'legs'], ['upper', 'lower'], ['full']];
+
 /**
  * Suggests the best split for today based on recent workout history.
  *
  * Algorithm:
- * 1. For each split, find when it was most recently trained
- * 2. The stalest split (longest since last trained) wins
- * 3. Never-trained splits get max priority
- * 4. Ties broken by SPLIT_PRIORITY order (push > pull > legs > ...)
+ * 1. The user's rotation = every family (PPL, upper/lower, full) they have trained
+ * 2. Within the rotation, untrained splits win (by SPLIT_PRIORITY order)
+ * 3. Otherwise the stalest split (longest since last trained) wins
+ * 4. No history → push
  */
 export function suggestSplit(
   recentWorkouts: RecentWorkout[]
@@ -78,11 +84,17 @@ export function suggestSplit(
     }
   }
 
+  const rotation = new Set(
+    SPLIT_FAMILIES.filter((fam) => fam.some((s) => s in splitLastTrained)).flat()
+  );
+  if (rotation.size === 0) return { split: 'push', daysSince: null };
+
   let bestSplit = 'push';
   let bestScore = -1;
   let bestDaysSince: number | null = null;
 
   for (const split of SPLIT_PRIORITY) {
+    if (!rotation.has(split)) continue;
     if (split in splitLastTrained) {
       const days = splitLastTrained[split];
       if (days > bestScore) {
@@ -90,13 +102,11 @@ export function suggestSplit(
         bestSplit = split;
         bestDaysSince = days;
       }
-    } else {
-      // Never trained — max priority, but respect SPLIT_PRIORITY order
-      if (bestScore < 999) {
-        bestScore = 999;
-        bestSplit = split;
-        bestDaysSince = null;
-      }
+    } else if (bestScore < 999) {
+      // Never trained within the rotation — max priority, respect SPLIT_PRIORITY order
+      bestScore = 999;
+      bestSplit = split;
+      bestDaysSince = null;
     }
   }
 
@@ -111,9 +121,11 @@ export function suggestSplit(
  * Algorithm:
  * 1. Filter to exercises whose muscle groups overlap with the split
  * 2. Separate compounds and isolations
- * 3. Sort each: favorites first, then stalest first
- * 4. Pick ~60% compounds, ~40% isolations
- * 5. Fill from remaining if not enough matches
+ * 3. Sort each: favorites first, then exercises you have done (stalest first),
+ *    then never-done exercises — so workouts rotate through your known lifts
+ * 4. Pick ~60% compounds, ~40% isolations, max MAX_PER_PRIMARY_MUSCLE per
+ *    primary muscle so one muscle doesn't take over the workout
+ * 5. Relax the muscle cap, then fill from remaining if not enough matches
  */
 export function selectExercises(
   availableExercises: AvailableExercise[],
@@ -156,9 +168,13 @@ export function selectExercises(
         if (aBoost !== bBoost) return aBoost - bBoost;
       }
 
-      // Stalest first (never used = earliest possible date)
-      const aDate = recencyMap.get(a.id) ?? '0000-00-00';
-      const bDate = recencyMap.get(b.id) ?? '0000-00-00';
+      // Done-before beats never-done
+      const aDate = recencyMap.get(a.id);
+      const bDate = recencyMap.get(b.id);
+      if (!aDate !== !bDate) return aDate ? -1 : 1;
+      if (!aDate || !bDate) return 0;
+
+      // Stalest first
       return aDate < bDate ? -1 : aDate > bDate ? 1 : 0;
     });
   }
@@ -166,13 +182,30 @@ export function selectExercises(
   const sortedCompounds = sortByPriority(compounds);
   const sortedIsolations = sortByPriority(isolations);
 
-  const compoundCount = Math.min(Math.ceil(count * 0.6), sortedCompounds.length);
-  const isolationCount = Math.min(count - compoundCount, sortedIsolations.length);
+  const primaryCount = new Map<string, number>();
+  const selected: AvailableExercise[] = [];
 
-  const selected = [
-    ...sortedCompounds.slice(0, compoundCount),
-    ...sortedIsolations.slice(0, isolationCount),
-  ];
+  function take(pool: AvailableExercise[], n: number, capped: boolean) {
+    for (const ex of pool) {
+      if (n <= 0) break;
+      if (selected.includes(ex)) continue;
+      const primary = ex.muscle_groups.split(',')[0].trim();
+      const used = primaryCount.get(primary) ?? 0;
+      if (capped && used >= MAX_PER_PRIMARY_MUSCLE) continue;
+      selected.push(ex);
+      primaryCount.set(primary, used + 1);
+      n--;
+    }
+  }
+
+  const compoundTarget = Math.ceil(count * 0.6);
+  take(sortedCompounds, compoundTarget, true);
+  take(sortedIsolations, count - selected.length, true);
+  // Not enough variety under the cap → relax it
+  take(sortedCompounds, compoundTarget - selected.filter((e) => e.is_compound === 1).length, false);
+  take(sortedIsolations, count - selected.length, false);
+  // Compounds lead the workout
+  selected.sort((a, b) => (b.is_compound === 1 ? 1 : 0) - (a.is_compound === 1 ? 1 : 0));
 
   // Fill from remaining if not enough
   if (selected.length < count) {

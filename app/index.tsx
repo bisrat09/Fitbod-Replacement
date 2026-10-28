@@ -213,7 +213,9 @@ export default function Today() {
     const previews: PreviewExercise[] = [];
     for (const ex of selected) {
       const last = await lastWorkingSetsForExercise(dbCtx, ex.id);
-      const prog = progressiveOverload(last, ex.is_compound === 1, 2.5);
+      const full = await getExercise(dbCtx, ex.id);
+      const inc = (full as any)?.default_increment ?? 2.5;
+      const prog = progressiveOverload(last, ex.is_compound === 1, inc);
       previews.push({
         id: ex.id, name: ex.name, muscle_groups: ex.muscle_groups,
         image_url: (ex as any).video_url ?? null,
@@ -273,14 +275,16 @@ export default function Today() {
   async function autoPopulateExercises(workoutId: string) {
     if (!dbCtx) return;
     const exerciseCount = DURATION_EXERCISE_COUNT[duration] ?? 10;
-    const [available, recency, favIds] = await Promise.all([
+    const [available, recency, favIds, recs] = await Promise.all([
       listExercisesAvailableByEquipment(dbCtx),
       exerciseRecency(dbCtx),
       listFavoriteExerciseIds(dbCtx),
+      getExerciseRecommendations(dbCtx),
     ]);
 
+    // Same inputs as refreshPreview() so the started workout matches the preview
     const selected = selectExercises(
-      available, split, exerciseCount, recency, new Set(favIds)
+      available, split, exerciseCount, recency, new Set(favIds), recs
     );
 
     for (let i = 0; i < selected.length; i++) {

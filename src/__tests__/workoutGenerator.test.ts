@@ -138,6 +138,24 @@ describe('suggestSplit', () => {
     expect(result.daysSince).toBeNull();
   });
 
+  test('PPL-only history never suggests upper/lower/full', () => {
+    const d = (daysAgo: number) =>
+      new Date(Date.now() - daysAgo * 86400000).toISOString();
+    const result = suggestSplit([
+      { split: 'legs', date: d(0) },
+      { split: 'pull', date: d(1) },
+      { split: 'push', date: d(2) },
+    ]);
+    expect(result.split).toBe('push');
+    expect(result.daysSince).toBe(2);
+  });
+
+  test('upper/lower history stays in upper/lower', () => {
+    const today = new Date().toISOString();
+    const result = suggestSplit([{ split: 'upper', date: today }]);
+    expect(result.split).toBe('lower');
+  });
+
   test('case-insensitive split matching', () => {
     const today = new Date().toISOString();
     const result = suggestSplit([{ split: 'PUSH', date: today }]);
@@ -230,6 +248,45 @@ describe('selectExercises', () => {
     const result = selectExercises(pushExercises, 'custom', 2, [], new Set());
     // Should still return exercises (full split matches everything)
     expect(result.length).toBeGreaterThan(0);
+  });
+
+  test('prefers exercises done before over never-done ones', () => {
+    const recency: RecencyEntry[] = [
+      { exercise_id: 'dips', last_used: new Date().toISOString() },
+    ];
+    const result = selectExercises(pushExercises, 'push', 1, recency, new Set());
+    expect(result[0].id).toBe('dips');
+  });
+
+  test('caps exercises per primary muscle', () => {
+    const chestHeavy = [
+      makeEx('bp', 'Bench Press', 'chest,triceps', 1),
+      makeEx('dbp', 'DB Bench Press', 'chest,triceps', 1),
+      makeEx('mbp', 'Machine Chest Press', 'chest,triceps', 1),
+      makeEx('ohp', 'Overhead Press', 'delts,triceps', 1),
+      makeEx('tp', 'Tricep Pushdown', 'triceps', 0),
+    ];
+    const result = selectExercises(chestHeavy, 'push', 4, [], new Set());
+    const chest = result.filter((e) => e.muscle_groups.startsWith('chest'));
+    expect(chest.length).toBeLessThanOrEqual(2);
+    expect(result.some((e) => e.id === 'ohp')).toBe(true);
+  });
+
+  test('relaxes muscle cap when variety runs out', () => {
+    const chestOnly = [
+      makeEx('bp', 'Bench Press', 'chest', 1),
+      makeEx('dbp', 'DB Bench Press', 'chest', 1),
+      makeEx('mbp', 'Machine Chest Press', 'chest', 1),
+    ];
+    const result = selectExercises(chestOnly, 'push', 3, [], new Set());
+    expect(result).toHaveLength(3);
+  });
+
+  test('compounds come before isolations', () => {
+    const result = selectExercises(pushExercises, 'push', 6, [], new Set());
+    const firstIso = result.findIndex((e) => e.is_compound !== 1);
+    const lastCompound = result.map((e) => e.is_compound).lastIndexOf(1);
+    expect(lastCompound).toBeLessThan(firstIso);
   });
 
   test('no duplicate exercises in selection', () => {
