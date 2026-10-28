@@ -35,8 +35,14 @@ export function progressiveOverload(
     return { weight: lastSets[0].weight, reps: range.min, progressed: false };
   }
 
-  const lastWeight = Math.max(...completed.map(s => s.weight));
+  const lastWeight = Math.max(...completed.map(s => s.weight ?? 0));
   const allHitTop = completed.every(s => s.reps >= range.max);
+
+  // Bodyweight (no load logged): progress reps only, never invent a weight
+  if (lastWeight <= 0) {
+    const avg = Math.round(completed.reduce((sum, s) => sum + (s.reps ?? 0), 0) / completed.length);
+    return { weight: 0, reps: Math.max(avg + (allHitTop ? 0 : 1), range.min), progressed: false };
+  }
 
   if (allHitTop) {
     return {

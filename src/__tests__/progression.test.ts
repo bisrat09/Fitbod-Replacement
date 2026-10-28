@@ -462,3 +462,15 @@ describe('progressiveOverload', () => {
       .toEqual({ weight: 102.5, reps: 6, progressed: true });
   });
 });
+
+describe('progressiveOverload — bodyweight', () => {
+  test('no load logged → stays bodyweight, adds a rep', () => {
+    const r = progressiveOverload([{ weight: 0, reps: 8, is_completed: 1 }], true, 2.5);
+    expect(r.weight).toBe(0);
+    expect(r.reps).toBe(9);
+  });
+  test('bodyweight at top of range → no invented weight', () => {
+    const r = progressiveOverload([{ weight: 0, reps: 12, is_completed: 1 }], true, 2.5);
+    expect(r.weight).toBe(0);
+  });
+});

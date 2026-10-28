@@ -151,7 +151,7 @@ export function PreWorkoutView({
               key={ex.id}
               name={ex.name}
               imageUrl={ex.image_url}
-              subtitle={`${ex.sets} sets \u00B7 ${ex.reps} reps \u00B7 ${ex.weight} ${unit}`}
+              subtitle={`${ex.sets} sets \u00B7 ${ex.reps} reps${ex.weight > 0 ? ` \u00B7 ${ex.weight} ${unit}` : ''}`}
               onMenuPress={onExerciseMenuPress ? () => onExerciseMenuPress(ex.id) : undefined}
               onImageFetched={onImageFetched ? (url) => onImageFetched(ex.id, url) : undefined}
             />

@@ -25,7 +25,12 @@ export const DURATION_EXERCISE_COUNT: Record<number, number> = {
   90: 14,
 };
 
+// Per-primary-muscle cap scales with how many muscles the split covers:
+// push (5 muscles) × 10 exercises → 2 each; full (16) → 1 each
 export const MAX_PER_PRIMARY_MUSCLE = 2;
+
+// Exercises done within this window are "regulars" — the pool workouts rotate through
+export const REGULAR_WINDOW_DAYS = 90;
 
 export const DURATION_OPTIONS = [30, 45, 60, 90] as const;
 export type DurationOption = (typeof DURATION_OPTIONS)[number];
@@ -121,10 +126,11 @@ export function suggestSplit(
  * Algorithm:
  * 1. Filter to exercises whose muscle groups overlap with the split
  * 2. Separate compounds and isolations
- * 3. Sort each: favorites first, then exercises you have done (stalest first),
- *    then never-done exercises — so workouts rotate through your known lifts
- * 4. Pick ~60% compounds, ~40% isolations, max MAX_PER_PRIMARY_MUSCLE per
- *    primary muscle so one muscle doesn't take over the workout
+ * 3. Sort each: favorites first, then regulars (done in the last
+ *    REGULAR_WINDOW_DAYS, stalest first), then older history, then never-done
+ *    — so workouts rotate through the lifts you currently do
+ * 4. Pick ~60% compounds, ~40% isolations, capped per primary muscle
+ *    (1–MAX_PER_PRIMARY_MUSCLE, scaled to the split) so no muscle takes over
  * 5. Relax the muscle cap, then fill from remaining if not enough matches
  */
 export function selectExercises(
@@ -133,7 +139,8 @@ export function selectExercises(
   count: number,
   recency: RecencyEntry[],
   favoriteIds: Set<string>,
-  recommendations?: Map<string, string>
+  recommendations?: Map<string, string>,
+  now: number = Date.now(),
 ): AvailableExercise[] {
   const targetMuscles = new Set(SPLIT_MUSCLES[split] ?? SPLIT_MUSCLES.full);
   const recencyMap = new Map(recency.map((r) => [r.exercise_id, r.last_used]));
@@ -152,6 +159,9 @@ export function selectExercises(
   const compounds = matching.filter((ex) => ex.is_compound === 1);
   const isolations = matching.filter((ex) => ex.is_compound !== 1);
 
+  const regularCutoff = new Date(now - REGULAR_WINDOW_DAYS * 86400000).toISOString();
+  const tier = (date: string | undefined) => (!date ? 2 : date >= regularCutoff ? 0 : 1);
+
   function sortByPriority(exercises: AvailableExercise[]): AvailableExercise[] {
     return [...exercises].sort((a, b) => {
       // Favorites first
@@ -168,10 +178,12 @@ export function selectExercises(
         if (aBoost !== bBoost) return aBoost - bBoost;
       }
 
-      // Done-before beats never-done
+      // Regulars, then older history, then never-done
       const aDate = recencyMap.get(a.id);
       const bDate = recencyMap.get(b.id);
-      if (!aDate !== !bDate) return aDate ? -1 : 1;
+      const aTier = tier(aDate);
+      const bTier = tier(bDate);
+      if (aTier !== bTier) return aTier - bTier;
       if (!aDate || !bDate) return 0;
 
       // Stalest first
@@ -182,6 +194,7 @@ export function selectExercises(
   const sortedCompounds = sortByPriority(compounds);
   const sortedIsolations = sortByPriority(isolations);
 
+  const cap = Math.min(MAX_PER_PRIMARY_MUSCLE, Math.max(1, Math.ceil(count / targetMuscles.size)));
   const primaryCount = new Map<string, number>();
   const selected: AvailableExercise[] = [];
 
@@ -191,7 +204,8 @@ export function selectExercises(
       if (selected.includes(ex)) continue;
       const primary = ex.muscle_groups.split(',')[0].trim();
       const used = primaryCount.get(primary) ?? 0;
-      if (capped && used >= MAX_PER_PRIMARY_MUSCLE) continue;
+      // An explicit "more" recommendation outranks the muscle cap
+      if (capped && used >= cap && recommendations?.get(ex.id) !== 'more') continue;
       selected.push(ex);
       primaryCount.set(primary, used + 1);
       n--;
@@ -201,6 +215,8 @@ export function selectExercises(
   const compoundTarget = Math.ceil(count * 0.6);
   take(sortedCompounds, compoundTarget, true);
   take(sortedIsolations, count - selected.length, true);
+  // Short on isolations → more compounds, still capped
+  take(sortedCompounds, count - selected.length, true);
   // Not enough variety under the cap → relax it
   take(sortedCompounds, compoundTarget - selected.filter((e) => e.is_compound === 1).length, false);
   take(sortedIsolations, count - selected.length, false);

@@ -1,4 +1,5 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
+import { useFocusEffect } from 'expo-router';
 import { View, StyleSheet, ScrollView, Share, Vibration } from 'react-native';
 import { bootstrapDb } from '@/lib/bootstrap';
 import {
@@ -119,6 +120,7 @@ export default function Today() {
     weight: number;
   };
   const [previewExercises, setPreviewExercises] = useState<PreviewExercise[]>([]);
+  const [focusTick, setFocusTick] = useState(0);
 
   // ═══════════════════════════════════════════════
   // ── Bootstrap ──
@@ -219,7 +221,7 @@ export default function Today() {
       previews.push({
         id: ex.id, name: ex.name, muscle_groups: ex.muscle_groups,
         image_url: (ex as any).video_url ?? null,
-        sets: 3, reps: prog.reps, weight: prog.weight || (parseFloat(weight) || 0),
+        sets: 3, reps: prog.reps, weight: prog.weight,
       });
     }
     setPreviewExercises(previews);
@@ -228,7 +230,19 @@ export default function Today() {
   useEffect(() => {
     if (!dbCtx || workoutId || programName) return;
     refreshPreview();
-  }, [dbCtx, workoutId, split, duration, programName]);
+  }, [dbCtx, workoutId, split, duration, programName, focusTick]);
+
+  // Re-plan when returning to this tab (e.g. after a Fitbod import in Settings)
+  const firstFocus = useRef(true);
+  useFocusEffect(useCallback(() => {
+    if (firstFocus.current) { firstFocus.current = false; return; }
+    if (!dbCtx || workoutId || programName) return;
+    (async () => {
+      const suggestion = suggestSplit(await getRecentWorkoutSplits(dbCtx));
+      setSplit(suggestion.split);
+      setFocusTick((t) => t + 1);
+    })();
+  }, [dbCtx, workoutId, programName]));
 
   // ═══════════════════════════════════════════════
   // ── Core workout functions ──
@@ -297,7 +311,7 @@ export default function Today() {
       const ex = await getExercise(dbCtx, selected[i].id);
       const inc = (ex as any)?.default_increment ?? 2.5;
       const prog = progressiveOverload(lastSets, selected[i].is_compound === 1, inc);
-      const w = prog.weight || (parseFloat(weight) || 0);
+      const w = prog.weight;
       const r = prog.reps;
       const rirVal = 2;
       for (let s = 0; s < 3; s++) {
@@ -506,7 +520,7 @@ export default function Today() {
     const inc = (ex as any)?.default_increment ?? 2.5;
     const isCompound = (ex as any)?.is_compound === 1;
     const prog = progressiveOverload(lastSets, isCompound, inc);
-    const w = prog.weight || (parseFloat(weight) || 0);
+    const w = prog.weight;
     const r = prog.reps;
     const rirVal = 2;
     for (let i = 0; i < 3; i++) {

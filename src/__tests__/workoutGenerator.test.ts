@@ -378,3 +378,30 @@ describe('formatStaleness', () => {
     expect(formatStaleness(14)).toBe('last trained 14 days ago');
   });
 });
+
+describe('selectExercises — regulars and bodyweight', () => {
+  const ex = (id: string, mg: string, c = 1): AvailableExercise => ({ id, name: id, muscle_groups: mg, is_compound: c, required_equipment: null });
+  const now = new Date('2026-10-29T00:00:00Z').getTime();
+  const daysAgo = (n: number) => new Date(now - n * 86400000).toISOString();
+
+  test('recent regulars beat exercises last done long ago', () => {
+    const pool = [ex('old', 'chest'), ex('regular', 'chest')];
+    const recency: RecencyEntry[] = [
+      { exercise_id: 'old', last_used: daysAgo(900) },
+      { exercise_id: 'regular', last_used: daysAgo(3) },
+    ];
+    expect(selectExercises(pool, 'push', 1, recency, new Set(), undefined, now)[0].id).toBe('regular');
+  });
+
+  test('old history still beats never-done', () => {
+    const pool = [ex('never', 'chest'), ex('old', 'chest')];
+    const recency: RecencyEntry[] = [{ exercise_id: 'old', last_used: daysAgo(900) }];
+    expect(selectExercises(pool, 'push', 1, recency, new Set(), undefined, now)[0].id).toBe('old');
+  });
+
+  test('full-body caps each primary muscle at one', () => {
+    const pool = [ex('calf1', 'calves'), ex('calf2', 'calves'), ex('row', 'lats'), ex('bench', 'chest')];
+    const result = selectExercises(pool, 'full', 3, [], new Set(), undefined, now);
+    expect(result.filter((e) => e.muscle_groups === 'calves')).toHaveLength(1);
+  });
+});

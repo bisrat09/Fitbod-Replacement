@@ -189,6 +189,8 @@ Goal: replace the paid Fitbod subscription. Bisrat has an active Apple Developer
 - [ ] First-time exercise weight: solved for anything in Fitbod history; brand-new exercises still fall back to the global input
 - [ ] Upgrade Expo SDK 54 to current
 - [x] Native build + TestFlight — DONE 2026-10-28. EAS project @bisrat09/fitlog, bundle com.bisrat.fitlog, ASC app 6828176600 ("Fitlog (e940cd)"). Build 3 (1.0.0) submitted to TestFlight. Rebuild before 90-day TestFlight expiry (~2027-01-26): `npx eas-cli build -p ios --profile production --auto-submit`. Distribution cert expires 2027-10-28
-- [ ] IN PROGRESS: Bisrat installs via TestFlight, imports Fitbod CSV, uses it at the gym for a week
+- [x] Build 3 installed on Bisrat's iPhone 2026-10-28; Fitbod import ran on device (386 workouts, 12,288 working sets)
+- [x] Device feedback fixes 2026-10-28: generator rotated into exercises last done in 2023 (now regulars = done in last 90 days first); bodyweight moves got +2.5 lb (now reps-only); leftover 185 lb fallback removed (no-history shows sets x reps only); Workout tab re-plans on focus after import; per-muscle cap scales to split (full = 1 each); "more" recommendation bypasses cap. 310 tests
+- [ ] IN PROGRESS: Bisrat installs build 4 via TestFlight, imports Fitbod CSV, uses it at the gym for a week
 - [ ] Muscle-recovery tracking (Fitbod-style freshness per muscle)
 - [ ] Pre-existing: 26 TypeScript errors (expo-file-system documentDirectory API change, Timer types)
