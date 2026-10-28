@@ -1,34 +1,44 @@
 {
   "expo": {
-    "name": "Fitlog Offline Starter",
-    "slug": "fitlog-offline-starter",
+    "name": "Fitlog",
+    "slug": "fitlog",
     "scheme": "fitlog",
     "orientation": "portrait",
     "icon": "assets/icon.png",
     "splash": {
       "image": "assets/splash.png",
       "resizeMode": "contain",
-      "backgroundColor": "#ffffff"
+      "backgroundColor": "#1C1C1E"
     },
     "plugins": [
       "expo-router",
-      "expo-secure-store"
+      "expo-secure-store",
+      "expo-sqlite"
     ],
     "ios": {
-      "supportsTablet": true,
+      "supportsTablet": false,
       "infoPlist": {
         "UIFileSharingEnabled": true,
-        "LSSupportsOpeningDocumentsInPlace": true
+        "LSSupportsOpeningDocumentsInPlace": true,
+        "ITSAppUsesNonExemptEncryption": false
+      },
+      "bundleIdentifier": "com.bisrat.fitlog",
+      "buildNumber": "1",
+      "config": {
+        "usesNonExemptEncryption": false
       }
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "assets/adaptive-icon.png",
-        "backgroundColor": "#ffffff"
-      }
+        "backgroundColor": "#1C1C1E"
+      },
+      "package": "com.bisrat.fitlog"
     },
     "web": {
       "bundler": "metro"
-    }
+    },
+    "version": "1.0.0",
+    "userInterfaceStyle": "dark"
   }
 }
