@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { View, Text, Pressable, Modal, ScrollView, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '@/theme/ThemeContext';
@@ -7,6 +7,7 @@ import { ExerciseImage } from '../ExerciseImage';
 import { SetRow } from '../SetRow';
 import { PinkButton } from '../PinkButton';
 import { RestTimer } from '../RestTimer';
+import { ExerciseDemoModal } from '../ExerciseDemoModal';
 
 type ExerciseDetailModalProps = {
   visible: boolean;
@@ -54,6 +55,7 @@ export function ExerciseDetailModal({
   onImageFetched, onCompleteSet,
 }: ExerciseDetailModalProps) {
   const { c } = useTheme();
+  const [showDemo, setShowDemo] = useState(false);
 
   const workingSets = sets.filter((s: any) => !s.is_warmup);
   const doneCount = workingSets.filter((s: any) => s.is_completed).length;
@@ -68,12 +70,17 @@ export function ExerciseDetailModal({
         {/* Compact header */}
         <View style={[styles.header, { backgroundColor: c.card, borderBottomColor: c.cardBorder }]}>
           <View style={styles.headerLeft}>
-            <ExerciseImage
-              name={exerciseName}
-              imageUrl={imageUrl}
-              size={48}
-              onImageFetched={onImageFetched}
-            />
+            <Pressable onPress={() => setShowDemo(true)} hitSlop={6}>
+              <ExerciseImage
+                name={exerciseName}
+                imageUrl={imageUrl}
+                size={64}
+                onImageFetched={onImageFetched}
+              />
+              <View style={[styles.demoBadge, { backgroundColor: c.accent }]}>
+                <Ionicons name="play" size={10} color={c.textOnAccent} />
+              </View>
+            </Pressable>
             <View style={styles.headerTitleGroup}>
               <Text style={[styles.exerciseName, { color: c.text }]} numberOfLines={2}>{exerciseName}</Text>
               {supersetLabel && (
@@ -90,6 +97,8 @@ export function ExerciseDetailModal({
             <Ionicons name="close" size={22} color={c.text} />
           </Pressable>
         </View>
+
+        <ExerciseDemoModal visible={showDemo} onClose={() => setShowDemo(false)} name={exerciseName} imageUrl={imageUrl} />
 
         {/* Action menu (vertical list) */}
         <View style={[styles.actionMenu, { borderBottomColor: c.cardBorder }]}>
@@ -190,6 +199,16 @@ function formatRestLabel(seconds: number): string {
 }
 
 const styles = StyleSheet.create({
+  demoBadge: {
+    position: 'absolute',
+    right: -2,
+    bottom: -2,
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   container: {
     flex: 1,
   },

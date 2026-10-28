@@ -1,9 +1,10 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { View, Text, Pressable, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '@/theme/ThemeContext';
 import { fontSize, fontWeight } from '@/theme/typography';
 import { ExerciseImage } from '../ExerciseImage';
+import { ExerciseDemoModal } from '../ExerciseDemoModal';
 
 type ExerciseListItemProps = {
   name: string;
@@ -28,13 +29,17 @@ export function ExerciseListItem({
   onImageFetched,
 }: ExerciseListItemProps) {
   const { c } = useTheme();
+  const [showDemo, setShowDemo] = useState(false);
 
   return (
     <Pressable
       onPress={onPress}
       style={[styles.container, { borderBottomColor: c.cardBorder }]}
     >
-      <ExerciseImage name={name} imageUrl={imageUrl} size={68} onImageFetched={onImageFetched} />
+      <Pressable onPress={() => setShowDemo(true)} hitSlop={4}>
+        <ExerciseImage name={name} imageUrl={imageUrl} size={68} onImageFetched={onImageFetched} />
+      </Pressable>
+      <ExerciseDemoModal visible={showDemo} onClose={() => setShowDemo(false)} name={name} imageUrl={imageUrl} />
       <View style={styles.info}>
         <Text style={[styles.name, { color: allDone ? c.green : c.text }]} numberOfLines={2}>
           {name}

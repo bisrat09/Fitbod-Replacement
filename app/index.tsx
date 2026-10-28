@@ -51,6 +51,8 @@ export default function Today() {
   const [workoutId, setWorkoutId] = useState<string | null>(null);
   const [workoutStartTime, setWorkoutStartTime] = useState<number | null>(null);
   const [elapsed, setElapsed] = useState(0);
+  // Pause: clock frozen since pausedAt; on resume the start time shifts forward by the pause
+  const [pausedAt, setPausedAt] = useState<number | null>(null);
   const [sets, setSets] = useState<any[]>([]);
   const [blocks, setBlocks] = useState<any[]>([]);
   const [blockExercises, setBlockExercises] = useState<Record<string, any[]>>({});
@@ -180,6 +182,8 @@ export default function Today() {
         setWorkoutId(activeWid);
         const startTs = await getSetting(ctx, 'workout_start_time');
         if (startTs) setWorkoutStartTime(parseInt(startTs));
+        const pausedTs = await getSetting(ctx, 'workout_paused_at');
+        if (pausedTs) setPausedAt(parseInt(pausedTs));
       }
       setDbCtx(ctx);
     })();
@@ -193,9 +197,11 @@ export default function Today() {
   // Elapsed timer
   useEffect(() => {
     if (!workoutStartTime) return;
+    if (pausedAt) { setElapsed(Math.floor((pausedAt - workoutStartTime) / 1000)); return; }
+    setElapsed(Math.floor((Date.now() - workoutStartTime) / 1000));
     const id = setInterval(() => setElapsed(Math.floor((Date.now() - workoutStartTime) / 1000)), 1000);
     return () => clearInterval(id);
-  }, [workoutStartTime]);
+  }, [workoutStartTime, pausedAt]);
 
   // Refresh blocks/sets when workout changes
   useEffect(() => { if (dbCtx && workoutId) refreshBlocksAndSets(); }, [dbCtx, workoutId]);
@@ -318,6 +324,21 @@ export default function Today() {
         await addSet(dbCtx, { id: Crypto.randomUUID(), workout_id: workoutId, exercise_id: selected[i].id, set_index: nextIdx, weight: w, reps: r, rir: rirVal, is_warmup: 0, block_id: blockId });
         nextIdx++;
       }
+    }
+  }
+
+  async function togglePause() {
+    if (!dbCtx || !workoutStartTime) return;
+    if (pausedAt) {
+      const newStart = workoutStartTime + (Date.now() - pausedAt);
+      await setSetting(dbCtx, 'workout_start_time', String(newStart));
+      await deleteSetting(dbCtx, 'workout_paused_at');
+      setWorkoutStartTime(newStart);
+      setPausedAt(null);
+    } else {
+      const now = Date.now();
+      await setSetting(dbCtx, 'workout_paused_at', String(now));
+      setPausedAt(now);
     }
   }
 
@@ -657,12 +678,13 @@ export default function Today() {
       if (workoutNotes.trim() && workoutId) await updateWorkoutNotes(dbCtx, workoutId, workoutNotes.trim());
       await deleteSetting(dbCtx, 'active_workout_id');
       await deleteSetting(dbCtx, 'workout_start_time');
+      await deleteSetting(dbCtx, 'workout_paused_at');
       const [s, wc] = await Promise.all([getWorkoutStreak(dbCtx), getWorkoutsThisWeek(dbCtx)]);
       setStreak(s); setWeekCount(wc);
     }
     setWorkoutId(null); setSets([]); setBlocks([]); setBlockExercises({});
     setActiveRowByBlock({}); setLastSets({});
-    setShowFinishModal(false); setWorkoutStartTime(null); setElapsed(0); setWorkoutNotes('');
+    setShowFinishModal(false); setWorkoutStartTime(null); setPausedAt(null); setElapsed(0); setWorkoutNotes('');
   }
 
   async function handleShareWorkout() {
@@ -694,6 +716,8 @@ export default function Today() {
           <ActiveWorkoutView
             prBanner={prBanner}
             elapsed={elapsed}
+            paused={!!pausedAt}
+            onTogglePause={togglePause}
             workoutStartTime={workoutStartTime}
             workoutId={workoutId}
             streak={streak}

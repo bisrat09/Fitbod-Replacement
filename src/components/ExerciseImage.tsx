@@ -10,12 +10,14 @@ type ExerciseImageProps = {
   size?: number;
   /** Callback when a new image URL is resolved (so caller can persist to DB). */
   onImageFetched?: (url: string) => void;
+  /** 'circle' (default) for lists; 'square' for the full-width demo. */
+  shape?: 'circle' | 'square';
 };
 
 /**
  * Shows an exercise GIF if available, falls back to colored-initial circle.
  */
-export function ExerciseImage({ name, imageUrl, size = 40, onImageFetched }: ExerciseImageProps) {
+export function ExerciseImage({ name, imageUrl, size = 40, onImageFetched, shape = 'circle' }: ExerciseImageProps) {
   const [url, setUrl] = useState<string | null>(imageUrl ? proxyUrl(imageUrl) : null);
   const [failed, setFailed] = useState(false);
 
@@ -53,22 +55,30 @@ export function ExerciseImage({ name, imageUrl, size = 40, onImageFetched }: Exe
     return (
       <Image
         source={{ uri: url }}
-        style={[styles.image, { width: size, height: size, borderRadius: size / 2 }]}
+        style={[
+          shape === 'square' ? styles.square : styles.image,
+          { width: size, height: size, borderRadius: shape === 'square' ? 0 : size / 2 },
+        ]}
         onError={(e) => {
           console.log(`[IMG] ${name}: FAILED — ${(e.nativeEvent as any)?.error || 'unknown'}`);
           setFailed(true);
         }}
         onLoad={() => console.log(`[IMG] ${name}: OK`)}
-        resizeMode="cover"
+        resizeMode={shape === 'square' ? 'contain' : 'cover'}
       />
     );
   }
 
+  if (shape === 'square') return null;
   return <ExerciseInitial name={name} size={size} />;
 }
 
 const styles = StyleSheet.create({
   image: {
     backgroundColor: '#1a1a2e',
+  },
+  // ExerciseDB GIFs are drawn on white
+  square: {
+    backgroundColor: '#FFFFFF',
   },
 });

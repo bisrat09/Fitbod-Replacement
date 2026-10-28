@@ -18,6 +18,8 @@ type ActiveWorkoutViewProps = {
   // Header
   prBanner: { exerciseName: string; est1rm: number } | null;
   elapsed: number;
+  paused: boolean;
+  onTogglePause: () => void;
   workoutStartTime: number | null;
   workoutId: string;
   streak: number;
@@ -62,7 +64,7 @@ type ActiveWorkoutViewProps = {
 };
 
 export function ActiveWorkoutView({
-  prBanner, elapsed, workoutStartTime, workoutId,
+  prBanner, elapsed, paused, onTogglePause, workoutStartTime, workoutId,
   streak, weekCount, suggestedDay, programName, unit,
   blocks, blockExercises, sets, timers,
   bestSetIds, lastSets, restDuration,
@@ -160,6 +162,8 @@ export function ActiveWorkoutView({
       <WorkoutHeader
         prBanner={prBanner}
         elapsed={elapsed}
+        paused={paused}
+        onTogglePause={onTogglePause}
         workoutStartTime={workoutStartTime}
         workoutId={workoutId}
         streak={streak}
@@ -191,7 +195,7 @@ export function ActiveWorkoutView({
                     name={ex.exercise_name}
                     imageUrl={ex.image_url}
                     subtitle={totalCount > 0
-                      ? `${totalCount} sets \u00B7 ${exSets[0]?.reps ?? 0} reps \u00B7 ${exSets[0]?.weight ?? 0} ${unit}`
+                      ? `${totalCount} sets \u00B7 ${exSets[0]?.reps ?? 0} reps${exSets[0]?.weight ? ` \u00B7 ${exSets[0].weight} ${unit}` : ''}`
                       : '0 sets'}
                     progress={`${completedCount}/${totalCount}`}
                     allDone={allDone}

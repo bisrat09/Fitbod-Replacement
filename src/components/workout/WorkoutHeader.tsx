@@ -1,11 +1,14 @@
 import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { View, Text, Pressable, StyleSheet } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '@/theme/ThemeContext';
 import { fontSize, fontWeight } from '@/theme/typography';
 
 type WorkoutHeaderProps = {
   prBanner: { exerciseName: string; est1rm: number } | null;
   elapsed: number;
+  paused?: boolean;
+  onTogglePause?: () => void;
   workoutStartTime: number | null;
   workoutId: string | null;
   streak: number;
@@ -16,13 +19,14 @@ type WorkoutHeaderProps = {
 };
 
 function formatTime(sec: number): string {
-  const m = Math.floor(sec / 60);
+  const h = Math.floor(sec / 3600);
+  const m = Math.floor((sec % 3600) / 60);
   const s = sec % 60;
-  return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+  return `${h}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
 }
 
 export function WorkoutHeader({
-  prBanner, elapsed, workoutStartTime, workoutId,
+  prBanner, elapsed, paused, onTogglePause, workoutStartTime, workoutId,
   streak, weekCount, suggestedDay, programName, unit,
 }: WorkoutHeaderProps) {
   const { c } = useTheme();
@@ -30,16 +34,32 @@ export function WorkoutHeader({
   return (
     <View style={styles.container}>
       {/* Title */}
-      <View style={styles.titleRow}>
-        <Text style={[styles.title, { color: c.text }]}>
-          {workoutId ? 'Today\'s Workout' : 'Workout'}
-        </Text>
-        {workoutId && workoutStartTime && (
-          <Text style={[styles.elapsed, { color: c.textSecondary }]}>
+      <Text style={[styles.title, { color: c.text }]}>
+        {workoutId ? 'Today\'s Workout' : 'Workout'}
+      </Text>
+
+      {/* Workout clock + pause */}
+      {workoutId && workoutStartTime && (
+        <View style={styles.clockRow}>
+          <View style={[styles.clockDot, { backgroundColor: paused ? c.textMuted : c.timerDot }]} />
+          <Text style={[styles.clock, { color: paused ? c.textSecondary : c.text }]}>
             {formatTime(elapsed)}
           </Text>
-        )}
-      </View>
+          {paused && (
+            <Text style={[styles.pausedLabel, { color: c.textSecondary }]}>PAUSED</Text>
+          )}
+          {onTogglePause && (
+            <Pressable
+              onPress={onTogglePause}
+              style={[styles.pauseBtn, { backgroundColor: paused ? c.accent : c.chipBg, borderColor: paused ? c.accent : c.chipBorder }]}
+              hitSlop={8}
+              accessibilityLabel={paused ? 'Resume workout' : 'Pause workout'}
+            >
+              <Ionicons name={paused ? 'play' : 'pause'} size={26} color={paused ? c.textOnAccent : c.text} />
+            </Pressable>
+          )}
+        </View>
+      )}
 
       {/* PR Banner */}
       {prBanner && (
@@ -85,19 +105,41 @@ const styles = StyleSheet.create({
   container: {
     gap: 8,
   },
-  titleRow: {
+  clockRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
+    gap: 12,
+    paddingVertical: 8,
+  },
+  clockDot: {
+    width: 12,
+    height: 12,
+    borderRadius: 6,
+  },
+  clock: {
+    fontSize: 44,
+    fontWeight: fontWeight.bold,
+    fontStyle: 'italic',
+    fontVariant: ['tabular-nums'],
+    letterSpacing: 1,
+  },
+  pausedLabel: {
+    fontSize: fontSize.caption,
+    fontWeight: fontWeight.bold,
+    letterSpacing: 1,
+  },
+  pauseBtn: {
+    marginLeft: 'auto',
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    borderWidth: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   title: {
     fontSize: fontSize.h1,
     fontWeight: fontWeight.bold,
-  },
-  elapsed: {
-    fontSize: fontSize.caption,
-    fontWeight: fontWeight.semibold,
-    fontVariant: ['tabular-nums'],
   },
   prBanner: {
     padding: 10,

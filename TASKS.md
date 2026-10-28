@@ -192,6 +192,8 @@ Goal: replace the paid Fitbod subscription. Bisrat has an active Apple Developer
 - [x] Build 3 installed on Bisrat's iPhone 2026-10-28; Fitbod import ran on device (386 workouts, 12,288 working sets)
 - [x] Device feedback fixes 2026-10-28: generator rotated into exercises last done in 2023 (now regulars = done in last 90 days first); bodyweight moves got +2.5 lb (now reps-only); leftover 185 lb fallback removed (no-history shows sets x reps only); Workout tab re-plans on focus after import; per-muscle cap scales to split (full = 1 each); "more" recommendation bypasses cap. 310 tests
 - [x] Build 4 installed 2026-10-28, Workout tab matches simulation (real lifts + weights, 1 per muscle)
+- [x] Gym-test feedback 2026-10-28: tap any exercise image → full-screen demo (large GIF + target muscles + steps, 216 exercises, 47/50 of Bisrat's top recent lifts; free-exercise-db public domain via `scripts/buildInstructions.mjs`, strict match + hand-checked aliases); workout pause/resume (persisted, clock shifts on resume); big 44pt H:MM:SS clock with red/grey dot; bodyweight rows no longer show "0 lb"
+- [ ] Later: bundle GIFs for regulars into the app (offline, no wsrv.nl dependency)
 - [ ] IN PROGRESS: one week of real gym use, then cancel Fitbod. Collect friction from Bisrat, imports Fitbod CSV, uses it at the gym for a week
 - [ ] Muscle-recovery tracking (Fitbod-style freshness per muscle)
 - [ ] Pre-existing: 26 TypeScript errors (expo-file-system documentDirectory API change, Timer types)
