@@ -39,6 +39,12 @@
       "bundler": "metro"
     },
     "version": "1.0.0",
-    "userInterfaceStyle": "dark"
+    "userInterfaceStyle": "dark",
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "dfd4853a-d2c9-4b5e-8681-9f8c3163c9f6"
+      }
+    }
   }
 }
