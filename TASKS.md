@@ -184,9 +184,10 @@ Goal: replace the paid Fitbod subscription. Bisrat has an active Apple Developer
 - [x] 281 tests passing
 
 ### Next
-- [ ] Fitbod CSV history importer (needs Bisrat's export: Fitbod > Settings > Export workout data). Seed names already match Fitbod names
-- [ ] First-time exercise starts at fallback weight (global input). Mostly solved by the importer
+- [x] Fitbod CSV importer — DONE 2026-10-28. `src/lib/fitbodImport.ts` (pure) + `importFitbodPlan()` in dao.ts + Settings > Import from Fitbod. Reads newest .csv from app Documents (Files > On My iPhone > Fitlog; `UIFileSharingEnabled` in app.json, no new dependency). Deterministic ids, re-import is a no-op. Verified on Bisrat's real export against a real SQLite DB built from schema + migrations: 386 workouts, 13,012 sets, 2,467 PR metrics, 25 new custom exercises. Splits inferred from muscles (mostly `full`)
+- [x] Settings backup export/import fixed for SDK 54 (`expo-file-system/legacy`)
+- [ ] First-time exercise weight: solved for anything in Fitbod history; brand-new exercises still fall back to the global input
 - [ ] Upgrade Expo SDK 54 to current
 - [ ] Native build + TestFlight. Blocked: needs Bisrat to approve EAS account, or install Xcode on Mac Mini
 - [ ] Muscle-recovery tracking (Fitbod-style freshness per muscle)
-- [ ] Pre-existing: 29 TypeScript errors (expo-file-system documentDirectory API change, Timer types)
+- [ ] Pre-existing: 26 TypeScript errors (expo-file-system documentDirectory API change, Timer types)

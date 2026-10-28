@@ -1,11 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, Pressable, TextInput, Switch } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import * as FileSystem from 'expo-file-system';
+import * as FileSystem from 'expo-file-system/legacy';
 import * as Crypto from 'expo-crypto';
 import { bootstrapDb } from '@/lib/bootstrap';
-import { ensureUser, getUserUnit, updateUserUnit, exportAllData, importData, logBodyWeight, getBodyWeightHistory, deleteBodyWeight, getLifetimeStats } from '@/lib/dao';
+import { ensureUser, getUserUnit, updateUserUnit, exportAllData, importData, importFitbodPlan, exerciseMuscleGroupsByName, logBodyWeight, getBodyWeightHistory, deleteBodyWeight, getLifetimeStats } from '@/lib/dao';
 import { useTheme } from '@/theme/ThemeContext';
+import { parseFitbodCsv, planFitbodImport, guessExercise } from '@/lib/fitbodImport';
 import { fontSize, fontWeight } from '@/theme/typography';
 import { Card } from '@/components/Card';
 import { SettingsRow } from '@/components/SettingsRow';
@@ -94,6 +95,35 @@ export default function Settings() {
     } catch (err: any) {
       setStatus(`Import failed: ${err.message}`);
       setTimeout(() => setStatus(null), 5000);
+    }
+  }
+
+  // Fitbod export: drop the CSV into Files > On My iPhone > Fitlog, then tap Import from Fitbod
+  async function handleFitbodImport() {
+    if (!dbCtx) return;
+    try {
+      setStatus('Looking for Fitbod export...');
+      const files = await FileSystem.readDirectoryAsync(FileSystem.documentDirectory!);
+      const csvs = files.filter((f) => f.toLowerCase().endsWith('.csv')).sort().reverse();
+      if (csvs.length === 0) {
+        setStatus('No CSV found. Save the Fitbod export to Files > On My iPhone > Fitlog.');
+        setTimeout(() => setStatus(null), 8000);
+        return;
+      }
+      setStatus(`Reading ${csvs[0]}...`);
+      const text = await FileSystem.readAsStringAsync(`${FileSystem.documentDirectory}${csvs[0]}`);
+      const rows = parseFitbodCsv(text);
+      const unitNow = await getUserUnit(dbCtx);
+      const known = await exerciseMuscleGroupsByName(dbCtx);
+      const plan = planFitbodImport(rows, unitNow, (name) => known.get(name.toLowerCase()) ?? guessExercise(name).muscle_groups);
+      setStatus(`Importing ${plan.workouts.length} workouts...`);
+      const res = await importFitbodPlan(dbCtx, plan, () => Crypto.randomUUID());
+      setStatus(`Imported ${res.workouts} workouts, ${res.sets} sets${res.newExercises.length ? `, ${res.newExercises.length} new exercises` : ''}.`);
+      await refreshData();
+      setTimeout(() => setStatus(null), 8000);
+    } catch (err: any) {
+      setStatus(`Fitbod import failed: ${err.message}`);
+      setTimeout(() => setStatus(null), 8000);
     }
   }
 
@@ -242,9 +272,14 @@ export default function Settings() {
             <Text style={[styles.dataActionLabel, { color: c.text }]}>Export Backup</Text>
             <Ionicons name="chevron-forward" size={16} color={c.textMuted} />
           </Pressable>
-          <Pressable onPress={handleImport} style={styles.dataActionRowLast}>
+          <Pressable onPress={handleImport} style={[styles.dataActionRow, { borderBottomColor: c.cardBorder }]}>
             <Ionicons name="push-outline" size={20} color={c.accent} />
             <Text style={[styles.dataActionLabel, { color: c.text }]}>Import Backup</Text>
+            <Ionicons name="chevron-forward" size={16} color={c.textMuted} />
+          </Pressable>
+          <Pressable onPress={handleFitbodImport} style={styles.dataActionRowLast}>
+            <Ionicons name="barbell-outline" size={20} color={c.accent} />
+            <Text style={[styles.dataActionLabel, { color: c.text }]}>Import from Fitbod</Text>
             <Ionicons name="chevron-forward" size={16} color={c.textMuted} />
           </Pressable>
         </Card>

@@ -1,4 +1,6 @@
 import { SQLiteDatabase } from 'expo-sqlite';
+import type { ImportPlan } from '@/lib/fitbodImport';
+import { guessExercise } from '@/lib/fitbodImport';
 
 export type Ctx = { db: SQLiteDatabase; userId: string };
 
@@ -563,6 +565,67 @@ export async function importData(ctx: Ctx, data: any) {
       await ctx.db.runAsync(`INSERT OR IGNORE INTO user_favorite_exercises(user_id,exercise_id) VALUES(?,?)`, [ctx.userId, exId]);
     }
   }
+}
+
+// Fitbod CSV import: writes a plan from planFitbodImport(). Deterministic ids +
+// INSERT OR IGNORE make re-importing the same export a no-op.
+export async function importFitbodPlan(
+  ctx: Ctx,
+  plan: ImportPlan,
+  newId: () => string,
+): Promise<{ workouts: number; sets: number; newExercises: string[] }> {
+  const ts = nowIso();
+  const exerciseIds = new Map<string, string>();
+  const newExercises: string[] = [];
+  let workouts = 0;
+  let sets = 0;
+
+  await ctx.db.withTransactionAsync(async () => {
+    for (const name of plan.exerciseNames) {
+      const existing = await ctx.db.getFirstAsync<{ id: string }>(
+        `SELECT id FROM exercises WHERE user_id=? AND name=? COLLATE NOCASE LIMIT 1`,
+        [ctx.userId, name]
+      );
+      if (existing) { exerciseIds.set(name, existing.id); continue; }
+      const id = newId();
+      const g = guessExercise(name);
+      await createExercise(ctx, { id, name, muscle_groups: g.muscle_groups, is_compound: g.is_compound, default_increment: 2.5 });
+      exerciseIds.set(name, id);
+      newExercises.push(name);
+    }
+
+    for (const w of plan.workouts) {
+      const res = await ctx.db.runAsync(
+        `INSERT OR IGNORE INTO workouts (id,user_id,date,split,notes,created_at,updated_at) VALUES (?,?,?,?,?,?,?)`,
+        [w.id, ctx.userId, w.date, w.split, 'Imported from Fitbod', ts, ts]
+      );
+      workouts += res.changes;
+      for (const st of w.sets) {
+        const r = await ctx.db.runAsync(
+          `INSERT OR IGNORE INTO sets (id,user_id,workout_id,exercise_id,set_index,weight,reps,rir,tempo,is_warmup,block_id,is_completed,notes,created_at,updated_at) VALUES (?,?,?,?,?,?,?,NULL,NULL,?,NULL,1,?,?,?)`,
+          [st.id, ctx.userId, w.id, exerciseIds.get(st.exercise)!, st.set_index, st.weight, st.reps, st.is_warmup, st.notes, ts, ts]
+        );
+        sets += r.changes;
+      }
+    }
+
+    for (const m of plan.metrics) {
+      await ctx.db.runAsync(
+        `INSERT OR IGNORE INTO metrics (id,user_id,date,exercise_id,est_1rm,top_set_weight,top_set_reps,created_at,updated_at) VALUES (?,?,?,?,?,?,?,?,?)`,
+        [m.id, ctx.userId, m.date, exerciseIds.get(m.exercise)!, m.est_1rm, m.top_set_weight, m.top_set_reps, ts, ts]
+      );
+    }
+  });
+
+  return { workouts, sets, newExercises };
+}
+
+// Muscle groups by exercise name (case-insensitive), for import planning
+export async function exerciseMuscleGroupsByName(ctx: Ctx): Promise<Map<string, string>> {
+  const rows = await ctx.db.getAllAsync<{ name: string; muscle_groups: string }>(
+    `SELECT name, muscle_groups FROM exercises WHERE user_id=?`, [ctx.userId]
+  );
+  return new Map(rows.map((r) => [r.name.toLowerCase(), r.muscle_groups]));
 }
 
 // Replace exercise in a block: update block_exercises and delete old sets

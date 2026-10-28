@@ -65,6 +65,7 @@ src/lib/                # Core logic
   bootstrap.ts          # Startup: opens DB, runs migrations, init userId
   progression.ts        # Weight suggestion, Epley 1RM, warmups
   workoutGenerator.ts   # Smart split suggestion + exercise selection (pure logic)
+  fitbodImport.ts       # Fitbod CSV parse + import plan (pure logic); dao.importFitbodPlan writes it
   targetMuscles.ts      # Muscle group percentage computation (pure logic)
   migrations/           # Incremental schema migrations (v2-v8)
 ```
@@ -109,7 +110,7 @@ Hidden routes: Programs, Exercises, Equipment, Recent (Log)
 ```bash
 npm start              # Expo dev server
 npm start -- --clear   # Clear cache
-npm test               # 275 tests
+npm test               # 305 tests
 npm run build:gifmap   # Regenerate exercise GIF map from ExerciseDB API
 npx expo run:ios       # Build + run iOS
 npx expo-doctor        # Check dependencies
