@@ -188,6 +188,7 @@ Goal: replace the paid Fitbod subscription. Bisrat has an active Apple Developer
 - [x] Settings backup export/import fixed for SDK 54 (`expo-file-system/legacy`)
 - [ ] First-time exercise weight: solved for anything in Fitbod history; brand-new exercises still fall back to the global input
 - [ ] Upgrade Expo SDK 54 to current
-- [ ] Native build + TestFlight. Blocked: needs Bisrat to approve EAS account, or install Xcode on Mac Mini
+- [x] Native build + TestFlight — DONE 2026-10-28. EAS project @bisrat09/fitlog, bundle com.bisrat.fitlog, ASC app 6828176600 ("Fitlog (e940cd)"). Build 3 (1.0.0) submitted to TestFlight. Rebuild before 90-day TestFlight expiry (~2027-01-26): `npx eas-cli build -p ios --profile production --auto-submit`. Distribution cert expires 2027-10-28
+- [ ] IN PROGRESS: Bisrat installs via TestFlight, imports Fitbod CSV, uses it at the gym for a week
 - [ ] Muscle-recovery tracking (Fitbod-style freshness per muscle)
 - [ ] Pre-existing: 26 TypeScript errors (expo-file-system documentDirectory API change, Timer types)
