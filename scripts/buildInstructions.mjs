@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Builds a static name → instructions map from free-exercise-db
+ * Builds a static name → instructions (+ start/finish photo paths) map from free-exercise-db
  * (https://github.com/yuhonas/free-exercise-db, public domain / Unlicense).
  *
  * Matching is deliberately strict (normalized exact name only): a fuzzy match
@@ -102,6 +102,7 @@ async function main() {
       primary: ex.primaryMuscles ?? [],
       secondary: ex.secondaryMuscles ?? [],
       equipment: ex.equipment ?? null,
+      images: ex.images ?? [],
     };
   }
 
