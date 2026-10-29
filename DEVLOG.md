@@ -502,3 +502,13 @@ Next Steps
 - Phase 2: Create 12 reusable components in `src/components/`
 - Phase 3: Split + restyle Workout screen (index.tsx)
 - See TASKS.md for full phase breakdown
+
+## 2026-10-28 — Shipped to iPhone (TestFlight builds 3–8)
+
+- Generator: stays in the user's split rotation; rotates through regulars (last 90 days) before older history and never-done; per-muscle cap scaled to split (full body = 1 each); bodyweight progresses reps only; no 185 lb fallback; re-plans on tab focus
+- Fitbod CSV importer (`src/lib/fitbodImport.ts`, `dao.importFitbodPlan`, Settings > Import from Fitbod). Bisrat's 386 workouts / 13,012 sets imported on device
+- iOS release: EAS project @bisrat09/fitlog, bundle com.bisrat.fitlog, ASC app 6828176600, `eas build -p ios --profile production --auto-submit`
+- Workout: pause/resume (persisted), 44pt H:MM:SS clock
+- Exercise demo: tap any image → start/finish photos (free-exercise-db, public domain), instructions, target muscles, YouTube form-video link. 237 exercises, hand-checked aliases in `scripts/buildInstructions.mjs`
+- Picture audit: ~22 ExerciseDB GIFs were wrong (fuzzy match); thumbnails now photo-first, wrong GIFs blocked (`WRONG_GIFS` in exerciseImages.ts)
+- Tests: 275 → 310

@@ -197,6 +197,6 @@ Goal: replace the paid Fitbod subscription. Bisrat has an active Apple Developer
 - [x] Picture audit 2026-10-28: visual check of the GIFs for Bisrat's 61 most-used exercises found ~22 wrong (fuzzy name match: Leg Press → rear-delt machine, Back Squat → seated press, 3 shoulder presses → band press, hip thrusts → kneeling band). Thumbnails now prefer the strictly matched free-exercise-db photo (66 regulars, all visually verified); audited-wrong GIFs blocked in `exerciseImages.ts` WRONG_GIFS (also overrides URLs cached in SQLite). Hip Thrust → Barbell Hip Thrust photos (Bisrat does the machine version; closest free match)
 - [x] Build 8 2026-10-28: 20 more hand-checked photo aliases (Dip, Seated Dumbbell Calf Raise, Hammerstrength Iso Row, ...), 237 exercises with photos
 - [ ] Later: bundle photos/GIFs for regulars into the app (offline at the gym)
-- [ ] IN PROGRESS: one week of real gym use, then cancel Fitbod. Collect friction from Bisrat, imports Fitbod CSV, uses it at the gym for a week
+- [ ] IN PROGRESS: first real workout 2026-10-29, Bisrat reports feedback. Trial must finish before Fitbod auto-renews 2026-11-05: Bisrat cancels Fitbod before then if Fitlog holds up, imports Fitbod CSV, uses it at the gym for a week
 - [ ] Muscle-recovery tracking (Fitbod-style freshness per muscle)
 - [ ] Pre-existing: 26 TypeScript errors (expo-file-system documentDirectory API change, Timer types)
