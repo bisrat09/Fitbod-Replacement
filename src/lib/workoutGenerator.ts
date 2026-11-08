@@ -5,6 +5,8 @@
  * No database access, no side effects — fully testable.
  */
 
+import { FRESH_THRESHOLD, recoveryOf, type RecoveryMap } from './muscleRecovery';
+
 // ── Split-to-muscle-group mapping ──
 
 export const SPLIT_MUSCLES: Record<string, string[]> = {
@@ -63,30 +65,59 @@ const SPLIT_PRIORITY = ['push', 'pull', 'legs', 'upper', 'lower', 'full'];
 // into the user's rotation; families never touched are ignored.
 const SPLIT_FAMILIES = [['push', 'pull', 'legs'], ['upper', 'lower'], ['full']];
 
+// Small accessory muscles don't decide the split
+const ACCESSORY_MUSCLES = new Set(['forearms', 'core', 'calves']);
+
+function daysSinceBySplit(recentWorkouts: RecentWorkout[], now: number): Record<string, number> {
+  const out: Record<string, number> = {};
+  for (const w of recentWorkouts) {
+    if (!w.split) continue;
+    const s = w.split.toLowerCase();
+    if (!(s in out)) out[s] = Math.floor((now - new Date(w.date).getTime()) / 86400000);
+  }
+  return out;
+}
+
+/** Mean recovery (0..1) of a split's main muscles. */
+export function splitReadiness(split: string, recovery: RecoveryMap): number {
+  const muscles = (SPLIT_MUSCLES[split] ?? SPLIT_MUSCLES.full).filter((m) => !ACCESSORY_MUSCLES.has(m));
+  return muscles.reduce((sum, m) => sum + recoveryOf(recovery, m), 0) / muscles.length;
+}
+
 /**
- * Suggests the best split for today based on recent workout history.
+ * Suggests the best split for today.
  *
- * Algorithm:
+ * With a recovery map (Fitbod-style, the default in the app):
+ *   the split whose main muscles are most recovered wins. Near-ties go to the
+ *   split trained longest ago, then SPLIT_PRIORITY order.
+ *
+ * Without one (legacy rotation):
  * 1. The user's rotation = every family (PPL, upper/lower, full) they have trained
  * 2. Within the rotation, untrained splits win (by SPLIT_PRIORITY order)
  * 3. Otherwise the stalest split (longest since last trained) wins
  * 4. No history → push
  */
 export function suggestSplit(
-  recentWorkouts: RecentWorkout[]
-): { split: string; daysSince: number | null } {
-  const now = new Date();
-  const splitLastTrained: Record<string, number> = {};
+  recentWorkouts: RecentWorkout[],
+  recovery?: RecoveryMap,
+  now: number = Date.now(),
+): { split: string; daysSince: number | null; readiness?: number } {
+  const splitLastTrained = daysSinceBySplit(recentWorkouts, now);
 
-  for (const w of recentWorkouts) {
-    if (!w.split) continue;
-    const s = w.split.toLowerCase();
-    if (!(s in splitLastTrained)) {
-      const daysSince = Math.floor(
-        (now.getTime() - new Date(w.date).getTime()) / (1000 * 60 * 60 * 24)
-      );
-      splitLastTrained[s] = daysSince;
+  if (recovery) {
+    let best = { split: 'push', score: -1, readiness: 0 };
+    for (const split of SPLIT_PRIORITY) {
+      const readiness = splitReadiness(split, recovery);
+      // Staleness only breaks near-ties: worth at most 0.02 of readiness
+      const days = Math.min(splitLastTrained[split] ?? 14, 14);
+      const score = readiness + 0.02 * (days / 14);
+      if (score > best.score + 1e-9) best = { split, score, readiness };
     }
+    return {
+      split: best.split,
+      daysSince: splitLastTrained[best.split] ?? null,
+      readiness: best.readiness,
+    };
   }
 
   const rotation = new Set(
@@ -132,6 +163,9 @@ export function suggestSplit(
  * 4. Pick ~60% compounds, ~40% isolations, capped per primary muscle
  *    (1–MAX_PER_PRIMARY_MUSCLE, scaled to the split) so no muscle takes over
  * 5. Relax the muscle cap, then fill from remaining if not enough matches
+ *
+ * With a recovery map, the split's muscles that are still recovering
+ * (< FRESH_THRESHOLD) are left out, as long as at least two fresh ones remain.
  */
 export function selectExercises(
   availableExercises: AvailableExercise[],
@@ -141,8 +175,12 @@ export function selectExercises(
   favoriteIds: Set<string>,
   recommendations?: Map<string, string>,
   now: number = Date.now(),
+  recovery?: RecoveryMap,
 ): AvailableExercise[] {
-  const targetMuscles = new Set(SPLIT_MUSCLES[split] ?? SPLIT_MUSCLES.full);
+  const splitMuscles = SPLIT_MUSCLES[split] ?? SPLIT_MUSCLES.full;
+  const fresh = recovery ? splitMuscles.filter((m) => recoveryOf(recovery, m) >= FRESH_THRESHOLD) : splitMuscles;
+  const avoidTired = !!recovery && fresh.length >= 2;
+  const targetMuscles = new Set(avoidTired ? fresh : splitMuscles);
   const recencyMap = new Map(recency.map((r) => [r.exercise_id, r.last_used]));
 
   // Filter out 'never' recommended exercises
@@ -153,6 +191,8 @@ export function selectExercises(
   // Filter to exercises matching the split's muscles
   const matching = filtered.filter((ex) => {
     const exMuscles = ex.muscle_groups.split(',').map((s) => s.trim());
+    // Skip lifts led by a muscle that's still recovering (bench on a sore chest)
+    if (avoidTired && recoveryOf(recovery!, exMuscles[0]) < FRESH_THRESHOLD) return false;
     return exMuscles.some((m) => targetMuscles.has(m));
   });
 

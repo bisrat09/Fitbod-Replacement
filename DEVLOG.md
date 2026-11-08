@@ -528,3 +528,11 @@ Next Steps
 - `src/lib/workoutSummary.ts`: summarizeWorkout (completed working sets only), estimateCalories (MET 5.0 x kg x hours; null without body weight), splitLabel
 - Finding: on Bisrat's Fitbod history inferSplit labels the last 60 workouts full 14 / push 14 / pull 22 / upper 8 / legs 2, so his rotation spans all 6 splits and they overlap. Muscle-recovery selection proposed
 - Tests: 326 → 334
+
+## 2026-11-08 — Fitbod-style muscle recovery generator
+- Bisrat approved replacing split rotation with recovery-based selection.
+- Model: each completed working set adds fatigue (primary 1.0, secondary 0.5), fading linearly over 72h (large muscles) or 48h (small). 10 effective sets = 0% recovered.
+- suggestSplit(recent, recovery) picks the split with the highest mean recovery of its main muscles (forearms/core/calves ignored); staleness only breaks near-ties. Legacy rotation kept when no map is passed.
+- selectExercises drops lifts whose primary muscle is under 60% recovered (falls back if fewer than 2 split muscles are fresh).
+- UI: Muscle Recovery row under Muscle Focus on the pre-workout screen. Replans on load, tab focus and after Finish.
+- 12 new tests (346 total).

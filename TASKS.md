@@ -209,7 +209,8 @@ Goal: replace the paid Fitbod subscription. Bisrat has an active Apple Developer
 - [x] Bisrat retested build 9 2026-11-08: search works
 - [x] Gym feedback 2026-11-08: today's split + Muscle Focus % on the active workout screen; full-screen Workout Complete summary after Finish (duration, est. calories, volume, sets, reps, exercises, muscles worked, best set per exercise, share). Calories = MET 5.0 x body weight x hours (`src/lib/workoutSummary.ts`), shown only when a body weight is logged. 334 tests
 - [ ] IN PROGRESS: Build 10 with the above; Bisrat checks summary + muscle focus at the gym
-- [ ] Split rotation: generator rotates across 6 overlapping splits (Bisrat's history spans PPL, upper and full), so chest can come up on back-to-back days. Proposed fix: pick by muscle recovery (Fitbod-style), see below. Needs Bisrat's go
+- [x] [2026-11-08] Split rotation fixed: Fitbod-style muscle recovery (src/lib/muscleRecovery.ts). Split = freshest main muscles, lifts led by a recovering muscle (<60%) skipped, Muscle Recovery row on pre-workout screen. Re-plans after Finish
+- [ ] IN PROGRESS: Build 11 with recovery; Bisrat checks it picks sensibly over a week
 - [ ] Later: rest-done local notification while the app is in background (needs expo-notifications, new dependency, Bisrat approval)
-- [ ] Muscle-recovery tracking (Fitbod-style freshness per muscle)
+- [x] [2026-11-08] Muscle-recovery tracking (Fitbod-style freshness per muscle)
 - [ ] Pre-existing: 26 TypeScript errors (expo-file-system documentDirectory API change, Timer types)

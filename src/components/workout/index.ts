@@ -10,3 +10,4 @@ export { ActiveWorkoutView } from './ActiveWorkoutView';
 export { TargetMuscles } from './TargetMuscles';
 export { ExerciseListItem } from './ExerciseListItem';
 export { ExerciseOptionsSheet } from './ExerciseOptionsSheet';
+export { MuscleRecovery } from './MuscleRecovery';

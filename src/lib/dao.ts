@@ -1161,3 +1161,16 @@ export async function getMostRecentWorkoutId(ctx: Ctx): Promise<string | null> {
   );
   return row?.id ?? null;
 }
+
+// One row per completed working set in the recovery window, for muscleRecovery.computeRecovery
+export async function getRecentMuscleSets(ctx: Ctx, days: number = 4) {
+  const cutoff = new Date(Date.now() - days * 86400000).toISOString();
+  return ctx.db.getAllAsync<{ date: string; muscle_groups: string }>(
+    `SELECT w.date AS date, e.muscle_groups AS muscle_groups
+     FROM sets s
+     JOIN workouts w ON w.id = s.workout_id
+     JOIN exercises e ON e.id = s.exercise_id
+     WHERE s.user_id=? AND s.is_completed=1 AND s.is_warmup=0 AND w.date >= ?`,
+    [ctx.userId, cutoff]
+  );
+}

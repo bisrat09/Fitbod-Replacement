@@ -7,6 +7,8 @@ import { PinkButton } from '../PinkButton';
 import { ActionChip } from '../ActionChip';
 import { Chip } from '../Chip';
 import { TargetMuscles } from './TargetMuscles';
+import { MuscleRecovery } from './MuscleRecovery';
+import type { RecoveryMap } from '@/lib/muscleRecovery';
 import { ExerciseListItem } from './ExerciseListItem';
 import {
   DURATION_OPTIONS,
@@ -40,6 +42,7 @@ type PreWorkoutViewProps = {
   onExerciseMenuPress?: (exerciseId: string) => void;
   onSwapWorkout?: () => void;
   onImageFetched?: (exerciseId: string, url: string) => void;
+  recovery?: RecoveryMap;
 };
 
 const SPLIT_OPTIONS = ['push', 'pull', 'legs', 'upper', 'lower', 'full'];
@@ -60,6 +63,7 @@ export function PreWorkoutView({
   onExerciseMenuPress,
   onSwapWorkout,
   onImageFetched,
+  recovery,
 }: PreWorkoutViewProps) {
   const { c } = useTheme();
   const exerciseCount = previewExercises.length || DURATION_EXERCISE_COUNT[duration] || 10;
@@ -163,6 +167,8 @@ export function PreWorkoutView({
       {previewExercises.length > 0 && (
         <TargetMuscles exercises={previewExercises} />
       )}
+
+      {recovery && !programName && <MuscleRecovery recovery={recovery} />}
 
       {/* Action buttons */}
       <View style={styles.actionsRow}>

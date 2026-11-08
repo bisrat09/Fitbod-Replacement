@@ -17,6 +17,7 @@ import {
   logBodyWeight, getLatestBodyWeight, getBestSetsInWorkout, getMostRecentWorkoutId,
   repeatWorkout, listWorkoutDetail, updateWorkoutDuration,
   getRecentWorkoutSplits,
+  getRecentMuscleSets,
   updateExerciseImageUrl,
   getExerciseRecommendations,
   updateExerciseNotes, getExerciseNotes,
@@ -36,6 +37,7 @@ import { useTheme } from '@/theme/ThemeContext';
 import { ActiveWorkoutView, ExercisePickerSheet, FinishSheet, PlateCalcSheet, PreWorkoutView } from '@/components/workout';
 import { WorkoutSummaryModal } from '@/components/workout/WorkoutSummaryModal';
 import { summarizeWorkout, type WorkoutSummary } from '@/lib/workoutSummary';
+import { computeRecovery, type RecoveryMap } from '@/lib/muscleRecovery';
 import { RestTimer } from '@/components/RestTimer';
 import { defaultRestSeconds, clampRest, restSettingKey, startTimer, timeLeft as timerLeft, pauseTimer, resumeTimer, adjustTimer, finishTimer, type TimerState } from '@/lib/restTimer';
 
@@ -129,6 +131,16 @@ export default function Today() {
   };
   const [previewExercises, setPreviewExercises] = useState<PreviewExercise[]>([]);
   const [focusTick, setFocusTick] = useState(0);
+  const [recovery, setRecovery] = useState<RecoveryMap>({});
+
+  // Fitbod-style: recompute muscle recovery and pick the freshest split
+  async function replan(ctx: any) {
+    const [recent, muscleSets] = await Promise.all([getRecentWorkoutSplits(ctx), getRecentMuscleSets(ctx)]);
+    const rec = computeRecovery(muscleSets);
+    setRecovery(rec);
+    setSplit(suggestSplit(recent, rec).split);
+    setFocusTick((t) => t + 1);
+  }
 
   // ═══════════════════════════════════════════════
   // ── Bootstrap ──
@@ -170,10 +182,8 @@ export default function Today() {
         const nextDay = await getNextProgramDay(ctx, prog.id);
         if (nextDay) { setSuggestedDay(nextDay); setSplit(nextDay.split || 'push'); }
       } else {
-        // Auto-suggest split when no program is active
-        const recentWorkouts = await getRecentWorkoutSplits(ctx);
-        const suggestion = suggestSplit(recentWorkouts);
-        setSplit(suggestion.split);
+        // Auto-suggest split from muscle recovery when no program is active
+        await replan(ctx);
         const savedDuration = await getSetting(ctx, 'preferred_duration');
         if (savedDuration) {
           const d = parseInt(savedDuration);
@@ -266,7 +276,7 @@ export default function Today() {
       listFavoriteExerciseIds(dbCtx),
       getExerciseRecommendations(dbCtx),
     ]);
-    const selected = selectExercises(available, split, exerciseCount, recency, new Set(favIds), recs);
+    const selected = selectExercises(available, split, exerciseCount, recency, new Set(favIds), recs, Date.now(), recovery);
     const previews: PreviewExercise[] = [];
     for (const ex of selected) {
       const last = await lastWorkingSetsForExercise(dbCtx, ex.id);
@@ -292,11 +302,7 @@ export default function Today() {
   useFocusEffect(useCallback(() => {
     if (firstFocus.current) { firstFocus.current = false; return; }
     if (!dbCtx || workoutId || programName) return;
-    (async () => {
-      const suggestion = suggestSplit(await getRecentWorkoutSplits(dbCtx));
-      setSplit(suggestion.split);
-      setFocusTick((t) => t + 1);
-    })();
+    replan(dbCtx);
   }, [dbCtx, workoutId, programName]));
 
   // ═══════════════════════════════════════════════
@@ -353,7 +359,7 @@ export default function Today() {
 
     // Same inputs as refreshPreview() so the started workout matches the preview
     const selected = selectExercises(
-      available, split, exerciseCount, recency, new Set(favIds), recs
+      available, split, exerciseCount, recency, new Set(favIds), recs, Date.now(), recovery
     );
 
     for (let i = 0; i < selected.length; i++) {
@@ -771,6 +777,7 @@ export default function Today() {
       setStreak(s); setWeekCount(wc);
     }
     setWorkoutId(null); setSets([]); setBlocks([]); setBlockExercises({});
+    if (dbCtx && !programName) replan(dbCtx);
     setActiveRowByBlock({}); setLastSets({});
     setShowFinishModal(false); setWorkoutStartTime(null); setPausedAt(null); setElapsed(0); setWorkoutNotes('');
   }
@@ -850,6 +857,7 @@ export default function Today() {
           <PreWorkoutView
             previewExercises={previewExercises}
             split={split}
+            recovery={recovery}
             duration={duration}
             unit={unit}
             programName={programName}
