@@ -6,6 +6,7 @@ import { BottomSheet } from '../BottomSheet';
 import { Chip } from '../Chip';
 import { PinkButton } from '../PinkButton';
 import { ExerciseInitial } from '../ExerciseInitial';
+import { searchExercises } from '@/lib/exerciseSearch';
 
 const MUSCLE_FILTERS = ['chest', 'back', 'legs', 'shoulders', 'arms', 'core'];
 
@@ -45,8 +46,8 @@ export function ExercisePickerSheet({
   const { c } = useTheme();
 
   let filtered = exercises;
-  if (search) filtered = filtered.filter((ex: any) => ex.name.toLowerCase().includes(search.toLowerCase()));
   if (muscleFilter) filtered = filtered.filter((ex: any) => matchesMuscleFilter(ex.muscle_groups, muscleFilter));
+  if (search) filtered = searchExercises(filtered, search);
 
   return (
     <BottomSheet visible={visible} onClose={onClose} title={title}>
@@ -57,6 +58,10 @@ export function ExercisePickerSheet({
         onChangeText={onSearchChange}
         style={[styles.searchInput, { backgroundColor: c.inputBg, borderColor: c.inputBorder, color: c.text }]}
         placeholderTextColor={c.textMuted}
+        autoCorrect={false}
+        autoCapitalize="none"
+        clearButtonMode="while-editing"
+        returnKeyType="search"
       />
 
       {/* Muscle filter chips */}
@@ -73,7 +78,12 @@ export function ExercisePickerSheet({
       </View>
 
       {/* Exercise list */}
-      <ScrollView style={styles.list}>
+      <ScrollView style={styles.list} keyboardShouldPersistTaps="handled" keyboardDismissMode="on-drag">
+        {filtered.length === 0 && (
+          <Text style={[styles.muscleTag, { color: c.textMuted, textAlign: 'center', paddingVertical: 16 }]}>
+            {muscleFilter ? `No matches in ${muscleFilter}. Clear the filter to search everything` : 'No matches'}
+          </Text>
+        )}
         {filtered.map((ex: any) => {
           const selected = selectedId === ex.id;
           return (

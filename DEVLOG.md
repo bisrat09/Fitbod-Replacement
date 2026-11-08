@@ -1,3 +1,11 @@
+# 2026-11-07 — Gym feedback: rest timer + search
+
+- Rest timer defaults per exercise instead of 120s for everything: heavy barbell compounds 120s, compounds 90s, isolation 60s, core/calves/forearms 30s. Adjusting +/-10s on a running timer saves that exercise's rest (settings `rest_seconds:<id>`).
+- Rest timer is now wall-clock based (end timestamp, 250ms UI tick, AppState refresh). Previously a per-second decrement, which froze while iOS suspended JS in the background.
+- Exercise picker search (Add / Superset / Replace): token, prefix, any-order matching with abbreviations, plurals, hyphen-insensitive, ranked. `keyboardShouldPersistTaps="handled"` so the first tap selects.
+- New: `src/lib/restTimer.ts`, `src/lib/exerciseSearch.ts`, `src/__tests__/restTimerAndSearch.test.ts`. `listBlockExercisesWithNames` now returns `muscle_groups`, `is_compound`.
+- 326 tests passing. Not yet built to TestFlight.
+
 # Fitlog Dev Log — 2025-09-18
 
 This log captures today’s changes so we can pick up smoothly tomorrow.

@@ -56,7 +56,7 @@ Performance & Offline
 - All data is local; avoid network calls. Optimize DB queries and indexes.
 
 Roadmap Pointers (future tasks)
-- Rest timer polish (custom durations, +30s)
+- Rest timer: DONE 2026-11-07, per-exercise defaults + learned durations (`src/lib/restTimer.ts`), wall-clock so it survives backgrounding. Next: background notification when rest ends
 - PR banner (detect new Epley 1RM)
 - Weekly volume per muscle group
 - Backup/export JSON via `expo-file-system`

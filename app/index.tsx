@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useFocusEffect } from 'expo-router';
-import { View, StyleSheet, ScrollView, Share, Vibration } from 'react-native';
+import { View, StyleSheet, ScrollView, Share, Vibration, AppState } from 'react-native';
 import { bootstrapDb } from '@/lib/bootstrap';
 import {
   ensureUser, createWorkout, addSet, listWorkoutSets, createExercise,
@@ -35,6 +35,7 @@ import {
 import { useTheme } from '@/theme/ThemeContext';
 import { ActiveWorkoutView, ExercisePickerSheet, FinishSheet, PlateCalcSheet, PreWorkoutView } from '@/components/workout';
 import { RestTimer } from '@/components/RestTimer';
+import { defaultRestSeconds, clampRest, restSettingKey, startTimer, timeLeft as timerLeft, pauseTimer, resumeTimer, adjustTimer, finishTimer, type TimerState } from '@/lib/restTimer';
 
 // ── Picker state (unified add / superset / swap) ──
 type PickerState = {
@@ -66,9 +67,10 @@ export default function Today() {
   const [unit, setUnit] = useState<'lb' | 'kg'>('lb');
 
   // ── Rest timer ──
-  const [restDuration, setRestDuration] = useState(120);
-  const [timers, setTimers] = useState<Record<string, { timeLeft: number; running: boolean }>>({});
-  const intervalRefs = useRef<Record<string, NodeJS.Timer>>({});
+  const [restOverrides, setRestOverrides] = useState<Record<string, number>>({});
+  const [timerStates, setTimerStates] = useState<Record<string, TimerState>>({});
+  const [now, setNow] = useState(() => Date.now());
+  const lastLeftRef = useRef<Record<string, number>>({});
 
   // ── Split & program ──
   const [split, setSplit] = useState('push');
@@ -189,11 +191,6 @@ export default function Today() {
     })();
   }, []);
 
-  // Cleanup rest timer intervals
-  useEffect(() => {
-    return () => { for (const key of Object.keys(intervalRefs.current)) clearInterval(intervalRefs.current[key]); };
-  }, []);
-
   // Elapsed timer
   useEffect(() => {
     if (!workoutStartTime) return;
@@ -202,6 +199,54 @@ export default function Today() {
     const id = setInterval(() => setElapsed(Math.floor((Date.now() - workoutStartTime) / 1000)), 1000);
     return () => clearInterval(id);
   }, [workoutStartTime, pausedAt]);
+
+  // Rest timer clock: wall-clock based, so time spent outside the app still counts
+  const anyTimerRunning = Object.values(timerStates).some((t) => t.running);
+  useEffect(() => {
+    if (!anyTimerRunning) return;
+    setNow(Date.now());
+    const id = setInterval(() => setNow(Date.now()), 250);
+    return () => clearInterval(id);
+  }, [anyTimerRunning]);
+  useEffect(() => {
+    const sub = AppState.addEventListener('change', (st) => { if (st === 'active') setNow(Date.now()); });
+    return () => sub.remove();
+  }, []);
+
+  const timers: Record<string, { timeLeft: number; running: boolean }> = {};
+  for (const [bid, st] of Object.entries(timerStates)) {
+    const left = timerLeft(st, now);
+    timers[bid] = { timeLeft: left, running: st.running && left > 0 };
+  }
+
+  // Haptics on countdown + mark finished timers
+  useEffect(() => {
+    const finished: string[] = [];
+    for (const [bid, st] of Object.entries(timerStates)) {
+      if (!st.running) { delete lastLeftRef.current[bid]; continue; }
+      const left = timerLeft(st, now);
+      const prev = lastLeftRef.current[bid];
+      if (left > 0 && left <= 3 && prev !== left) Vibration.vibrate(100);
+      if (left === 0) { finished.push(bid); if (prev !== 0) Vibration.vibrate([0, 200, 100, 200]); }
+      lastLeftRef.current[bid] = left;
+    }
+    if (finished.length) setTimerStates((prev) => { const n = { ...prev }; for (const b of finished) if (n[b]) n[b] = finishTimer(n[b]); return n; });
+  }, [now, timerStates]);
+
+  // Load saved per-exercise rest durations
+  useEffect(() => {
+    if (!dbCtx) return;
+    const ids = new Set<string>();
+    for (const exs of Object.values(blockExercises)) for (const e of exs) ids.add(e.exercise_id);
+    const missing = [...ids].filter((id) => !(id in restOverrides));
+    if (!missing.length) return;
+    (async () => {
+      const vals = await Promise.all(missing.map((id) => getSetting(dbCtx, restSettingKey(id))));
+      const add: Record<string, number> = {};
+      missing.forEach((id, i) => { const v = parseInt(vals[i] ?? '', 10); add[id] = Number.isFinite(v) ? v : 0; });
+      setRestOverrides((prev) => ({ ...prev, ...add }));
+    })();
+  }, [dbCtx, blockExercises]);
 
   // Refresh blocks/sets when workout changes
   useEffect(() => { if (dbCtx && workoutId) refreshBlocksAndSets(); }, [dbCtx, workoutId]);
@@ -433,7 +478,7 @@ export default function Today() {
     setSets(rows);
     const next = suggestNextWeight(parseFloat(weight), isNaN(parseInt(rir)) ? null : parseInt(rir), 2, 2.5);
     setWeight(String(next));
-    startRest(blockId, restDuration);
+    startRest(blockId, exerciseId);
   }
 
   async function logActiveSet(blockId: string) {
@@ -455,7 +500,7 @@ export default function Today() {
     // Auto-advance — only start rest timer if more sets remain in the same exercise
     const nextIncomplete = perExSets.findIndex((s: any, idx: number) => idx > active.row && !s.is_completed);
     if (nextIncomplete >= 0) {
-      startRest(blockId, restDuration);
+      startRest(blockId, active.exerciseId);
       setActiveRowByBlock(prev => ({ ...prev, [blockId]: { exerciseId: active.exerciseId, row: nextIncomplete } }));
     } else {
       // All sets done for this exercise — stop any running rest timer
@@ -552,32 +597,58 @@ export default function Today() {
 
   // ── Rest timer ──
 
-  function startRest(blockId: string, duration: number) {
-    if (intervalRefs.current[blockId]) { clearInterval(intervalRefs.current[blockId]); delete intervalRefs.current[blockId]; }
-    setTimers(t => ({ ...t, [blockId]: { timeLeft: duration, running: true } }));
-    intervalRefs.current[blockId] = setInterval(() => {
-      setTimers(prev => {
-        const st = prev[blockId] ?? { timeLeft: duration, running: true };
-        if (!st.running) return prev;
-        const next = st.timeLeft <= 1 ? 0 : st.timeLeft - 1;
-        if (next > 0 && next <= 3) setTimeout(() => Vibration.vibrate(100), 0);
-        if (next === 0) { clearInterval(intervalRefs.current[blockId]); delete intervalRefs.current[blockId]; setTimeout(() => Vibration.vibrate([0, 200, 100, 200]), 0); }
-        return { ...prev, [blockId]: { ...st, timeLeft: next, running: next > 0 && st.running } };
-      });
-    }, 1000);
+  function restDurationFor(exerciseId: string): number {
+    const saved = restOverrides[exerciseId];
+    if (saved) return saved;
+    const ex = Object.values(blockExercises).flat().find((e: any) => e.exercise_id === exerciseId);
+    return defaultRestSeconds(ex ? { name: ex.exercise_name, muscle_groups: ex.muscle_groups, is_compound: ex.is_compound } : null);
+  }
+
+  function blockExerciseId(blockId: string): string | null {
+    return activeRowByBlock[blockId]?.exerciseId ?? timerStates[blockId]?.exerciseId ?? blockExercises[blockId]?.[0]?.exercise_id ?? null;
+  }
+
+  function startRest(blockId: string, exerciseId: string | null) {
+    const exId = exerciseId ?? blockExerciseId(blockId);
+    const duration = exId ? restDurationFor(exId) : 90;
+    const t = Date.now();
+    setNow(t);
+    setTimerStates((prev) => ({ ...prev, [blockId]: startTimer(duration, t, exId) }));
   }
 
   function pauseResume(blockId: string) {
-    setTimers(prev => {
+    const t = Date.now();
+    setNow(t);
+    setTimerStates((prev) => {
       const st = prev[blockId];
       if (!st) return prev;
-      return { ...prev, [blockId]: { ...st, running: !st.running } };
+      return { ...prev, [blockId]: st.running ? pauseTimer(st, t) : resumeTimer(st, t) };
     });
   }
 
+  function toggleTimer(blockId: string) {
+    const t = timers[blockId];
+    if (!t || t.timeLeft === 0) startRest(blockId, blockExerciseId(blockId));
+    else pauseResume(blockId);
+  }
+
+  // +/- on a running timer also becomes that exercise's rest from now on
+  function adjustRest(blockId: string, delta: number) {
+    const st = timerStates[blockId];
+    if (!st) return;
+    const t = Date.now();
+    const next = adjustTimer(st, delta, t);
+    setNow(t);
+    setTimerStates((prev) => ({ ...prev, [blockId]: next }));
+    if (st.exerciseId) {
+      const sec = clampRest(next.duration);
+      setRestOverrides((prev) => ({ ...prev, [st.exerciseId!]: sec }));
+      if (dbCtx) setSetting(dbCtx, restSettingKey(st.exerciseId), String(sec));
+    }
+  }
+
   function resetTimer(blockId: string) {
-    if (intervalRefs.current[blockId]) { clearInterval(intervalRefs.current[blockId]); delete intervalRefs.current[blockId]; }
-    setTimers(prev => ({ ...prev, [blockId]: { timeLeft: restDuration, running: false } }));
+    setTimerStates((prev) => { const n = { ...prev }; delete n[blockId]; return n; });
   }
 
   // ── PR detection ──
@@ -667,8 +738,7 @@ export default function Today() {
   }
 
   async function confirmFinishWorkout() {
-    for (const key of Object.keys(intervalRefs.current)) { clearInterval(intervalRefs.current[key]); delete intervalRefs.current[key]; }
-    setTimers({});
+    setTimerStates({});
     if (dbCtx && finishBwInput.trim()) {
       const bw = parseFloat(finishBwInput);
       if (!isNaN(bw) && bw > 0) await logBodyWeight(dbCtx, { id: Crypto.randomUUID(), date: new Date().toISOString(), weight: bw });
@@ -731,7 +801,7 @@ export default function Today() {
             timers={timers}
             bestSetIds={bestSetIds}
             lastSets={lastSets}
-            restDuration={restDuration}
+            restDurationFor={restDurationFor}
             onAddExercise={() => openPicker('add')}
             onFinishWorkout={openFinishWorkout}
             onLogSet={(blockId, exId) => logSetForBlock(blockId, exId)}
@@ -740,8 +810,8 @@ export default function Today() {
             onDeleteSet={handleDeleteSet}
             onSetUpdate={handleSetUpdate}
             onSetFocus={(blockId, exId, row) => { setActiveRowByBlock((prev) => ({ ...prev, [blockId]: { exerciseId: exId, row } })); }}
-            onTimerPauseResume={(blockId) => { const t = timers[blockId]; if (!t || t.timeLeft === 0) startRest(blockId, restDuration); else pauseResume(blockId); }}
-            onTimerAdjust={(blockId, delta) => setTimers((prev) => ({ ...prev, [blockId]: { ...prev[blockId], timeLeft: (prev[blockId]?.timeLeft ?? 0) + delta } }))}
+            onTimerPauseResume={toggleTimer}
+            onTimerAdjust={adjustRest}
             onTimerReset={resetTimer}
             onImageFetched={(exId, url) => { if (dbCtx) updateExerciseImageUrl(dbCtx, exId, url); }}
             exerciseNotes={exerciseNotes}
@@ -777,7 +847,7 @@ export default function Today() {
 
       {/* Floating rest timer — only during active workout */}
       {workoutId && (() => {
-        const entry = Object.entries(timers).find(([, t]) => t.running && t.timeLeft > 0);
+        const entry = Object.entries(timers).find(([, t]) => t.timeLeft > 0);
         if (!entry) return null;
         const [blockId, timer] = entry;
         return (
@@ -785,8 +855,8 @@ export default function Today() {
             <RestTimer
               timeLeft={timer.timeLeft}
               running={timer.running}
-              onPauseResume={() => { const t = timers[blockId]; if (!t || t.timeLeft === 0) startRest(blockId, restDuration); else pauseResume(blockId); }}
-              onAdjust={(delta) => setTimers((prev) => ({ ...prev, [blockId]: { ...prev[blockId], timeLeft: (prev[blockId]?.timeLeft ?? 0) + delta } }))}
+              onPauseResume={() => toggleTimer(blockId)}
+              onAdjust={(delta) => adjustRest(blockId, delta)}
               onDismiss={() => resetTimer(blockId)}
             />
           </View>

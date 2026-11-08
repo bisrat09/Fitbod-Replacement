@@ -35,7 +35,7 @@ type ActiveWorkoutViewProps = {
   timers: Record<string, { timeLeft: number; running: boolean }>;
   bestSetIds: Set<string>;
   lastSets: Record<string, any[]>;
-  restDuration: number;
+  restDurationFor: (exerciseId: string) => number;
 
   // Actions
   onAddExercise: () => void;
@@ -67,7 +67,7 @@ export function ActiveWorkoutView({
   prBanner, elapsed, paused, onTogglePause, workoutStartTime, workoutId,
   streak, weekCount, suggestedDay, programName, unit,
   blocks, blockExercises, sets, timers,
-  bestSetIds, lastSets, restDuration,
+  bestSetIds, lastSets, restDurationFor,
   onAddExercise, onFinishWorkout,
   onLogSet, onAddWarmups, onSwapExercise,
   onDeleteSet, onSetUpdate, onSetFocus,
@@ -235,7 +235,7 @@ export function ActiveWorkoutView({
           bestSetIds={bestSetIds}
           lastSets={detailData.lastSets}
           timer={detailData.timer}
-          restDuration={restDuration}
+          restDuration={restDurationFor(detailData.exerciseId)}
           onSetUpdate={onSetUpdate}
           onSetFocus={(row) => onSetFocus(detailTarget.blockId, detailData.exerciseId, row)}
           onDeleteSet={onDeleteSet}

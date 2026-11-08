@@ -309,7 +309,7 @@ export async function listExercisesAvailableByEquipment(ctx: Ctx) {
 
 export async function listBlockExercisesWithNames(ctx: Ctx, blockId: string) {
   return ctx.db.getAllAsync<any>(
-    `SELECT be.*, ex.name AS exercise_name, ex.video_url AS image_url
+    `SELECT be.*, ex.name AS exercise_name, ex.video_url AS image_url, ex.muscle_groups AS muscle_groups, ex.is_compound AS is_compound
      FROM block_exercises be
      JOIN exercises ex ON ex.id = be.exercise_id
      WHERE be.user_id=? AND be.block_id=?

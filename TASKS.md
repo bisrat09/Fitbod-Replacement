@@ -199,6 +199,13 @@ Goal: replace the paid Fitbod subscription. Bisrat has an active Apple Developer
 - [x] Friends sharing 2026-10-28: TestFlight external group "Friends" + public link https://testflight.apple.com/join/xUeE6QZW (limit 10 testers). Build 8 submitted to Beta App Review (Waiting for Review); link works once approved. Test Information filled (description, feedback email bisrat09, review contact, no sign-in)
 - [ ] Each new build must be added to the Friends group in App Store Connect (EAS auto-submit only reaches internal testers); later builds of the same version usually skip full review
 - [ ] Later: bundle photos/GIFs for regulars into the app (offline at the gym)
-- [ ] IN PROGRESS: first real workout 2026-10-29, Bisrat reports feedback. Trial must finish before Fitbod auto-renews 2026-11-05: Bisrat cancels Fitbod before then if Fitlog holds up, imports Fitbod CSV, uses it at the gym for a week
+- [x] First real workout 2026-10-29 + gym trial. Fitbod cancelled 2026-11-07, Fitlog is the daily driver
+- [x] Gym feedback fixes 2026-11-07 (code done, not yet in a build):
+  - Rest timer per exercise: heavy barbell compounds 2:00, other compounds 1:30, isolation 1:00, core/calves/forearms 0:30 (`src/lib/restTimer.ts`). +/-10s on a running timer is saved as that exercise's rest (settings key `rest_seconds:<exerciseId>`)
+  - Rest timer kept counting only while the app was open (JS interval suspended in background). Now wall-clock: stores end time, recomputes on resume
+  - Replace/Add search: words in any order, partial words, gym abbreviations (db, bb, kb, rdl, ohp, tri, ext...), plurals, hyphens (`src/lib/exerciseSearch.ts`). First tap on a result no longer just dismisses the keyboard. "No matches" hint mentions active muscle filter
+  - 326 tests
+- [ ] IN PROGRESS: Build 9 with the 2026-11-07 fixes: `npx eas-cli build -p ios --profile production --auto-submit`, then Bisrat retests timer + search at the gym
+- [ ] Later: rest-done local notification while the app is in background (needs expo-notifications, new dependency, Bisrat approval)
 - [ ] Muscle-recovery tracking (Fitbod-style freshness per muscle)
 - [ ] Pre-existing: 26 TypeScript errors (expo-file-system documentDirectory API change, Timer types)
