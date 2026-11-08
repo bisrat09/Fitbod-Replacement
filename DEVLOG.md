@@ -520,3 +520,11 @@ Next Steps
 - Exercise demo: tap any image → start/finish photos (free-exercise-db, public domain), instructions, target muscles, YouTube form-video link. 237 exercises, hand-checked aliases in `scripts/buildInstructions.mjs`
 - Picture audit: ~22 ExerciseDB GIFs were wrong (fuzzy match); thumbnails now photo-first, wrong GIFs blocked (`WRONG_GIFS` in exerciseImages.ts)
 - Tests: 275 → 310
+
+## 2026-11-08 — Workout summary + muscle focus
+
+- Active workout shows the split ("Full Body · 7 exercises") and Muscle Focus % (weighted by working sets), same component as the pre-workout screen
+- Finish now: confirm sheet ("Finish Workout?", body weight, template) → full-screen Workout Complete summary → Done returns to the next-workout preview
+- `src/lib/workoutSummary.ts`: summarizeWorkout (completed working sets only), estimateCalories (MET 5.0 x kg x hours; null without body weight), splitLabel
+- Finding: on Bisrat's Fitbod history inferSplit labels the last 60 workouts full 14 / push 14 / pull 22 / upper 8 / legs 2, so his rotation spans all 6 splits and they overlap. Muscle-recovery selection proposed
+- Tests: 326 → 334

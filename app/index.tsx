@@ -14,7 +14,7 @@ import {
   deleteSetting, getActiveProgram, getNextProgramDay,
   listProgramDayExercises, updateWorkoutNotes, getWorkoutStreak,
   getWorkoutsThisWeek, saveWorkoutAsTemplate,
-  logBodyWeight, getBestSetsInWorkout, getMostRecentWorkoutId,
+  logBodyWeight, getLatestBodyWeight, getBestSetsInWorkout, getMostRecentWorkoutId,
   repeatWorkout, listWorkoutDetail, updateWorkoutDuration,
   getRecentWorkoutSplits,
   updateExerciseImageUrl,
@@ -34,6 +34,8 @@ import {
 } from '@/lib/workoutGenerator';
 import { useTheme } from '@/theme/ThemeContext';
 import { ActiveWorkoutView, ExercisePickerSheet, FinishSheet, PlateCalcSheet, PreWorkoutView } from '@/components/workout';
+import { WorkoutSummaryModal } from '@/components/workout/WorkoutSummaryModal';
+import { summarizeWorkout, type WorkoutSummary } from '@/lib/workoutSummary';
 import { RestTimer } from '@/components/RestTimer';
 import { defaultRestSeconds, clampRest, restSettingKey, startTimer, timeLeft as timerLeft, pauseTimer, resumeTimer, adjustTimer, finishTimer, type TimerState } from '@/lib/restTimer';
 
@@ -93,6 +95,8 @@ export default function Today() {
 
   // ── Finish modal ──
   const [showFinishModal, setShowFinishModal] = useState(false);
+  const [summary, setSummary] = useState<WorkoutSummary | null>(null);
+  const summaryWorkoutId = useRef<string | null>(null);
   const [weeklyVolume, setWeeklyVolume] = useState<Record<string, number>>({});
   const [finishBwInput, setFinishBwInput] = useState('');
   const [templateName, setTemplateName] = useState('');
@@ -739,10 +743,24 @@ export default function Today() {
 
   async function confirmFinishWorkout() {
     setTimerStates({});
+    let bodyWeight: number | null = null;
     if (dbCtx && finishBwInput.trim()) {
       const bw = parseFloat(finishBwInput);
-      if (!isNaN(bw) && bw > 0) await logBodyWeight(dbCtx, { id: Crypto.randomUUID(), date: new Date().toISOString(), weight: bw });
+      if (!isNaN(bw) && bw > 0) {
+        await logBodyWeight(dbCtx, { id: Crypto.randomUUID(), date: new Date().toISOString(), weight: bw });
+        bodyWeight = bw;
+      }
     }
+    if (dbCtx && bodyWeight == null) bodyWeight = (await getLatestBodyWeight(dbCtx))?.weight ?? null;
+
+    // Snapshot the summary before the workout state is cleared
+    const muscleGroupsByExercise: Record<string, string> = {};
+    for (const exs of Object.values(blockExercises)) for (const e of exs) muscleGroupsByExercise[e.exercise_id] = e.muscle_groups ?? '';
+    summaryWorkoutId.current = workoutId;
+    setSummary(summarizeWorkout({
+      split, date: new Date().toISOString(), durationSec: elapsed, sets,
+      muscleGroupsByExercise, bodyWeight, unit,
+    }));
     if (dbCtx) {
       if (workoutId && elapsed > 0) await updateWorkoutDuration(dbCtx, workoutId, elapsed);
       if (workoutNotes.trim() && workoutId) await updateWorkoutNotes(dbCtx, workoutId, workoutNotes.trim());
@@ -758,14 +776,16 @@ export default function Today() {
   }
 
   async function handleShareWorkout() {
-    if (!dbCtx || !workoutId) return;
-    const detail = await listWorkoutDetail(dbCtx, workoutId);
+    const id = workoutId ?? summaryWorkoutId.current;
+    if (!dbCtx || !id) return;
+    const durationSec = workoutId ? elapsed : (summary?.durationSec ?? 0);
+    const detail = await listWorkoutDetail(dbCtx, id);
     const exMap = new Map<string, { name: string; sets: any[] }>();
     for (const s of detail) {
       if (!exMap.has(s.exercise_id)) exMap.set(s.exercise_id, { name: s.exercise_name, sets: [] });
       exMap.get(s.exercise_id)!.sets.push(s);
     }
-    await Share.share({ message: formatWorkoutSummary({ split, date: new Date().toISOString(), elapsed }, Array.from(exMap.values()), unit) });
+    await Share.share({ message: formatWorkoutSummary({ split: summary && !workoutId ? summary.split : split, date: new Date().toISOString(), elapsed: durationSec }, Array.from(exMap.values()), unit) });
   }
 
   async function handleSaveAsTemplate() {
@@ -790,6 +810,7 @@ export default function Today() {
             onTogglePause={togglePause}
             workoutStartTime={workoutStartTime}
             workoutId={workoutId}
+            split={split}
             streak={streak}
             weekCount={weekCount}
             suggestedDay={suggestedDay}
@@ -897,6 +918,14 @@ export default function Today() {
         onSaveTemplate={handleSaveAsTemplate}
         onShare={handleShareWorkout}
         onConfirm={confirmFinishWorkout}
+      />
+
+      {/* Post-workout summary */}
+      <WorkoutSummaryModal
+        summary={summary}
+        unit={unit}
+        onShare={handleShareWorkout}
+        onDone={() => { setSummary(null); summaryWorkoutId.current = null; }}
       />
 
       {/* Plate calculator */}

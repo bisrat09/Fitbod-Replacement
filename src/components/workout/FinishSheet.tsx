@@ -46,7 +46,7 @@ export function FinishSheet({
   const totalVol = completedSets.reduce((sum: number, s: any) => sum + ((s.weight || 0) * (s.reps || 0)), 0);
 
   return (
-    <BottomSheet visible={visible} onClose={onClose} title="Workout Complete!">
+    <BottomSheet visible={visible} onClose={onClose} title="Finish Workout?">
       {/* Summary stats */}
       <View style={[styles.statsCard, { backgroundColor: c.chipBg }]}>
         <View style={styles.statsRow}>
@@ -134,7 +134,7 @@ export function FinishSheet({
       <View style={styles.actions}>
         <ActionChip icon="share-outline" label="Share" onPress={onShare} />
         <View style={{ flex: 1 }}>
-          <PinkButton title="Done" onPress={onConfirm} fullWidth />
+          <PinkButton title="Finish" onPress={onConfirm} fullWidth />
         </View>
       </View>
     </BottomSheet>

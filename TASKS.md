@@ -206,7 +206,10 @@ Goal: replace the paid Fitbod subscription. Bisrat has an active Apple Developer
   - Replace/Add search: words in any order, partial words, gym abbreviations (db, bb, kb, rdl, ohp, tri, ext...), plurals, hyphens (`src/lib/exerciseSearch.ts`). First tap on a result no longer just dismisses the keyboard. "No matches" hint mentions active muscle filter
   - 326 tests
 - [x] Build 9 queued 2026-11-07 on EAS with auto-submit (build cce6e218). Add to Friends group in App Store Connect once processed
-- [ ] IN PROGRESS: Bisrat retests rest timer + Replace search at the gym on build 9
+- [x] Bisrat retested build 9 2026-11-08: search works
+- [x] Gym feedback 2026-11-08: today's split + Muscle Focus % on the active workout screen; full-screen Workout Complete summary after Finish (duration, est. calories, volume, sets, reps, exercises, muscles worked, best set per exercise, share). Calories = MET 5.0 x body weight x hours (`src/lib/workoutSummary.ts`), shown only when a body weight is logged. 334 tests
+- [ ] IN PROGRESS: Build 10 with the above; Bisrat checks summary + muscle focus at the gym
+- [ ] Split rotation: generator rotates across 6 overlapping splits (Bisrat's history spans PPL, upper and full), so chest can come up on back-to-back days. Proposed fix: pick by muscle recovery (Fitbod-style), see below. Needs Bisrat's go
 - [ ] Later: rest-done local notification while the app is in background (needs expo-notifications, new dependency, Bisrat approval)
 - [ ] Muscle-recovery tracking (Fitbod-style freshness per muscle)
 - [ ] Pre-existing: 26 TypeScript errors (expo-file-system documentDirectory API change, Timer types)

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { View, StyleSheet } from 'react-native';
+import { View, Text, StyleSheet } from 'react-native';
 import { PinkButton } from '../PinkButton';
 import { ActionChip } from '../ActionChip';
 import { SupersetHeader } from '../SupersetHeader';
@@ -7,6 +7,10 @@ import { WorkoutHeader } from './WorkoutHeader';
 import { ExerciseListItem } from './ExerciseListItem';
 import { ExerciseDetailModal } from './ExerciseDetailModal';
 import { ExerciseOptionsSheet } from './ExerciseOptionsSheet';
+import { TargetMuscles } from './TargetMuscles';
+import { splitLabel } from '@/lib/workoutSummary';
+import { useTheme } from '@/theme/ThemeContext';
+import { fontSize } from '@/theme/typography';
 import type { Recommendation } from '@/lib/dao';
 
 type DetailTarget = {
@@ -22,6 +26,7 @@ type ActiveWorkoutViewProps = {
   onTogglePause: () => void;
   workoutStartTime: number | null;
   workoutId: string;
+  split: string;
   streak: number;
   weekCount: number;
   suggestedDay: { day_order: number; split: string } | null;
@@ -64,7 +69,7 @@ type ActiveWorkoutViewProps = {
 };
 
 export function ActiveWorkoutView({
-  prBanner, elapsed, paused, onTogglePause, workoutStartTime, workoutId,
+  prBanner, elapsed, paused, onTogglePause, workoutStartTime, workoutId, split,
   streak, weekCount, suggestedDay, programName, unit,
   blocks, blockExercises, sets, timers,
   bestSetIds, lastSets, restDurationFor,
@@ -77,7 +82,19 @@ export function ActiveWorkoutView({
   onExerciseNotesChange, onExerciseRecommendationChange,
   onUnitToggle, onRemoveExercise, onCompleteActiveSet,
 }: ActiveWorkoutViewProps) {
+  const { c } = useTheme();
   const [detailTarget, setDetailTarget] = useState<DetailTarget>(null);
+
+  // Muscle focus of the planned workout, weighted by working sets per exercise
+  const muscleEntries: { muscle_groups: string }[] = [];
+  let exerciseTotal = 0;
+  for (const b of blocks) {
+    for (const ex of (blockExercises[b.id] ?? [])) {
+      exerciseTotal++;
+      const n = sets.filter((s: any) => s.block_id === b.id && s.exercise_id === ex.exercise_id && !s.is_warmup).length || 1;
+      for (let i = 0; i < n; i++) muscleEntries.push({ muscle_groups: ex.muscle_groups ?? '' });
+    }
+  }
   const [showOptions, setShowOptions] = useState(false);
   const hasAutoOpened = useRef(false);
 
@@ -172,6 +189,12 @@ export function ActiveWorkoutView({
         programName={programName}
         unit={unit}
       />
+
+      {/* Today's split + muscle focus */}
+      <Text style={[styles.splitLine, { color: c.textSecondary }]}>
+        {splitLabel(split)} · {exerciseTotal} exercises
+      </Text>
+      <TargetMuscles exercises={muscleEntries} />
 
       {/* Clean exercise list */}
       <View style={styles.exerciseList}>
@@ -272,6 +295,10 @@ export function ActiveWorkoutView({
 }
 
 const styles = StyleSheet.create({
+  splitLine: {
+    fontSize: fontSize.caption,
+    marginBottom: 8,
+  },
   container: {
     gap: 12,
   },
