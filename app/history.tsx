@@ -1,3 +1,4 @@
+import { describeSet } from '@/lib/cardio';
 import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, Pressable } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
@@ -238,8 +239,9 @@ export default function History() {
                               )}
                               <Text style={[styles.detailSet, { color: isPR ? c.gold : c.textSecondary }]}>
                                 {s.is_warmup ? 'W  ' : ''}
-                                {s.weight ?? '-'} {unit} {'\u00D7'} {s.reps ?? '-'}
-                                {s.rir != null ? `  @${s.rir}` : ''}
+                                {s.duration_sec || s.level != null || s.calories != null
+                                  ? describeSet(s, unit)
+                                  : `${s.weight ?? '-'} ${unit} \u00D7 ${s.reps ?? '-'}${s.rir != null ? `  @${s.rir}` : ''}`}
                                 {s.notes ? ` \u2014 ${s.notes}` : ''}
                               </Text>
                               {isPR && (

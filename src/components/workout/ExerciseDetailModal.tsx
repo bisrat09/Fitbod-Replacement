@@ -1,10 +1,12 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { View, Text, Pressable, Modal, ScrollView, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '@/theme/ThemeContext';
 import { fontSize, fontWeight } from '@/theme/typography';
 import { ExerciseImage } from '../ExerciseImage';
 import { SetRow } from '../SetRow';
+import { CardioSetRow } from '../CardioSetRow';
+import { describeSet } from '@/lib/cardio';
 import { PinkButton } from '../PinkButton';
 import { RestTimer } from '../RestTimer';
 import { ExerciseDemoModal } from '../ExerciseDemoModal';
@@ -42,12 +44,17 @@ type ExerciseDetailModalProps = {
   onTimerReset: () => void;
   onImageFetched?: (url: string) => void;
   onCompleteSet?: () => void;
+  /** Cardio machine: sets track time, level and calories instead of reps and weight. */
+  isCardio?: boolean;
+  /** Running cardio stopwatch, if any. */
+  clock?: { setId: string; startedAt: number; baseSec: number } | null;
+  onToggleClock?: (setId: string) => void;
   /** Sheets opened from this modal. iOS only presents a Modal over a pageSheet when it's nested inside it. */
   children?: React.ReactNode;
 };
 
 export function ExerciseDetailModal({
-  visible, onClose, children,
+  visible, onClose, children, isCardio, clock, onToggleClock,
   exerciseId, exerciseName, imageUrl, supersetLabel,
   sets, unit, bestSetIds, lastSets,
   timer, restDuration,
@@ -64,7 +71,18 @@ export function ExerciseDetailModal({
   const totalCount = workingSets.length;
   const allDone = totalCount > 0 && doneCount === totalCount;
   const nextIncomplete = sets.find((s: any) => !s.is_completed && s.reps != null && s.weight != null);
-  const canLog = !!nextIncomplete && !allDone;
+  const nextCardio = sets.find((s: any) => !s.is_completed && (s.duration_sec > 0 || clock?.setId === s.id));
+  const canLog = (isCardio ? !!nextCardio : !!nextIncomplete) && !allDone;
+
+  // Tick once a second while the cardio stopwatch runs
+  const [, setTick] = useState(0);
+  useEffect(() => {
+    if (!clock) return;
+    const id = setInterval(() => setTick((t) => t + 1), 1000);
+    return () => clearInterval(id);
+  }, [clock]);
+  const liveFor = (setId: string) =>
+    clock && clock.setId === setId ? clock.baseSec + Math.floor((Date.now() - clock.startedAt) / 1000) : null;
 
   return (
     <Modal visible={visible} animationType="slide" presentationStyle="pageSheet" onRequestClose={onClose}>
@@ -127,19 +145,38 @@ export function ExerciseDetailModal({
           {/* Last-time preview */}
           {lastSets && lastSets.length > 0 && (
             <Text style={[styles.lastTime, { color: c.textMuted }]}>
-              Last: {lastSets.map((s: any) => `${s.weight}${unit}\u00D7${s.reps}${s.rir != null ? ` @${s.rir}` : ''}`).join(', ')}
+              Last: {lastSets.map((s: any) => describeSet(s, unit)).join(', ')}
             </Text>
           )}
 
           {/* Column headers */}
-          <View style={styles.columnHeaders}>
-            <View style={styles.setBadgeCol} />
-            <Text style={[styles.colHeader, { color: c.textMuted }]}>Reps</Text>
-            <Text style={[styles.colHeader, { color: c.textMuted }]}>Weight ({unit})</Text>
-          </View>
+          {!isCardio && (
+            <View style={styles.columnHeaders}>
+              <View style={styles.setBadgeCol} />
+              <Text style={[styles.colHeader, { color: c.textMuted }]}>Reps</Text>
+              <Text style={[styles.colHeader, { color: c.textMuted }]}>Weight ({unit})</Text>
+            </View>
+          )}
 
           {/* Set rows */}
-          {sets.map((s: any, i: number) => (
+          {isCardio && sets.map((s: any, i: number) => (
+            <CardioSetRow
+              key={s.id}
+              index={s.set_index}
+              durationSec={s.duration_sec ?? null}
+              level={s.level ?? null}
+              calories={s.calories ?? null}
+              completed={!!s.is_completed}
+              liveSec={liveFor(s.id)}
+              onToggleClock={() => onToggleClock?.(s.id)}
+              onDurationChange={(v) => onSetUpdate(s.id, { duration_sec: v })}
+              onLevelChange={(v) => onSetUpdate(s.id, { level: v })}
+              onCaloriesChange={(v) => onSetUpdate(s.id, { calories: v })}
+              onFocus={() => onSetFocus(i)}
+              onDelete={!s.is_completed ? () => onDeleteSet(s.id) : undefined}
+            />
+          ))}
+          {!isCardio && sets.map((s: any, i: number) => (
             <SetRow
               key={s.id}
               index={s.set_index}

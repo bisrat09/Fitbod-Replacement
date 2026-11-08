@@ -176,12 +176,12 @@ export async function createWorkout(
 
 export async function addSet(
   ctx: Ctx,
-  s: { id: string; workout_id: string; exercise_id: string; set_index: number; weight?: number | null; reps?: number | null; rir?: number | null; tempo?: string | null; is_warmup?: number; block_id?: string | null; is_completed?: number }
+  s: { id: string; workout_id: string; exercise_id: string; set_index: number; weight?: number | null; reps?: number | null; rir?: number | null; tempo?: string | null; is_warmup?: number; block_id?: string | null; is_completed?: number; duration_sec?: number | null; level?: number | null; calories?: number | null }
 ){
   const ts = nowIso();
   await ctx.db.runAsync(
-    `INSERT INTO sets (id,user_id,workout_id,exercise_id,set_index,weight,reps,rir,tempo,is_warmup,block_id,is_completed,created_at,updated_at) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)`,
-    [s.id, ctx.userId, s.workout_id, s.exercise_id, s.set_index, s.weight ?? null, s.reps ?? null, s.rir ?? null, s.tempo ?? null, s.is_warmup ? 1 : 0, s.block_id ?? null, s.is_completed ?? 0, ts, ts]
+    `INSERT INTO sets (id,user_id,workout_id,exercise_id,set_index,weight,reps,rir,tempo,is_warmup,block_id,is_completed,duration_sec,level,calories,created_at,updated_at) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`,
+    [s.id, ctx.userId, s.workout_id, s.exercise_id, s.set_index, s.weight ?? null, s.reps ?? null, s.rir ?? null, s.tempo ?? null, s.is_warmup ? 1 : 0, s.block_id ?? null, s.is_completed ?? 0, s.duration_sec ?? null, s.level ?? null, s.calories ?? null, ts, ts]
   );
 }
 
@@ -248,12 +248,12 @@ export async function listBlocksWithExercises(ctx: Ctx, workoutId: string) {
 
 export async function updateSet(
   ctx: Ctx,
-  s: { id: string; weight?: number | null; reps?: number | null; rir?: number | null; tempo?: string | null; is_completed?: number | null; notes?: string | null }
+  s: { id: string; weight?: number | null; reps?: number | null; rir?: number | null; tempo?: string | null; is_completed?: number | null; notes?: string | null; duration_sec?: number | null; level?: number | null; calories?: number | null }
 ){
   const ts = nowIso();
   await ctx.db.runAsync(
-    `UPDATE sets SET weight=COALESCE(?,weight), reps=COALESCE(?,reps), rir=COALESCE(?,rir), tempo=COALESCE(?,tempo), is_completed=COALESCE(?,is_completed), notes=COALESCE(?,notes), updated_at=? WHERE id=? AND user_id=?`,
-    [s.weight ?? null, s.reps ?? null, s.rir ?? null, s.tempo ?? null, s.is_completed ?? null, s.notes ?? null, ts, s.id, ctx.userId]
+    `UPDATE sets SET weight=COALESCE(?,weight), reps=COALESCE(?,reps), rir=COALESCE(?,rir), tempo=COALESCE(?,tempo), is_completed=COALESCE(?,is_completed), notes=COALESCE(?,notes), duration_sec=COALESCE(?,duration_sec), level=COALESCE(?,level), calories=COALESCE(?,calories), updated_at=? WHERE id=? AND user_id=?`,
+    [s.weight ?? null, s.reps ?? null, s.rir ?? null, s.tempo ?? null, s.is_completed ?? null, s.notes ?? null, s.duration_sec ?? null, s.level ?? null, s.calories ?? null, ts, s.id, ctx.userId]
   );
 }
 
@@ -602,8 +602,8 @@ export async function importFitbodPlan(
       workouts += res.changes;
       for (const st of w.sets) {
         const r = await ctx.db.runAsync(
-          `INSERT OR IGNORE INTO sets (id,user_id,workout_id,exercise_id,set_index,weight,reps,rir,tempo,is_warmup,block_id,is_completed,notes,created_at,updated_at) VALUES (?,?,?,?,?,?,?,NULL,NULL,?,NULL,1,?,?,?)`,
-          [st.id, ctx.userId, w.id, exerciseIds.get(st.exercise)!, st.set_index, st.weight, st.reps, st.is_warmup, st.notes, ts, ts]
+          `INSERT OR IGNORE INTO sets (id,user_id,workout_id,exercise_id,set_index,weight,reps,rir,tempo,is_warmup,block_id,is_completed,notes,duration_sec,created_at,updated_at) VALUES (?,?,?,?,?,?,?,NULL,NULL,?,NULL,1,?,?,?,?)`,
+          [st.id, ctx.userId, w.id, exerciseIds.get(st.exercise)!, st.set_index, st.weight, st.reps, st.is_warmup, st.notes, st.duration_sec ?? null, ts, ts]
         );
         sets += r.changes;
       }

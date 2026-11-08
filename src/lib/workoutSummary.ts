@@ -4,6 +4,7 @@
  */
 
 import { computeTargetMuscles, type MuscleTarget } from './targetMuscles';
+import { isCardio, estimateCardioCalories } from './cardio';
 
 /**
  * MET for resistance training at moderate-to-vigorous effort with short rests.
@@ -31,6 +32,9 @@ export type SummarySet = {
   reps: number | null;
   is_warmup: number;
   is_completed: number;
+  duration_sec?: number | null;
+  level?: number | null;
+  calories?: number | null;
 };
 
 export type SummaryExerciseLine = {
@@ -39,6 +43,8 @@ export type SummaryExerciseLine = {
   sets: number;
   bestWeight: number;
   bestReps: number;
+  /** Set for cardio exercises: total time, highest level, calories (logged or estimated). */
+  cardio?: { durationSec: number; level: number | null; calories: number | null };
 };
 
 export type WorkoutSummary = {
@@ -50,6 +56,7 @@ export type WorkoutSummary = {
   reps: number;
   volume: number;
   calories: number | null;
+  cardioSec: number;
   muscles: MuscleTarget[];
   lines: SummaryExerciseLine[];
 };
@@ -72,27 +79,53 @@ export function summarizeWorkout(args: {
   const byEx = new Map<string, SummaryExerciseLine>();
   let reps = 0;
   let volume = 0;
+  let cardioSec = 0;
+  let cardioCalories = 0;
+  let cardioCaloriesKnown = true;
   const muscleEntries: { muscle_groups: string }[] = [];
 
   for (const s of done) {
-    const r = s.reps || 0;
-    const w = s.weight || 0;
-    reps += r;
-    volume += r * w;
     const mg = args.muscleGroupsByExercise[s.exercise_id];
     if (mg) muscleEntries.push({ muscle_groups: mg });
-
     const line = byEx.get(s.exercise_id) ?? {
       exerciseId: s.exercise_id,
       name: s.exercise_name ?? 'Exercise',
       sets: 0, bestWeight: 0, bestReps: 0,
     };
     line.sets += 1;
-    if (w > line.bestWeight || (w === line.bestWeight && r > line.bestReps)) {
-      line.bestWeight = w;
-      line.bestReps = r;
+
+    if (isCardio(mg)) {
+      const sec = s.duration_sec || 0;
+      // Machine calories win; otherwise estimate from time and body weight
+      const cal = s.calories != null && s.calories > 0
+        ? Math.round(s.calories)
+        : estimateCardioCalories(sec, args.bodyWeight, args.unit);
+      cardioSec += sec;
+      if (cal != null) cardioCalories += cal; else if (sec > 0) cardioCaloriesKnown = false;
+      const c = line.cardio ?? { durationSec: 0, level: null, calories: null };
+      c.durationSec += sec;
+      if (s.level != null) c.level = Math.max(c.level ?? 0, s.level);
+      if (cal != null) c.calories = (c.calories ?? 0) + cal;
+      line.cardio = c;
+    } else {
+      const r = s.reps || 0;
+      const w = s.weight || 0;
+      reps += r;
+      volume += r * w;
+      if (w > line.bestWeight || (w === line.bestWeight && r > line.bestReps)) {
+        line.bestWeight = w;
+        line.bestReps = r;
+      }
     }
     byEx.set(s.exercise_id, line);
+  }
+
+  // Lifting at STRENGTH_MET for the time not spent on cardio, plus cardio calories
+  const strength = estimateCalories(Math.max(0, args.durationSec - cardioSec), args.bodyWeight, args.unit);
+  let calories: number | null = null;
+  if (strength != null || cardioCalories > 0) {
+    calories = (strength ?? 0) + cardioCalories;
+    if (!cardioCaloriesKnown && strength == null) calories = cardioCalories || null;
   }
 
   return {
@@ -103,7 +136,8 @@ export function summarizeWorkout(args: {
     workingSets: done.length,
     reps,
     volume: Math.round(volume),
-    calories: estimateCalories(args.durationSec, args.bodyWeight, args.unit),
+    calories,
+    cardioSec,
     muscles: computeTargetMuscles(muscleEntries),
     lines: [...byEx.values()],
   };

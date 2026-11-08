@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, Pressable, Modal, StyleSheet, type ViewStyle } from 'react-native';
+import { View, Text, Pressable, Modal, StyleSheet, KeyboardAvoidingView, Platform, Keyboard, type ViewStyle } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '@/theme/ThemeContext';
 import { fontSize, fontWeight } from '@/theme/typography';
@@ -16,11 +16,15 @@ export function BottomSheet({ visible, onClose, title, children, style }: Bottom
   const { c } = useTheme();
   return (
     <Modal visible={visible} animationType="slide" transparent onRequestClose={onClose}>
+      {/* Lifts the sheet above the keyboard so search results stay tappable */}
+      <KeyboardAvoidingView style={styles.flex} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
       <Pressable style={[styles.backdrop, { backgroundColor: c.modalBackdrop }]} onPress={onClose}>
         <View />
       </Pressable>
       <View style={[styles.sheet, { backgroundColor: c.modalBg }, style]}>
+        <Pressable onPress={Keyboard.dismiss} hitSlop={12} style={styles.handleHit}>
         <View style={[styles.handle, { backgroundColor: c.textMuted }]} />
+        </Pressable>
         {title && (
           <View style={styles.header}>
             <Text style={[styles.title, { color: c.text }]}>{title}</Text>
@@ -31,11 +35,14 @@ export function BottomSheet({ visible, onClose, title, children, style }: Bottom
         )}
         {children}
       </View>
+      </KeyboardAvoidingView>
     </Modal>
   );
 }
 
 const styles = StyleSheet.create({
+  flex: { flex: 1 },
+  handleHit: { alignSelf: 'stretch', alignItems: 'center', paddingVertical: 4 },
   backdrop: {
     flex: 1,
   },

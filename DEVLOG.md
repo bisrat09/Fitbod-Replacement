@@ -539,3 +539,12 @@ Next Steps
 
 ## 2026-11-08 — More Options fix
 - iOS won't present a Modal over a pageSheet Modal unless it's nested inside it. ExerciseOptionsSheet now renders as a child of ExerciseDetailModal; closing the detail also resets the options sheet.
+
+## 2026-11-08 — Cardio sets + picker keyboard
+- Bisrat: Stair Stepper showed Reps/Weight and "Last: nulllb×null"; keyboard covered swap results.
+- src/lib/cardio.ts: isCardio (primary muscle 'cardio'), formatClock/parseClock, describeSet, CARDIO_MET 8 estimate.
+- Migration 009 adds sets.duration_sec, level, calories. Fitbod import now stores Duration(s) in duration_sec.
+- CardioSetRow: Time (stopwatch Start/Stop, wall-clock, survives closing the sheet; or type 12:30 / 20), Level, Calories ("auto" = estimate).
+- Log Set stops the stopwatch and saves before completing; logActiveSet now reads sets fresh from the DB.
+- Summary: Cardio stat replaces Reps when cardio was done; calories = lifting estimate for non-cardio time + machine (or estimated) cardio calories.
+- BottomSheet wraps content in KeyboardAvoidingView; picker rows/handle/Search dismiss the keyboard.

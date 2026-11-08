@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, TextInput, ScrollView, Pressable, StyleSheet } from 'react-native';
+import { View, Text, TextInput, ScrollView, Pressable, StyleSheet, Keyboard } from 'react-native';
 import { useTheme } from '@/theme/ThemeContext';
 import { fontSize, fontWeight } from '@/theme/typography';
 import { BottomSheet } from '../BottomSheet';
@@ -62,6 +62,7 @@ export function ExercisePickerSheet({
         autoCapitalize="none"
         clearButtonMode="while-editing"
         returnKeyType="search"
+        onSubmitEditing={() => Keyboard.dismiss()}
       />
 
       {/* Muscle filter chips */}
@@ -89,7 +90,7 @@ export function ExercisePickerSheet({
           return (
             <Pressable
               key={ex.id}
-              onPress={() => onSelect(ex.id)}
+              onPress={() => { Keyboard.dismiss(); onSelect(ex.id); }}
               style={[
                 styles.exerciseRow,
                 { borderColor: selected ? c.accent : c.cardBorder },
@@ -130,6 +131,7 @@ const styles = StyleSheet.create({
   },
   list: {
     maxHeight: 280,
+    flexShrink: 1,
   },
   exerciseRow: {
     flexDirection: 'row',

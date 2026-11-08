@@ -9,6 +9,7 @@ import { ExerciseDetailModal } from './ExerciseDetailModal';
 import { ExerciseOptionsSheet } from './ExerciseOptionsSheet';
 import { TargetMuscles } from './TargetMuscles';
 import { splitLabel } from '@/lib/workoutSummary';
+import { isCardio, formatClock } from '@/lib/cardio';
 import { useTheme } from '@/theme/ThemeContext';
 import { fontSize } from '@/theme/typography';
 import type { Recommendation } from '@/lib/dao';
@@ -51,7 +52,7 @@ type ActiveWorkoutViewProps = {
   onAddWarmups: (blockId: string, exerciseId: string) => void;
   onSwapExercise: (blockId: string, exerciseId: string) => void;
   onDeleteSet: (setId: string) => void;
-  onSetUpdate: (setId: string, updates: Record<string, any>) => void;
+  onSetUpdate: (setId: string, updates: Record<string, any>) => void | Promise<void>;
   onSetFocus: (blockId: string, exerciseId: string, row: number) => void;
   onTimerPauseResume: (blockId: string) => void;
   onTimerAdjust: (blockId: string, delta: number) => void;
@@ -96,6 +97,21 @@ export function ActiveWorkoutView({
     }
   }
   const [showOptions, setShowOptions] = useState(false);
+
+  // Cardio stopwatch: wall-clock based, survives closing the exercise sheet
+  const [clock, setClock] = useState<{ setId: string; startedAt: number; baseSec: number } | null>(null);
+  function stopClock(): Promise<void> | void {
+    if (!clock) return;
+    const total = clock.baseSec + Math.floor((Date.now() - clock.startedAt) / 1000);
+    setClock(null);
+    return onSetUpdate(clock.setId, { duration_sec: total });
+  }
+  function toggleClock(setId: string) {
+    if (clock?.setId === setId) { stopClock(); return; }
+    stopClock();
+    const s = sets.find((x: any) => x.id === setId);
+    setClock({ setId, startedAt: Date.now(), baseSec: s?.duration_sec ?? 0 });
+  }
   const hasAutoOpened = useRef(false);
 
   // Auto-open first exercise when workout starts
@@ -129,12 +145,14 @@ export function ActiveWorkoutView({
   }
 
   // Wrap onCompleteActiveSet to auto-advance to next exercise when current is done
-  function handleCompleteSet() {
+  async function handleCompleteSet() {
     if (!onCompleteActiveSet || !detailTarget) return;
     const { blockId, exerciseId } = detailTarget;
     const working = sets.filter((s: any) => s.block_id === blockId && s.exercise_id === exerciseId && !s.is_warmup);
     const incompleteCount = working.filter((s: any) => !s.is_completed).length;
 
+    // Logging a cardio set stops its stopwatch and saves the time first
+    if (clock && working.some((s: any) => s.id === clock.setId)) await stopClock();
     onCompleteActiveSet(blockId);
 
     // If this was the last incomplete set, advance to next exercise
@@ -164,6 +182,7 @@ export function ActiveWorkoutView({
     return {
       exerciseId,
       exerciseName: ex.exercise_name,
+      isCardio: isCardio(ex.muscle_groups),
       imageUrl: ex.image_url,
       supersetLabel,
       sets: exSets,
@@ -217,7 +236,13 @@ export function ActiveWorkoutView({
                     key={`${b.id}-${ex.exercise_id}`}
                     name={ex.exercise_name}
                     imageUrl={ex.image_url}
-                    subtitle={totalCount > 0
+                    subtitle={isCardio(ex.muscle_groups)
+                      ? (() => {
+                          const sec = workingSets.reduce((t: number, s: any) => t + (s.duration_sec || 0), 0);
+                          const lvl = workingSets.find((s: any) => s.level != null)?.level;
+                          return [clock && workingSets.some((s: any) => s.id === clock.setId) ? 'Timer running' : sec ? formatClock(sec) : 'Cardio', lvl != null ? `Level ${lvl}` : null].filter(Boolean).join(' \u00B7 ');
+                        })()
+                      : totalCount > 0
                       ? `${totalCount} sets \u00B7 ${exSets[0]?.reps ?? 0} reps${exSets[0]?.weight ? ` \u00B7 ${exSets[0].weight} ${unit}` : ''}`
                       : '0 sets'}
                     progress={`${completedCount}/${totalCount}`}
@@ -271,6 +296,9 @@ export function ActiveWorkoutView({
           onTimerReset={() => onTimerReset(detailTarget.blockId)}
           onImageFetched={onImageFetched ? (url) => onImageFetched(detailData.exerciseId, url) : undefined}
           onCompleteSet={onCompleteActiveSet ? handleCompleteSet : undefined}
+          isCardio={detailData.isCardio}
+          clock={clock}
+          onToggleClock={toggleClock}
         >
           {/* Options sheet nests inside so iOS can present it over the pageSheet */}
           <ExerciseOptionsSheet

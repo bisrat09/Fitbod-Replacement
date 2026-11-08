@@ -35,6 +35,7 @@ export type PlannedSet = {
   reps: number | null;
   is_warmup: number;
   notes: string | null;
+  duration_sec: number | null;
 };
 
 export type PlannedWorkout = {
@@ -248,6 +249,7 @@ export function planFitbodImport(
           reps,
           is_warmup: r.isWarmup ? 1 : 0,
           notes: timedNote(r),
+          duration_sec: r.durationSec > 0 ? Math.round(r.durationSec) : null,
         });
         idx++;
         if (!r.isWarmup) {

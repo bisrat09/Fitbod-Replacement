@@ -1,3 +1,4 @@
+import { describeSet } from './cardio';
 export const epley1RM=(w:number,r:number)=>w*(1+r/30);export function roundToIncrement(x:number,inc:number){const n=Math.round(x/inc)*inc;return Math.max(0,Math.round(n*1000)/1000);}export function suggestNextWeight(prevWeight:number,prevRir:number|null,targetRir:number,increment:number){if(prevRir===null||prevRir===undefined)return roundToIncrement(prevWeight,increment);const delta=targetRir-prevRir;const pct=Math.max(-0.075,Math.min(0.075,delta*0.025));const raw=prevWeight*(1+pct);return roundToIncrement(raw,increment);}export function warmupPlan(){return[{pct:0.40,reps:5},{pct:0.60,reps:3},{pct:0.75,reps:2},{pct:0.85,reps:1}];}export function generateWarmupWeights(target:number,increment:number){return warmupPlan().map(step=>({weight:roundToIncrement(target*step.pct,increment),reps:step.reps}));}
 
 // ── Progressive overload (double progression) ──
@@ -90,7 +91,8 @@ export function formatWorkoutSummary(workout: { split?: string; date: string; el
     lines.push(ex.name);
     const workingSets = ex.sets.filter(s => !s.is_warmup && s.is_completed);
     for (const s of workingSets) {
-      lines.push(`  ${s.weight} ${unit} × ${s.reps}${s.rir != null ? ` @ RIR ${s.rir}` : ''}`);
+      const cardio = (s as any).duration_sec || (s as any).level != null || (s as any).calories != null;
+      lines.push(cardio ? `  ${describeSet(s as any, unit)}` : `  ${s.weight} ${unit} × ${s.reps}${s.rir != null ? ` @ RIR ${s.rir}` : ''}`);
     }
   }
   lines.push('');

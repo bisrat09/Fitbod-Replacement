@@ -1,3 +1,4 @@
+import { describeSet } from '@/lib/cardio';
 import React, { useState } from 'react';
 import { View, Text, Pressable, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
@@ -142,7 +143,7 @@ export function BlockCard({
                 {/* Last-time preview */}
                 {lastTime && lastTime.length > 0 && (
                   <Text style={[styles.lastTime, { color: c.textMuted }]}>
-                    Last: {lastTime.map((s: any) => `${s.weight}${unit}\u00D7${s.reps}${s.rir != null ? ` @${s.rir}` : ''}`).join(', ')}
+                    Last: {lastTime.map((s: any) => describeSet(s, unit)).join(', ')}
                   </Text>
                 )}
 

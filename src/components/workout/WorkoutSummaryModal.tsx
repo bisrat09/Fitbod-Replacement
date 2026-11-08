@@ -5,6 +5,7 @@ import { fontSize, fontWeight } from '@/theme/typography';
 import { PinkButton } from '../PinkButton';
 import { ActionChip } from '../ActionChip';
 import { splitLabel, type WorkoutSummary } from '@/lib/workoutSummary';
+import { formatClock } from '@/lib/cardio';
 
 type WorkoutSummaryModalProps = {
   summary: WorkoutSummary | null;
@@ -29,7 +30,9 @@ export function WorkoutSummaryModal({ summary, unit, onShare, onDone }: WorkoutS
     { value: summary.calories != null ? `~${summary.calories}` : '--', label: 'Calories (est.)' },
     { value: summary.volume.toLocaleString(), label: `Volume (${unit})` },
     { value: String(summary.workingSets), label: 'Sets' },
-    { value: String(summary.reps), label: 'Reps' },
+    summary.cardioSec > 0
+      ? { value: formatClock(summary.cardioSec), label: 'Cardio' }
+      : { value: String(summary.reps), label: 'Reps' },
     { value: String(summary.exercises), label: 'Exercises' },
   ];
   const topPct = summary.muscles[0]?.percentage ?? 100;
@@ -79,7 +82,9 @@ export function WorkoutSummaryModal({ summary, unit, onShare, onDone }: WorkoutS
                 <View key={l.exerciseId} style={[styles.exRow, { borderBottomColor: c.cardBorder }]}>
                   <Text style={[styles.exName, { color: c.text }]} numberOfLines={1}>{l.name}</Text>
                   <Text style={[styles.exDetail, { color: c.textSecondary }]}>
-                    {l.sets} {l.sets === 1 ? 'set' : 'sets'} · best {l.bestWeight > 0 ? `${l.bestWeight} ${unit} × ` : ''}{l.bestReps}
+                    {l.cardio
+                      ? [formatClock(l.cardio.durationSec), l.cardio.level != null ? `Level ${l.cardio.level}` : null, l.cardio.calories != null ? `${l.cardio.calories} cal` : null].filter(Boolean).join(' · ')
+                      : `${l.sets} ${l.sets === 1 ? 'set' : 'sets'} · best ${l.bestWeight > 0 ? `${l.bestWeight} ${unit} × ` : ''}${l.bestReps}`}
                   </Text>
                 </View>
               ))}

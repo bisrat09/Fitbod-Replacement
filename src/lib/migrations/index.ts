@@ -6,6 +6,7 @@ import sql005 from './005_set_notes';
 import sql006 from './006_body_weight';
 import sql007 from './007_workout_duration';
 import sql008 from './008_exercise_recommendation';
+import sql009 from './009_cardio_sets';
 
 async function getSchemaVersion(db: DB): Promise<number> {
   const row = await db.getFirstAsync<{ value: string }>(
@@ -52,5 +53,9 @@ export async function applyPendingMigrations(db: DB) {
   if (current < 8) {
     await db.execAsync(sql008);
     await setSchemaVersion(db, 8);
+  }
+  if (current < 9) {
+    await db.execAsync(sql009);
+    await setSchemaVersion(db, 9);
   }
 }

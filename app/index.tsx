@@ -38,6 +38,7 @@ import { ActiveWorkoutView, ExercisePickerSheet, FinishSheet, PlateCalcSheet, Pr
 import { WorkoutSummaryModal } from '@/components/workout/WorkoutSummaryModal';
 import { summarizeWorkout, type WorkoutSummary } from '@/lib/workoutSummary';
 import { computeRecovery, type RecoveryMap } from '@/lib/muscleRecovery';
+import { isCardio } from '@/lib/cardio';
 import { RestTimer } from '@/components/RestTimer';
 import { defaultRestSeconds, clampRest, restSettingKey, startTimer, timeLeft as timerLeft, pauseTimer, resumeTimer, adjustTimer, finishTimer, type TimerState } from '@/lib/restTimer';
 
@@ -494,11 +495,13 @@ export default function Today() {
   async function logActiveSet(blockId: string) {
     const active = activeRowByBlock[blockId];
     const block = blocks.find((x: any) => x.id === blockId);
-    if (!active || !block) return;
-    const perExSets = sets.filter((s: any) => s.block_id === blockId && s.exercise_id === active.exerciseId);
+    if (!active || !block || !dbCtx || !workoutId) return;
+    // Read fresh: a cardio stopwatch may have just saved its time
+    const current = await listWorkoutSets(dbCtx, workoutId);
+    const perExSets = current.filter((s: any) => s.block_id === blockId && s.exercise_id === active.exerciseId);
     if (active.row >= perExSets.length) return;
-    const s = perExSets[active.row];
-    if (!(s.reps != null && s.weight != null)) return;
+    const s: any = perExSets[active.row];
+    if (!((s.reps != null && s.weight != null) || s.duration_sec > 0)) return;
     await updateSet(dbCtx, { id: s.id, is_completed: 1 });
     const rows = await listWorkoutSets(dbCtx, workoutId!);
     setSets(rows);
@@ -593,6 +596,11 @@ export default function Today() {
     let nextIdx = await getNextSetIndex(dbCtx, workoutId);
     const lastSets = await lastWorkingSetsForExercise(dbCtx, exerciseId, workoutId);
     const ex = await getExercise(dbCtx, exerciseId);
+    if (isCardio((ex as any)?.muscle_groups)) {
+      // One cardio entry; carry last level, time is filled by the stopwatch or typed
+      await addSet(dbCtx, { id: Crypto.randomUUID(), workout_id: workoutId, exercise_id: exerciseId, set_index: nextIdx, weight: null, reps: null, is_warmup: 0, block_id: blockId, level: lastSets[0]?.level ?? null });
+      return;
+    }
     const inc = (ex as any)?.default_increment ?? 2.5;
     const isCompound = (ex as any)?.is_compound === 1;
     const prog = progressiveOverload(lastSets, isCompound, inc);

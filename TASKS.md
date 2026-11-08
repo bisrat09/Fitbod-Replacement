@@ -211,7 +211,9 @@ Goal: replace the paid Fitbod subscription. Bisrat has an active Apple Developer
 - [ ] IN PROGRESS: Build 10 with the above; Bisrat checks summary + muscle focus at the gym
 - [x] [2026-11-08] Split rotation fixed: Fitbod-style muscle recovery (src/lib/muscleRecovery.ts). Split = freshest main muscles, lifts led by a recovering muscle (<60%) skipped, Muscle Recovery row on pre-workout screen. Re-plans after Finish
 - [x] [2026-11-08] More Options in exercise detail did nothing on iOS: options sheet was a sibling Modal of the pageSheet; now nested inside it
-- [ ] IN PROGRESS: Build 12 (recovery + More Options fix); Bisrat checks recovery picks over a week
+- [x] [2026-11-08] Swap/Add picker: keyboard hid results. BottomSheet now KeyboardAvoidingView; tapping a row, the handle, or Search dismisses the keyboard
+- [x] [2026-11-08] Cardio tracking: exercises with primary muscle 'cardio' log Time (stopwatch or typed), Level, Calories (migration 009: sets.duration_sec/level/calories). One set by default, never auto-picked by the generator. Summary uses machine calories (else MET 8 estimate) and excludes cardio time from the lifting estimate. "Last: null" fixed everywhere
+- [ ] IN PROGRESS: Build 13 (recovery, More Options, keyboard, cardio); Bisrat checks at the gym
 - [ ] Later: rest-done local notification while the app is in background (needs expo-notifications, new dependency, Bisrat approval)
 - [x] [2026-11-08] Muscle-recovery tracking (Fitbod-style freshness per muscle)
 - [ ] Pre-existing: 26 TypeScript errors (expo-file-system documentDirectory API change, Timer types)

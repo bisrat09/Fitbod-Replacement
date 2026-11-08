@@ -5,6 +5,7 @@
  * No database access, no side effects — fully testable.
  */
 
+import { isCardio } from './cardio';
 import { FRESH_THRESHOLD, recoveryOf, type RecoveryMap } from './muscleRecovery';
 
 // ── Split-to-muscle-group mapping ──
@@ -267,7 +268,7 @@ export function selectExercises(
   if (selected.length < count) {
     const selectedIds = new Set(selected.map((e) => e.id));
     const remaining = sortByPriority(
-      filtered.filter((ex) => !selectedIds.has(ex.id))
+      filtered.filter((ex) => !selectedIds.has(ex.id) && !isCardio(ex.muscle_groups))
     );
     for (const ex of remaining) {
       if (selected.length >= count) break;

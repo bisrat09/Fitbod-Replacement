@@ -43,6 +43,7 @@ export function computeRecovery(entries: MuscleSetEntry[], now: number = Date.no
     if (!Number.isFinite(t)) continue;
     const hours = Math.max(0, (now - t) / 3600000);
     parseMuscles(e.muscle_groups).forEach((m, i) => {
+      if (m === 'cardio') return;
       const left = 1 - hours / recoveryHours(m);
       if (left <= 0) return;
       fatigue[m] = (fatigue[m] ?? 0) + (i === 0 ? 1 : SECONDARY_WEIGHT) * left;
