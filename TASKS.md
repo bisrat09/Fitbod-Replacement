@@ -205,7 +205,8 @@ Goal: replace the paid Fitbod subscription. Bisrat has an active Apple Developer
   - Rest timer kept counting only while the app was open (JS interval suspended in background). Now wall-clock: stores end time, recomputes on resume
   - Replace/Add search: words in any order, partial words, gym abbreviations (db, bb, kb, rdl, ohp, tri, ext...), plurals, hyphens (`src/lib/exerciseSearch.ts`). First tap on a result no longer just dismisses the keyboard. "No matches" hint mentions active muscle filter
   - 326 tests
-- [ ] IN PROGRESS: Build 9 with the 2026-11-07 fixes: `npx eas-cli build -p ios --profile production --auto-submit`, then Bisrat retests timer + search at the gym
+- [x] Build 9 queued 2026-11-07 on EAS with auto-submit (build cce6e218). Add to Friends group in App Store Connect once processed
+- [ ] IN PROGRESS: Bisrat retests rest timer + Replace search at the gym on build 9
 - [ ] Later: rest-done local notification while the app is in background (needs expo-notifications, new dependency, Bisrat approval)
 - [ ] Muscle-recovery tracking (Fitbod-style freshness per muscle)
 - [ ] Pre-existing: 26 TypeScript errors (expo-file-system documentDirectory API change, Timer types)
