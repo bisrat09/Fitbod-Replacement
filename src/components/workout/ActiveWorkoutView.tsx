@@ -299,6 +299,13 @@ export function ActiveWorkoutView({
           isCardio={detailData.isCardio}
           clock={clock}
           onToggleClock={toggleClock}
+          onRemoveExercise={() => {
+            const { blockId, exerciseId } = { blockId: detailTarget.blockId, exerciseId: detailData.exerciseId };
+            if (clock && sets.some((s: any) => s.id === clock.setId && s.exercise_id === exerciseId)) setClock(null);
+            setShowOptions(false);
+            setDetailTarget(null);
+            onRemoveExercise(blockId, exerciseId);
+          }}
         >
           {/* Options sheet nests inside so iOS can present it over the pageSheet */}
           <ExerciseOptionsSheet

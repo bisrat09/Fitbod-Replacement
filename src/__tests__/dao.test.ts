@@ -23,7 +23,7 @@ import {
   getWorkoutDatesForMonth, getLifetimeStats,
   saveWorkoutAsTemplate, archiveExercise, unarchiveExercise, listArchivedExercises, getBestSetsInWorkout,
   getExerciseStats, getAllExerciseStats, getMostRecentWorkoutId,
-  updateWorkoutDuration,
+  updateWorkoutDuration, dropUnloggedSets,
 } from '@/lib/dao';
 
 let mockDb: ReturnType<typeof createMockDb>;
@@ -528,6 +528,20 @@ describe('deleteBlock', () => {
     expect(mockDb.sqlContains('DELETE FROM sets')).toBe(true);
     expect(mockDb.sqlContains('DELETE FROM block_exercises')).toBe(true);
     expect(mockDb.sqlContains('DELETE FROM workout_blocks')).toBe(true);
+  });
+});
+
+describe('dropUnloggedSets', () => {
+  test('deletes only unlogged sets of the workout, then blocks left empty', async () => {
+    mockDb.setDefaultGetAll([{ id: 'b9' }]);
+    const n = await dropUnloggedSets(ctx, 'w1');
+    expect(n).toBe(1);
+    const del = mockDb.db.runAsync.mock.calls[0];
+    expect(del[0]).toContain('is_completed=0');
+    expect(del[1]).toEqual([ctx.userId, 'w1']);
+    // empty block b9 removed via deleteBlock (3 deletes)
+    expect(mockDb.db.runAsync).toHaveBeenCalledTimes(4);
+    expect(mockDb.db.runAsync.mock.calls[3][1]).toEqual(['b9', ctx.userId]);
   });
 });
 

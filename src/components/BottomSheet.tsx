@@ -10,12 +10,14 @@ type BottomSheetProps = {
   title?: string;
   children: React.ReactNode;
   style?: ViewStyle;
+  /** iOS: fires once the sheet has fully closed. */
+  onDismiss?: () => void;
 };
 
-export function BottomSheet({ visible, onClose, title, children, style }: BottomSheetProps) {
+export function BottomSheet({ visible, onClose, title, children, style, onDismiss }: BottomSheetProps) {
   const { c } = useTheme();
   return (
-    <Modal visible={visible} animationType="slide" transparent onRequestClose={onClose}>
+    <Modal visible={visible} animationType="slide" transparent onRequestClose={onClose} onDismiss={onDismiss}>
       {/* Lifts the sheet above the keyboard so search results stay tappable */}
       <KeyboardAvoidingView style={styles.flex} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
       <Pressable style={[styles.backdrop, { backgroundColor: c.modalBackdrop }]} onPress={onClose}>

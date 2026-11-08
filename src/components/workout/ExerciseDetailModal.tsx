@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, Pressable, Modal, ScrollView, StyleSheet } from 'react-native';
+import { View, Text, Pressable, Modal, ScrollView, StyleSheet, Alert } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '@/theme/ThemeContext';
 import { fontSize, fontWeight } from '@/theme/typography';
@@ -49,12 +49,13 @@ type ExerciseDetailModalProps = {
   /** Running cardio stopwatch, if any. */
   clock?: { setId: string; startedAt: number; baseSec: number } | null;
   onToggleClock?: (setId: string) => void;
+  onRemoveExercise?: () => void;
   /** Sheets opened from this modal. iOS only presents a Modal over a pageSheet when it's nested inside it. */
   children?: React.ReactNode;
 };
 
 export function ExerciseDetailModal({
-  visible, onClose, children, isCardio, clock, onToggleClock,
+  visible, onClose, children, isCardio, clock, onToggleClock, onRemoveExercise,
   exerciseId, exerciseName, imageUrl, supersetLabel,
   sets, unit, bestSetIds, lastSets,
   timer, restDuration,
@@ -138,6 +139,21 @@ export function ExerciseDetailModal({
             <Ionicons name="ellipsis-horizontal" size={20} color={c.textSecondary} />
             <Text style={[styles.actionMenuLabel, { color: c.text }]}>More Options</Text>
           </Pressable>
+          {onRemoveExercise && (
+            <Pressable
+              style={styles.actionMenuItem}
+              onPress={() => {
+                if (doneCount === 0) { onRemoveExercise(); return; }
+                Alert.alert('Remove exercise?', `${doneCount} logged ${doneCount === 1 ? 'set' : 'sets'} will be deleted.`, [
+                  { text: 'Cancel', style: 'cancel' },
+                  { text: 'Remove', style: 'destructive', onPress: onRemoveExercise },
+                ]);
+              }}
+            >
+              <Ionicons name="trash-outline" size={20} color={c.danger} />
+              <Text style={[styles.actionMenuLabel, { color: c.danger }]}>Remove Exercise</Text>
+            </Pressable>
+          )}
         </View>
 
         {/* Sets */}

@@ -26,6 +26,7 @@ type FinishSheetProps = {
   // Actions
   onShare: () => void;
   onConfirm: () => void;
+  onDismissed?: () => void;
 };
 
 function formatTime(sec: number): string {
@@ -38,15 +39,21 @@ export function FinishSheet({
   visible, onClose,
   exerciseCount, sets, elapsed, unit, weeklyVolume, workoutNotes,
   bwInput, onBwChange, templateName, onTemplateNameChange, templateSaved, onSaveTemplate,
-  onShare, onConfirm,
+  onShare, onConfirm, onDismissed,
 }: FinishSheetProps) {
   const { c } = useTheme();
 
   const completedSets = sets.filter((s: any) => s.is_completed && !s.is_warmup);
+  const unfinished = sets.filter((s: any) => !s.is_completed && !s.is_warmup).length;
   const totalVol = completedSets.reduce((sum: number, s: any) => sum + ((s.weight || 0) * (s.reps || 0)), 0);
 
   return (
-    <BottomSheet visible={visible} onClose={onClose} title="Finish Workout?">
+    <BottomSheet visible={visible} onClose={onClose} onDismiss={onDismissed} title="Finish Workout?">
+      {unfinished > 0 && (
+        <Text style={[styles.unfinished, { color: c.textSecondary }]}>
+          {unfinished} unfinished {unfinished === 1 ? 'set' : 'sets'} will be left out
+        </Text>
+      )}
       {/* Summary stats */}
       <View style={[styles.statsCard, { backgroundColor: c.chipBg }]}>
         <View style={styles.statsRow}>
@@ -142,6 +149,7 @@ export function FinishSheet({
 }
 
 const styles = StyleSheet.create({
+  unfinished: { fontSize: fontSize.small },
   statsCard: {
     borderRadius: 10,
     padding: 12,

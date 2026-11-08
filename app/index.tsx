@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useFocusEffect } from 'expo-router';
-import { View, StyleSheet, ScrollView, Share, Vibration, AppState } from 'react-native';
+import { View, StyleSheet, ScrollView, Share, Vibration, AppState, Platform } from 'react-native';
 import { bootstrapDb } from '@/lib/bootstrap';
 import {
   ensureUser, createWorkout, addSet, listWorkoutSets, createExercise,
@@ -18,6 +18,7 @@ import {
   repeatWorkout, listWorkoutDetail, updateWorkoutDuration,
   getRecentWorkoutSplits,
   getRecentMuscleSets,
+  dropUnloggedSets,
   updateExerciseImageUrl,
   getExerciseRecommendations,
   updateExerciseNotes, getExerciseNotes,
@@ -99,6 +100,8 @@ export default function Today() {
   // ── Finish modal ──
   const [showFinishModal, setShowFinishModal] = useState(false);
   const [summary, setSummary] = useState<WorkoutSummary | null>(null);
+  const pendingSummary = useRef<WorkoutSummary | null>(null);
+  const previewSeq = useRef(0);
   const summaryWorkoutId = useRef<string | null>(null);
   const [weeklyVolume, setWeeklyVolume] = useState<Record<string, number>>({});
   const [finishBwInput, setFinishBwInput] = useState('');
@@ -270,6 +273,8 @@ export default function Today() {
   // Generate preview exercises for pre-workout screen
   async function refreshPreview() {
     if (!dbCtx || workoutId) return;
+    // Split/duration can change while this runs; only the latest request may write
+    const seq = ++previewSeq.current;
     const exerciseCount = DURATION_EXERCISE_COUNT[duration] ?? 10;
     const [available, recency, favIds, recs] = await Promise.all([
       listExercisesAvailableByEquipment(dbCtx),
@@ -290,7 +295,7 @@ export default function Today() {
         sets: 3, reps: prog.reps, weight: prog.weight,
       });
     }
-    setPreviewExercises(previews);
+    if (seq === previewSeq.current) setPreviewExercises(previews);
   }
 
   useEffect(() => {
@@ -771,11 +776,18 @@ export default function Today() {
     const muscleGroupsByExercise: Record<string, string> = {};
     for (const exs of Object.values(blockExercises)) for (const e of exs) muscleGroupsByExercise[e.exercise_id] = e.muscle_groups ?? '';
     summaryWorkoutId.current = workoutId;
-    setSummary(summarizeWorkout({
+    const done = summarizeWorkout({
       split, date: new Date().toISOString(), durationSec: elapsed, sets,
       muscleGroupsByExercise, bodyWeight, unit,
-    }));
+    });
+    // iOS can't present the summary while the finish sheet is still up:
+    // close the sheet, then show the summary once it has dismissed
+    pendingSummary.current = done;
+    setShowFinishModal(false);
+    if (Platform.OS !== 'ios') showPendingSummary();
+    else setTimeout(showPendingSummary, 900); // fallback if onDismiss never fires
     if (dbCtx) {
+      if (workoutId) await dropUnloggedSets(dbCtx, workoutId);
       if (workoutId && elapsed > 0) await updateWorkoutDuration(dbCtx, workoutId, elapsed);
       if (workoutNotes.trim() && workoutId) await updateWorkoutNotes(dbCtx, workoutId, workoutNotes.trim());
       await deleteSetting(dbCtx, 'active_workout_id');
@@ -787,7 +799,13 @@ export default function Today() {
     setWorkoutId(null); setSets([]); setBlocks([]); setBlockExercises({});
     if (dbCtx && !programName) replan(dbCtx);
     setActiveRowByBlock({}); setLastSets({});
-    setShowFinishModal(false); setWorkoutStartTime(null); setPausedAt(null); setElapsed(0); setWorkoutNotes('');
+    setWorkoutStartTime(null); setPausedAt(null); setElapsed(0); setWorkoutNotes('');
+  }
+
+  function showPendingSummary() {
+    if (!pendingSummary.current) return;
+    setSummary(pendingSummary.current);
+    pendingSummary.current = null;
   }
 
   async function handleShareWorkout() {
@@ -934,6 +952,7 @@ export default function Today() {
         onSaveTemplate={handleSaveAsTemplate}
         onShare={handleShareWorkout}
         onConfirm={confirmFinishWorkout}
+        onDismissed={showPendingSummary}
       />
 
       {/* Post-workout summary */}

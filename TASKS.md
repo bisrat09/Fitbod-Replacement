@@ -213,7 +213,11 @@ Goal: replace the paid Fitbod subscription. Bisrat has an active Apple Developer
 - [x] [2026-11-08] More Options in exercise detail did nothing on iOS: options sheet was a sibling Modal of the pageSheet; now nested inside it
 - [x] [2026-11-08] Swap/Add picker: keyboard hid results. BottomSheet now KeyboardAvoidingView; tapping a row, the handle, or Search dismisses the keyboard
 - [x] [2026-11-08] Cardio tracking: exercises with primary muscle 'cardio' log Time (stopwatch or typed), Level, Calories (migration 009: sets.duration_sec/level/calories). One set by default, never auto-picked by the generator. Summary uses machine calories (else MET 8 estimate) and excludes cardio time from the lifting estimate. "Last: null" fixed everywhere
-- [ ] IN PROGRESS: Build 13 (recovery, More Options, keyboard, cardio); Bisrat checks at the gym
+- [x] [2026-11-08] Summary didn't appear after Finish: summary Modal was set visible while the Finish BottomSheet was still presented (iOS drops it). Now the sheet closes first and the summary opens on its onDismiss (900ms fallback)
+- [x] [2026-11-08] Remove Exercise row in the exercise detail menu (confirms if sets were logged)
+- [x] [2026-11-08] Finish drops planned-but-unlogged sets and empty blocks (dropUnloggedSets); Finish sheet says how many will be left out
+- [x] [2026-11-08] Pre-workout preview race: stale refreshPreview results could overwrite the current split's list (Push showing Hip Extension). Latest request wins
+- [ ] IN PROGRESS: Build 14; Bisrat checks finish -> summary and remove exercise at the gym
 - [ ] Later: rest-done local notification while the app is in background (needs expo-notifications, new dependency, Bisrat approval)
 - [x] [2026-11-08] Muscle-recovery tracking (Fitbod-style freshness per muscle)
 - [ ] Pre-existing: 26 TypeScript errors (expo-file-system documentDirectory API change, Timer types)

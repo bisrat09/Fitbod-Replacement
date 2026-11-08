@@ -1174,3 +1174,16 @@ export async function getRecentMuscleSets(ctx: Ctx, days: number = 4) {
     [ctx.userId, cutoff]
   );
 }
+
+// On finish: drop sets that were planned but never logged, and blocks left empty.
+// Returns how many sets were dropped.
+export async function dropUnloggedSets(ctx: Ctx, workoutId: string): Promise<number> {
+  const r = await ctx.db.runAsync(`DELETE FROM sets WHERE user_id=? AND workout_id=? AND is_completed=0`, [ctx.userId, workoutId]);
+  const empty = await ctx.db.getAllAsync<{ id: string }>(
+    `SELECT b.id FROM workout_blocks b WHERE b.user_id=? AND b.workout_id=?
+     AND NOT EXISTS (SELECT 1 FROM sets s WHERE s.block_id = b.id)`,
+    [ctx.userId, workoutId]
+  );
+  for (const b of empty) await deleteBlock(ctx, b.id);
+  return r.changes;
+}

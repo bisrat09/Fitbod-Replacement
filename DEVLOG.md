@@ -548,3 +548,9 @@ Next Steps
 - Log Set stops the stopwatch and saves before completing; logActiveSet now reads sets fresh from the DB.
 - Summary: Cardio stat replaces Reps when cardio was done; calories = lifting estimate for non-cardio time + machine (or estimated) cardio calories.
 - BottomSheet wraps content in KeyboardAvoidingView; picker rows/handle/Search dismiss the keyboard.
+
+## 2026-11-08 — Finish/summary, remove exercise, preview race
+- Root cause of missing summary: same iOS rule as More Options. A second Modal can't present while another is up; confirmFinishWorkout made the summary visible before closing the finish sheet. Fix: close sheet first, show summary on BottomSheet onDismiss.
+- Remove Exercise added to the detail action menu (Alert confirm when logged sets exist).
+- dropUnloggedSets on finish keeps history clean when Bisrat runs out of time.
+- Push preview listed Cable Hip Extension (glutes): concurrent refreshPreview calls after finish (old split + replanned split) could resolve out of order. Sequence ref fixes it.
