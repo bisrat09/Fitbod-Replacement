@@ -42,10 +42,12 @@ type ExerciseDetailModalProps = {
   onTimerReset: () => void;
   onImageFetched?: (url: string) => void;
   onCompleteSet?: () => void;
+  /** Sheets opened from this modal. iOS only presents a Modal over a pageSheet when it's nested inside it. */
+  children?: React.ReactNode;
 };
 
 export function ExerciseDetailModal({
-  visible, onClose,
+  visible, onClose, children,
   exerciseId, exerciseName, imageUrl, supersetLabel,
   sets, unit, bestSetIds, lastSets,
   timer, restDuration,
@@ -188,6 +190,7 @@ export function ExerciseDetailModal({
           </View>
         )}
       </View>
+      {children}
     </Modal>
   );
 }

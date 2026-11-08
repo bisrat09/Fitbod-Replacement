@@ -248,7 +248,7 @@ export function ActiveWorkoutView({
       {detailData && detailTarget && (
         <ExerciseDetailModal
           visible
-          onClose={() => setDetailTarget(null)}
+          onClose={() => { setShowOptions(false); setDetailTarget(null); }}
           exerciseId={detailData.exerciseId}
           exerciseName={detailData.exerciseName}
           imageUrl={detailData.imageUrl}
@@ -271,25 +271,24 @@ export function ActiveWorkoutView({
           onTimerReset={() => onTimerReset(detailTarget.blockId)}
           onImageFetched={onImageFetched ? (url) => onImageFetched(detailData.exerciseId, url) : undefined}
           onCompleteSet={onCompleteActiveSet ? handleCompleteSet : undefined}
-        />
+        >
+          {/* Options sheet nests inside so iOS can present it over the pageSheet */}
+          <ExerciseOptionsSheet
+            visible={showOptions}
+            onClose={() => setShowOptions(false)}
+            exerciseName={detailData.exerciseName}
+            notes={exerciseNotes[detailData.exerciseId] ?? ''}
+            onNotesChange={(notes) => onExerciseNotesChange(detailData.exerciseId, notes)}
+            onAddWarmups={() => onAddWarmups(detailTarget.blockId, detailData.exerciseId)}
+            unit={unit}
+            onUnitToggle={onUnitToggle}
+            recommendation={(exerciseRecommendations[detailData.exerciseId] as any) ?? 'normal'}
+            onRecommendationChange={(rec) => onExerciseRecommendationChange(detailData.exerciseId, rec)}
+            onRemove={() => { setShowOptions(false); setDetailTarget(null); onRemoveExercise(detailTarget.blockId, detailData.exerciseId); }}
+          />
+        </ExerciseDetailModal>
       )}
 
-      {/* Exercise options sheet */}
-      {detailData && detailTarget && (
-        <ExerciseOptionsSheet
-          visible={showOptions}
-          onClose={() => setShowOptions(false)}
-          exerciseName={detailData.exerciseName}
-          notes={exerciseNotes[detailData.exerciseId] ?? ''}
-          onNotesChange={(notes) => onExerciseNotesChange(detailData.exerciseId, notes)}
-          onAddWarmups={() => onAddWarmups(detailTarget.blockId, detailData.exerciseId)}
-          unit={unit}
-          onUnitToggle={onUnitToggle}
-          recommendation={(exerciseRecommendations[detailData.exerciseId] as any) ?? 'normal'}
-          onRecommendationChange={(rec) => onExerciseRecommendationChange(detailData.exerciseId, rec)}
-          onRemove={() => { setShowOptions(false); setDetailTarget(null); onRemoveExercise(detailTarget.blockId, detailData.exerciseId); }}
-        />
-      )}
     </View>
   );
 }

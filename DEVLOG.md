@@ -536,3 +536,6 @@ Next Steps
 - selectExercises drops lifts whose primary muscle is under 60% recovered (falls back if fewer than 2 split muscles are fresh).
 - UI: Muscle Recovery row under Muscle Focus on the pre-workout screen. Replans on load, tab focus and after Finish.
 - 12 new tests (346 total).
+
+## 2026-11-08 — More Options fix
+- iOS won't present a Modal over a pageSheet Modal unless it's nested inside it. ExerciseOptionsSheet now renders as a child of ExerciseDetailModal; closing the detail also resets the options sheet.
