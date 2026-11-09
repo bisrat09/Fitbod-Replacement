@@ -223,7 +223,8 @@ Goal: replace the paid Fitbod subscription. Bisrat has an active Apple Developer
 - [x] [2026-11-08] Form video button opened a YouTube search (random suggestions). Now opens one specific video per exercise from trusted coaching channels (Nippard, RP, Scott Herman, Athlean-X, Squat University, Catalyst...): `src/data/formVideos.json`, 223/237 exercises, built by `scripts/buildFormVideos.mjs` (hand-reviewed; OVERRIDES/EXCLUDE lists in the script). Channel + title shown under the button, "More videos" still opens search. 14 excluded exercises fall back to search. 372 tests
 - [x] Build 16 queued 2026-11-08 (EAS 07b85005, auto-submit)
 - [x] [2026-11-08] Build 16 feedback: Cable One Arm Tricep Side Extension still opened a search (only the 237 exercises with instructions had videos). Script now covers the whole 1,060 seed library. 915 exercises have one specific video; every library pick hand-reviewed by title, 57 wrong picks excluded (paper airplane, pancake recipe, eyelash, FedEx, guitar...), re-upload channels blocked. Rest fall back to search. YouTube may still show its own pre-roll ads (no way around that without Premium)
-- [ ] IN PROGRESS: Build 17 (library-wide videos); Bisrat checks Log tab + videos at the gym. Add build to Friends group
+- [x] Build 17 queued 2026-11-09 (EAS fc815b73, auto-submit)
+- [ ] IN PROGRESS: Bisrat checks Log tab + videos at the gym on build 17. Add build 17 to Friends group
 - [ ] Later: rest-done local notification while the app is in background (needs expo-notifications, new dependency, Bisrat approval)
 - [x] [2026-11-08] Muscle-recovery tracking (Fitbod-style freshness per muscle)
 - [ ] Pre-existing: 26 TypeScript errors (expo-file-system documentDirectory API change, Timer types)
