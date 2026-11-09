@@ -219,7 +219,8 @@ Goal: replace the paid Fitbod subscription. Bisrat has an active Apple Developer
 - [x] [2026-11-08] Pre-workout preview race: stale refreshPreview results could overwrite the current split's list (Push showing Hip Extension). Latest request wins
 - [x] Build 14 shipped (finish -> summary, remove exercise)
 - [x] [2026-11-08] Log tab redesign (Bisrat asked for Fitbod's more useful log layout, kept Fitlog styling): stats header (total workouts, days this week vs weekly goal, week streak; tap goal to cycle 1-7, setting `weekly_goal_days`), week strip calendar that expands to month, tap a day to filter, timeline of compact cards (muscle title by working sets, Exercises / Volume / Sets, "A, B, C and N more"), tap to expand sets + Repeat/Delete, Show more paging. `src/lib/logStats.ts`. 369 tests
-- [ ] IN PROGRESS: Build 15 (Log redesign); Bisrat checks Log tab + build 14 items at the gym
+- [x] Build 15 queued 2026-11-08 (EAS 9b2e16b0, auto-submit)
+- [ ] IN PROGRESS: Bisrat checks Log tab + build 14 items at the gym on build 15
 - [ ] Later: rest-done local notification while the app is in background (needs expo-notifications, new dependency, Bisrat approval)
 - [x] [2026-11-08] Muscle-recovery tracking (Fitbod-style freshness per muscle)
 - [ ] Pre-existing: 26 TypeScript errors (expo-file-system documentDirectory API change, Timer types)
