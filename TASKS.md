@@ -221,7 +221,8 @@ Goal: replace the paid Fitbod subscription. Bisrat has an active Apple Developer
 - [x] [2026-11-08] Log tab redesign (Bisrat asked for Fitbod's more useful log layout, kept Fitlog styling): stats header (total workouts, days this week vs weekly goal, week streak; tap goal to cycle 1-7, setting `weekly_goal_days`), week strip calendar that expands to month, tap a day to filter, timeline of compact cards (muscle title by working sets, Exercises / Volume / Sets, "A, B, C and N more"), tap to expand sets + Repeat/Delete, Show more paging. `src/lib/logStats.ts`. 369 tests
 - [x] Build 15 queued 2026-11-08 (EAS 9b2e16b0, auto-submit)
 - [x] [2026-11-08] Form video button opened a YouTube search (random suggestions). Now opens one specific video per exercise from trusted coaching channels (Nippard, RP, Scott Herman, Athlean-X, Squat University, Catalyst...): `src/data/formVideos.json`, 223/237 exercises, built by `scripts/buildFormVideos.mjs` (hand-reviewed; OVERRIDES/EXCLUDE lists in the script). Channel + title shown under the button, "More videos" still opens search. 14 excluded exercises fall back to search. 372 tests
-- [ ] IN PROGRESS: Build 16 (form videos); Bisrat checks Log tab, videos, and build 14 items at the gym
+- [x] Build 16 queued 2026-11-08 (EAS 07b85005, auto-submit)
+- [ ] IN PROGRESS: Bisrat checks Log tab, form videos, build 14 items at the gym on build 16. Add build 16 to Friends group in App Store Connect
 - [ ] Later: rest-done local notification while the app is in background (needs expo-notifications, new dependency, Bisrat approval)
 - [x] [2026-11-08] Muscle-recovery tracking (Fitbod-style freshness per muscle)
 - [ ] Pre-existing: 26 TypeScript errors (expo-file-system documentDirectory API change, Timer types)
