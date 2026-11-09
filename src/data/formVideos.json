@@ -29,6 +29,12 @@
     "channel": "ATHLEAN-X\u2122",
     "trusted": true
   },
+  "acb-skips": {
+    "id": "NTdACaNh88I",
+    "title": "Skipping ACB",
+    "channel": "Sergio Acera Villanueva",
+    "trusted": false
+  },
   "air squats": {
     "id": "BMZiC83SpF8",
     "title": "How To Perform The Air Squat (For Beginners) | Strength Training For Beginners",
@@ -161,10 +167,40 @@
     "channel": "FitMind",
     "trusted": false
   },
+  "balance trainer alternating lunge": {
+    "id": "FyxFYIV8wKU",
+    "title": "Exercises with an Athletic Trainer: Alternating Jump Lunges",
+    "channel": "Children's Hospital Colorado",
+    "trusted": false
+  },
+  "balance trainer alternating lunge jumps": {
+    "id": "FyxFYIV8wKU",
+    "title": "Exercises with an Athletic Trainer: Alternating Jump Lunges",
+    "channel": "Children's Hospital Colorado",
+    "trusted": false
+  },
+  "balance trainer bird dog": {
+    "id": "QABW99qPiNM",
+    "title": "Bird Dog Exercise | Improve Your Core and Balance",
+    "channel": "Muscle & Motion",
+    "trusted": false
+  },
   "balance trainer burpee": {
     "id": "0wHD7Uzh_sg",
     "title": "Balance Trainer Workouts: Burpee",
     "channel": "Limm",
+    "trusted": false
+  },
+  "balance trainer curtsy lunge": {
+    "id": "NpmtkHl8NVs",
+    "title": "Curtsy Lunge: Challenge Your Balance",
+    "channel": "American Medical Association (AMA)",
+    "trusted": false
+  },
+  "balance trainer goblet squat": {
+    "id": "Kag5WPThu4U",
+    "title": "How To Coach The Goblet Squat Like A Pro || NASM-CPT Trainer Tips and Cues",
+    "channel": "The Axiom Personal Trainer Academy",
     "trusted": false
   },
   "balance trainer mountain climber": {
@@ -185,6 +221,18 @@
     "channel": "Indonesia Fitness Academy",
     "trusted": false
   },
+  "balance trainer shoulder tap planks": {
+    "id": "KgzFRoW1eHM",
+    "title": "How to Do Plank Shoulder Taps - Stability Trainer PRO",
+    "channel": "Spacer Mobility",
+    "trusted": false
+  },
+  "balance trainer single leg kneeling good morning": {
+    "id": "QK-qFvya4R0",
+    "title": "Single Leg Kneeling Good Morning",
+    "channel": "Mayne Made Physique",
+    "trusted": false
+  },
   "balance trainer squat": {
     "id": "968_PBKE3O4",
     "title": "BOSU Balance Trainer Squats Round",
@@ -201,6 +249,12 @@
     "id": "iNmJlBrTrl8",
     "title": "Banded Curtsy Lunge",
     "channel": "The Queen of Lean",
+    "trusted": false
+  },
+  "banded glute bridge with alternating leg raise": {
+    "id": "DtE-ke6xfuM",
+    "title": "GLUTE BRIDGE WITH ALTERNATING LEG RAISES",
+    "channel": "On My Mat",
     "trusted": false
   },
   "banded leg drive": {
@@ -347,6 +401,12 @@
     "channel": "KungFu-School Santa Clarita by Dmitry Prosvirov",
     "trusted": false
   },
+  "battle ropes outside spiral": {
+    "id": "XDoR34lP33k",
+    "title": "How to Do Double Outside Circles with Battle Rope | Proper Form & Technique",
+    "channel": "LivingFit",
+    "trusted": false
+  },
   "bear crawl": {
     "id": "disJ_lTAmAg",
     "title": "How To Perform The Bear Crawl Exercise | Safely Building Core Strength For Less Joint Pain",
@@ -419,6 +479,24 @@
     "channel": "ATHLEAN-X\u2122",
     "trusted": true
   },
+  "bodyweight kneeling banded deadlift": {
+    "id": "lA94PImIjPw",
+    "title": "Kneeling Banded Deadlift",
+    "channel": "Juniper Strength & Recovery Studio",
+    "trusted": false
+  },
+  "bodyweight squat hold": {
+    "id": "Zu6KEtyKBPs",
+    "title": "Bodyweight Squat Hold",
+    "channel": "Motive Training",
+    "trusted": false
+  },
+  "bodyweight step up to deficit reverse lunge": {
+    "id": "UdtGvKISn0M",
+    "title": "Bodyweight Step-Up into Reverse Lunge",
+    "channel": "Girls Gone Strong | Women's Health & Fitness",
+    "trusted": true
+  },
   "bounds": {
     "id": "zegHQw9HWNY",
     "title": "Learning How to Bound // Easy Bounding Progression for Jumpers and Athletes",
@@ -453,6 +531,12 @@
     "id": "g0P7_8lXhHo",
     "title": "BOX STEP-DOWNS",
     "channel": "Infinit Fitness NZ",
+    "trusted": false
+  },
+  "bridge up up down down": {
+    "id": "jOzf2GLegbg",
+    "title": "How to: elevated bridge up up down down",
+    "channel": "GRIT Fitness",
     "trusted": false
   },
   "bridge walk": {
@@ -527,6 +611,18 @@
     "channel": "Howcast",
     "trusted": true
   },
+  "cable crossover flat bench fly": {
+    "id": "D04sUKQi85Y",
+    "title": "How to Do Flat Bench Cable Flys",
+    "channel": "LIVESTRONG",
+    "trusted": false
+  },
+  "cable crossover incline bench fly": {
+    "id": "GtHNC-5GtR0",
+    "title": "How to Do Incline Bench Cable Flys",
+    "channel": "LIVESTRONG",
+    "trusted": false
+  },
   "cable crossover lat pulldown": {
     "id": "VB2zHAnoIMc",
     "title": "What\u2019s a Cable Crossover Lat Pulldown? #88fitnesstraining #backworkout",
@@ -585,6 +681,12 @@
     "id": "Sp8be0IFNvk",
     "title": "How to Fix your Cable Lateral Raise | DB vs. CABLE",
     "channel": "John Jewett",
+    "trusted": false
+  },
+  "cable one arm tricep side extension": {
+    "id": "YfDxCvoadsM",
+    "title": "Cable One Arm Tricep Extension Exercise Guide and Video",
+    "channel": "Mohamed Attia",
     "trusted": false
   },
   "cable one arm underhand tricep extension": {
@@ -664,6 +766,12 @@
     "title": "The Science of Shoulder Internal Rotation (Do These Exercises!)",
     "channel": "Squat University",
     "trusted": true
+  },
+  "cable shoulder internal rotation at 90\\u00b0": {
+    "id": "ew5Q8LIjJvw",
+    "title": "Cable Shoulder Internal Rotation (90\u00b0 Abduction) \u2014 Quick Technique Demo",
+    "channel": "Fitness By Physio",
+    "trusted": false
   },
   "cable shoulder press": {
     "id": "fBTGwHChaf4",
@@ -929,6 +1037,12 @@
     "channel": "Live Lean TV Daily Exercises",
     "trusted": true
   },
+  "decline overhead weighted sit up": {
+    "id": "1b4_WJER2h0",
+    "title": "How to Do Weighted Decline Sit-ups with Instruction",
+    "channel": "SixPackAbsGuide",
+    "trusted": false
+  },
   "decline push up": {
     "id": "SKPab2YC8BE",
     "title": "How To: Decline Push-Up",
@@ -1061,6 +1175,12 @@
     "channel": "Mike | J2FIT Strength & Conditioning",
     "trusted": false
   },
+  "dumbbell cuban shoulder rotations": {
+    "id": "8M5Aulz7Xgo",
+    "title": "DB Cuban rotations",
+    "channel": "PowerMonkeyFitness",
+    "trusted": false
+  },
   "dumbbell curtsy lunge": {
     "id": "yZobjDnsJ4w",
     "title": "How To: Dumbbell Curtsy Lunges",
@@ -1089,6 +1209,18 @@
     "id": "oGPDmuZUf5w",
     "title": "Dumbbell Drag Curls (CORRECT FORM) myFIT Personal Training.mp4",
     "channel": "myFIT Personal Training",
+    "trusted": false
+  },
+  "dumbbell drag pause curl": {
+    "id": "oGPDmuZUf5w",
+    "title": "Dumbbell Drag Curls (CORRECT FORM) myFIT Personal Training.mp4",
+    "channel": "myFIT Personal Training",
+    "trusted": false
+  },
+  "dumbbell fire hydrant circle": {
+    "id": "zgKnChVEmDU",
+    "title": "How To Do Fire Hydrant Circles by Sara Frenza",
+    "channel": "Sara Frenza",
     "trusted": false
   },
   "dumbbell floor press": {
@@ -1210,6 +1342,12 @@
     "title": "How To Do A DUMBBELL FORWARD LUNGE | Exercise Demonstration Video and Guide",
     "channel": "Live Lean TV Daily Exercises",
     "trusted": true
+  },
+  "dumbbell no money curls": {
+    "id": "izetLGoyIdQ",
+    "title": "Db no money Curls",
+    "channel": "Refuse To Lose Fitness ",
+    "trusted": false
   },
   "dumbbell overhead kneel to stand": {
     "id": "bL0bXUG2QWI",
@@ -1433,6 +1571,18 @@
     "channel": "Headstrong Fit",
     "trusted": false
   },
+  "elevated plank with slow mountain climber": {
+    "id": "MfJLLAgp5Hk",
+    "title": "Elevated front plank mountain climbers",
+    "channel": "Restore Physical Therapy, LLC",
+    "trusted": false
+  },
+  "elevated platform deadlift": {
+    "id": "Inc472jkpo0",
+    "title": "Kettlebell Deadlift Elevated Platform",
+    "channel": "Motus Rx Physical Therapy",
+    "trusted": false
+  },
   "exercise ball crunch": {
     "id": "sUMW-xhzI84",
     "title": "Killer Ab Exercise- The Physio Ball Crunch",
@@ -1455,6 +1605,12 @@
     "id": "ostWPCp9-So",
     "title": "Extended Plank",
     "channel": "Jenny LaBaw",
+    "trusted": false
+  },
+  "ez bar pjr pull over": {
+    "id": "ikWNxABhBQk",
+    "title": "EZ-Bar Pullover 5510",
+    "channel": "Mark Sayer",
     "trusted": false
   },
   "ez-bar curl": {
@@ -1512,6 +1668,12 @@
     "trusted": false
   },
   "foam roll chest": {
+    "id": "MJ05BtY_kY4",
+    "title": "How To Foam Roll Your Chest To Fix Rounded Shoulders",
+    "channel": "Fitness 4 Back Pain",
+    "trusted": false
+  },
+  "foam roll chest - alternative": {
     "id": "MJ05BtY_kY4",
     "title": "How To Foam Roll Your Chest To Fix Rounded Shoulders",
     "channel": "Fitness 4 Back Pain",
@@ -1721,6 +1883,12 @@
     "channel": "Mustang Fitness",
     "trusted": false
   },
+  "hammerstrength shrug": {
+    "id": "mZhKDKgvkMA",
+    "title": "HammerStrength High Pull/ Shrug machine..",
+    "channel": "David Feather",
+    "trusted": false
+  },
   "hand release push up": {
     "id": "ZXPZLZErnUw",
     "title": "How To Do A Hand Release Push-Up | Exercise Guide",
@@ -1738,6 +1906,12 @@
     "title": "The ONLY WAY You Should Be Doing Banded Bicep Curls",
     "channel": "Mind Pump TV",
     "trusted": true
+  },
+  "handle band lat pulldown": {
+    "id": "eLYR0_GwLNA",
+    "title": "How to loop band lat pulldown",
+    "channel": "Janet",
+    "trusted": false
   },
   "handle band lateral raise": {
     "id": "gfEyrmxbCbw",
@@ -1773,6 +1947,18 @@
     "id": "0qSvGVgu3yw",
     "title": "Squat Press - Resistance Band With Handles",
     "channel": "Paul Sandburg Fitness",
+    "trusted": false
+  },
+  "handle band straight-arm pulldown": {
+    "id": "K4VAFznrNLk",
+    "title": "HOW TO DO Straight Arm Lat Pulldown with Resistance Bands",
+    "channel": "Bodylastics",
+    "trusted": false
+  },
+  "handle band tricep extension": {
+    "id": "OWV6s4FtwME",
+    "title": "How to do a Resistance Band Tricep Extension for Arm Strength",
+    "channel": "Get Healthy U - with Chris Freytag",
     "trusted": false
   },
   "handle band upright row": {
@@ -2339,6 +2525,12 @@
     "channel": "PureGym",
     "trusted": false
   },
+  "loop band back squat": {
+    "id": "UpP-WhGfqm4",
+    "title": "Banded Back Squat",
+    "channel": "Pursuit",
+    "trusted": false
+  },
   "loop band bent over row": {
     "id": "Y3H17rshgZE",
     "title": "How To Do A RESISTANCE BAND BENT OVER ROW | Exercise Demonstration Video and Guide",
@@ -2369,6 +2561,12 @@
     "channel": "Men's Health",
     "trusted": true
   },
+  "loop band front squat": {
+    "id": "p2u8rRvph0Q",
+    "title": "Infinity Loop Band Front Squat Tutorial",
+    "channel": "Kyle Devlin",
+    "trusted": false
+  },
   "loop band glute kickback": {
     "id": "fv3gD2siB4c",
     "title": "Long Loop Band Glute Kickback",
@@ -2385,6 +2583,12 @@
     "id": "ENePIwyD0N0",
     "title": "Hammer Curl con Loop Bands\u00ae",
     "channel": "Loop Band Training",
+    "trusted": false
+  },
+  "loop band high pull": {
+    "id": "WOKntgy-b9A",
+    "title": "Band High Pull",
+    "channel": "Hybrid Fitness",
     "trusted": false
   },
   "loop band hip thrust": {
@@ -2411,10 +2615,40 @@
     "channel": "Courtneyofitness",
     "trusted": false
   },
+  "loop band negative chin up": {
+    "id": "HqNiG-tU7bw",
+    "title": "Band Assisted Negative Chin-up",
+    "channel": "Built By Barry",
+    "trusted": false
+  },
+  "loop band negative pull up": {
+    "id": "5NvFgiigkPM",
+    "title": "Band Assisted Negative Pull Up",
+    "channel": "Coach Kayne",
+    "trusted": false
+  },
+  "loop band overhead pull apart": {
+    "id": "exeRQHew4Ys",
+    "title": "Overhead Band Pull Apart Demo with coaching",
+    "channel": "Girls Gone Strong | Women's Health & Fitness",
+    "trusted": true
+  },
+  "loop band overhead shoulder stretch": {
+    "id": "XGpPoC8Y4-4",
+    "title": "Overhead Shoulder Stretch | Boost Shoulder Strength & Flexibility with Resistance Band",
+    "channel": "DopamineO",
+    "trusted": false
+  },
   "loop band plank row": {
     "id": "HWVGcgi7Sls",
     "title": "Loop Band Plank Row",
     "channel": "BEXT",
+    "trusted": false
+  },
+  "loop band pulse lunge": {
+    "id": "kuWVCICR0C4",
+    "title": "Resistance Band   Pulse Lunge",
+    "channel": "Eris Fit",
     "trusted": false
   },
   "loop band push up": {
@@ -2422,6 +2656,12 @@
     "title": "NT Loop Band Assisted Push Up - Can't Do a Push Up? Do This!",
     "channel": "Nick Tumminello - Trainer of Trainers",
     "trusted": true
+  },
+  "loop band push up on knees": {
+    "id": "eDzgxOsnZwQ",
+    "title": "Add a Band To Kneeling Push Ups to Get Your 1st Push Up",
+    "channel": "Mike | J2FIT Strength & Conditioning",
+    "trusted": false
   },
   "loop band romanian deadlift": {
     "id": "pYUIHa4MEn0",
@@ -2434,6 +2674,18 @@
     "title": "How To: Seated Banded Row",
     "channel": "Live Lean TV Daily Exercises",
     "trusted": true
+  },
+  "loop band seated shoulder press": {
+    "id": "mpiduE3C-Hc",
+    "title": "How to | Resistance Band Seated Shoulder Press",
+    "channel": "OMNI Strength and Performance",
+    "trusted": false
+  },
+  "loop band seated single arm row": {
+    "id": "9DEBG7sbYqc",
+    "title": "Seated Single Arm Banded Rows",
+    "channel": "Made Possible Personal Training",
+    "trusted": false
   },
   "loop band shoulder external rotation": {
     "id": "C4SyjqqNS3A",
@@ -2453,6 +2705,12 @@
     "channel": "E3 Rehab Exercise Library",
     "trusted": true
   },
+  "loop band side plank row": {
+    "id": "HYo9CKUKtUk",
+    "title": "Side Plank Row with Resistance Band",
+    "channel": "Luke Briggs",
+    "trusted": false
+  },
   "loop band side step": {
     "id": "9kfN70v-wbg",
     "title": "Band loop sidestep with forward and backward progression",
@@ -2469,6 +2727,12 @@
     "id": "baGx6pqU6S0",
     "title": "Resistance Bands Chest Exercise: Single Arm Incline Press",
     "channel": "Undersun Fitness",
+    "trusted": false
+  },
+  "loop band single arm tricep extension": {
+    "id": "3uXTZtJdXZE",
+    "title": "Sculpt Your Triceps: Single Arm Extensions with Resistance Bands \ud83d\udcaa",
+    "channel": "Clench Fitness",
     "trusted": false
   },
   "loop band squat to shoulder press": {
@@ -2489,6 +2753,12 @@
     "channel": "Live Lean TV Daily Exercises",
     "trusted": true
   },
+  "loop band standing decline chest press": {
+    "id": "4iVpEZ-Vl8U",
+    "title": "Standing Decline Chest Press Using Resistance Bands",
+    "channel": "Home Gym Fitness Channel",
+    "trusted": false
+  },
   "loop band standing hip abduction": {
     "id": "4qr26RNU3EQ",
     "title": "How To Do A STANDING BANDED HIP ABDUCTION | Exercise Demonstration Video and Guide",
@@ -2501,10 +2771,46 @@
     "channel": "Live Lean TV Daily Exercises",
     "trusted": true
   },
+  "loop band standing incline chest press": {
+    "id": "h2odbdAj49g",
+    "title": "Standing Incline Chest Press Using Resistance Bands - Shoulder Exercise with Exercise Bands",
+    "channel": "Home Gym Fitness Channel",
+    "trusted": false
+  },
+  "loop band standing single arm row": {
+    "id": "YMvG8_oDAWQ",
+    "title": "Single arm row w NT loop band",
+    "channel": "Korin Sutton ",
+    "trusted": false
+  },
+  "loop band standing tricep extension": {
+    "id": "A919pqX43xI",
+    "title": "Standing Tricep Extension Using Resistance Bands",
+    "channel": "Home Gym Fitness Channel",
+    "trusted": false
+  },
+  "loop band straight-arm pull down": {
+    "id": "Fn_c94pLpVE",
+    "title": "How To Do Resistance Band Straight Arm Pull Down",
+    "channel": "Calixpert",
+    "trusted": false
+  },
   "loop band sumo deadlift": {
     "id": "U7ORnePiMZw",
     "title": "Loop band sumo deadlift",
     "channel": "Tara Nicole",
+    "trusted": false
+  },
+  "loop band superman press": {
+    "id": "0Jb07JVIcHc",
+    "title": "Superman Loop Band Overhead Pull",
+    "channel": "Adam Watkins",
+    "trusted": false
+  },
+  "loop band wide grip pull up": {
+    "id": "_Y13ZGfd0wI",
+    "title": "How to Execute Assisted Band Wide Grip Pull Ups 2019 Tips for HUGE Lats",
+    "channel": "Conquer Fitness",
     "trusted": false
   },
   "low cable chest fly": {
@@ -2747,7 +3053,19 @@
     "channel": "Physique Development",
     "trusted": true
   },
+  "mini loop band around the world plank": {
+    "id": "WlUf0R_nQSg",
+    "title": "Mini Band Around The World Plank",
+    "channel": "QuikFits Fitness",
+    "trusted": false
+  },
   "mini loop band fire hydrant": {
+    "id": "NXK4qcXsmgU",
+    "title": "Fire Hydrant with Mini Loop Band",
+    "channel": "Beyond the Scale Healthy",
+    "trusted": false
+  },
+  "mini loop band fire hydrant circle": {
     "id": "NXK4qcXsmgU",
     "title": "Fire Hydrant with Mini Loop Band",
     "channel": "Beyond the Scale Healthy",
@@ -2757,6 +3075,24 @@
     "id": "91uayvdKAQY",
     "title": "How to Do a  Glute Bridge With a Mini Resistance Band Loop",
     "channel": "Fitwirr",
+    "trusted": false
+  },
+  "mini loop band hip thrust": {
+    "id": "GgvuSXnFGLM",
+    "title": "Hip Thrusts | Large Loop Band",
+    "channel": "Allison Ethier",
+    "trusted": false
+  },
+  "mini loop band jump squat": {
+    "id": "DfLdBk8wjPE",
+    "title": "Mini Band Squat Jumps",
+    "channel": "Fit Mama Santa Barbara",
+    "trusted": false
+  },
+  "mini loop band kneeling bicep curl": {
+    "id": "8Dn-5iYfYxE",
+    "title": "Resistance Loop Bands Workouts: Biceps Curls \u2013 Forward Kneeling Lunge",
+    "channel": "Limm",
     "trusted": false
   },
   "mini loop band kneeling row": {
@@ -2771,10 +3107,22 @@
     "channel": "Nick Tumminello - Trainer of Trainers",
     "trusted": true
   },
+  "mini loop band leg raise": {
+    "id": "3ZPbmjy15b0",
+    "title": "Standing Glute Leg Raise with Resistance Loop Bands by NeeBooFit",
+    "channel": "NeeBooFit",
+    "trusted": false
+  },
   "mini loop band lunge": {
     "id": "IlChpJZiCe8",
     "title": "Close Stance Reverse lunge with mini loop resistance band",
     "channel": "Fit With Curves",
+    "trusted": false
+  },
+  "mini loop band lunge kickback": {
+    "id": "4KB6RZQ5rF8",
+    "title": "Standing Kickback w/ Mini Loop Resistance Band (Workout Demonstration Video)",
+    "channel": "B-Force Bands",
     "trusted": false
   },
   "mini loop band mountain climber": {
@@ -2783,10 +3131,22 @@
     "channel": "B-Force Bands",
     "trusted": false
   },
+  "mini loop band overhead fly": {
+    "id": "8HxqcncIWrs",
+    "title": "NT Loop Mini Rear Deltoid Fly || Mini Band Shoulder Exercise",
+    "channel": "NT Loop",
+    "trusted": false
+  },
   "mini loop band plank with straight leg kickback": {
     "id": "bKZQt7BZCJQ",
     "title": "Mini band planking straight leg kickback",
     "channel": "Iceland Fitness ifitness.is",
+    "trusted": false
+  },
+  "mini loop band reverse fly": {
+    "id": "yfYYu2HKDhc",
+    "title": "Back - Mini Band Reverse Fly - Exercise Library",
+    "channel": "Sean Chen",
     "trusted": false
   },
   "mini loop band scapular retraction": {
@@ -2794,6 +3154,18 @@
     "title": "NT Loop Band Resisted Scapular Retraction Exercise",
     "channel": "Nick Tumminello - Trainer of Trainers",
     "trusted": true
+  },
+  "mini loop band scissor kick": {
+    "id": "ZLXq9P-Ah1Q",
+    "title": "Scissor Kick with Mini Band",
+    "channel": "Noam Tamir",
+    "trusted": false
+  },
+  "mini loop band side-lying clam": {
+    "id": "A5MlkfjaSpQ",
+    "title": "Side Lying Clam Shells w/ Mini Band - Pilates Drill",
+    "channel": "Julie Wandzilak",
+    "trusted": false
   },
   "mini loop band side-lying hip abduction": {
     "id": "kYjqRczyvYg",
@@ -2811,6 +3183,24 @@
     "id": "o1T4XRv1FU4",
     "title": "Mini band squat for glute activation squats with loop bands around knees by Chiropractor Dr. Mackay",
     "channel": "Transform Chiropractic",
+    "trusted": false
+  },
+  "mini loop band standing hip extension": {
+    "id": "oJY1boZCykg",
+    "title": "Standing Hip Extension with Mini Band",
+    "channel": "Samson Physical Therapy",
+    "trusted": false
+  },
+  "mini loop band standing hip flexion": {
+    "id": "paAU-ByVQhU",
+    "title": "Standing Hip Flexion with Loop Band Around Feet",
+    "channel": "Keep It Moving Physical Therapy & Wellness",
+    "trusted": false
+  },
+  "mini loop band toe touch": {
+    "id": "NOSxV2Nznn4",
+    "title": "Mini Band Toe Touches",
+    "channel": "VR Fitness",
     "trusted": false
   },
   "mixed grip pull up": {
@@ -2951,11 +3341,23 @@
     "channel": "Get Right Results",
     "trusted": false
   },
+  "partner band jump": {
+    "id": "1JrSp-nFvcQ",
+    "title": "Partner band resisted broad jumps",
+    "channel": "NashdogBarbell",
+    "trusted": false
+  },
   "partner band sprint": {
     "id": "kW3mLx54b5M",
     "title": "How To Do A PARTNER RESISTANCE BAND SPRINT | Exercise Demonstration Video and Guide",
     "channel": "Live Lean TV Daily Exercises",
     "trusted": true
+  },
+  "partner floor glute-ham raise": {
+    "id": "bh30d9p-7zI",
+    "title": "Floor Glute Ham Raise, Tutorial, Exercise Video, Workout, SEXioFIT",
+    "channel": "SEXioFIT",
+    "trusted": false
   },
   "partner hamstring stretch": {
     "id": "Qa3mED_wSn4",
@@ -2963,11 +3365,23 @@
     "channel": "Dr. Carl Baird",
     "trusted": true
   },
+  "partner leg toss windshields": {
+    "id": "LrII2JVdpe4",
+    "title": "Partner leg toss",
+    "channel": "Ben Benson",
+    "trusted": false
+  },
   "partner medicine ball chest pass": {
     "id": "iqLcNs-MGaU",
     "title": "Activate More Chest Muscle Fibers with Medicine Ball Lateral Toss & Chest Pass",
     "channel": "Mind Pump TV",
     "trusted": true
+  },
+  "partner medicine ball full twist": {
+    "id": "LD_1-LNFHHU",
+    "title": "Partner Medicine Ball Twist Pass",
+    "channel": "Corporate Fitness Works",
+    "trusted": false
   },
   "partner pallof twist": {
     "id": "lYDjWmZKgyY",
@@ -2981,10 +3395,22 @@
     "channel": "CaptainBFit Training",
     "trusted": false
   },
+  "partner plank hold and jump": {
+    "id": "SCGx2JO7xhs",
+    "title": "Partner Plank Jumps",
+    "channel": "bootcampgoddess1",
+    "trusted": false
+  },
   "partner push up reach": {
     "id": "7eQuCjQGYME",
     "title": "Partner Push Up to Single Arm Forward Reach",
     "channel": "DailyMuscle",
+    "trusted": false
+  },
+  "partner rolling ball push up": {
+    "id": "9cS49r6l084",
+    "title": "Partner Medicine Ball Push-Ups | Dose & Dustin Myers",
+    "channel": "Max Effort Muscle",
     "trusted": false
   },
   "partner sit up toss": {
@@ -3221,6 +3647,12 @@
     "channel": "YST Exercises",
     "trusted": false
   },
+  "prone loop band hamstring curl": {
+    "id": "LtTcXXgeRYo",
+    "title": "Band Prone Hamstring Curl",
+    "channel": "Testosterone Nation",
+    "trusted": false
+  },
   "pull up": {
     "id": "sIvJTfGxdFo",
     "title": "The Official Pull-Up Checklist (AVOID MISTAKES!)",
@@ -3293,6 +3725,12 @@
     "channel": "Fitness4ward",
     "trusted": false
   },
+  "pvc jerk press": {
+    "id": "rVbNzcDyuvg",
+    "title": "PVC technique WOD   Jerk Press, Jerk Balance, Split Jerks",
+    "channel": "Free Range (Free Range CrossFit)",
+    "trusted": false
+  },
   "pvc overhead squat": {
     "id": "k-kImyW5sb0",
     "title": "How to Perform the PVC Overhead Squat Test | Mobility & Stability Assessment",
@@ -3340,6 +3778,12 @@
     "title": "The Quadruped Hold | How To Build Strength With Plank Progressions and Variations",
     "channel": "Dr. Carl Baird",
     "trusted": true
+  },
+  "quadruped plank with leg extensions": {
+    "id": "pnhjNRHJKKg",
+    "title": "QUADRUPED LEG EXTENSION FROM BENCH | HOW TO PERFORM | Ashley Wingate",
+    "channel": "Ashley Wingate",
+    "trusted": false
   },
   "rack pulls": {
     "id": "cxVrqTqD_J4",
@@ -3418,6 +3862,12 @@
     "title": "How To Perform The Reverse Lunge",
     "channel": "Dr. Carl Baird",
     "trusted": true
+  },
+  "reverse lunge with 1/2 kneeling pallof press": {
+    "id": "rRXgYgoq0JA",
+    "title": "Pallof Press with Alternating Reverse Lunge",
+    "channel": "Dr. Dan Maggio",
+    "trusted": false
   },
   "reverse plank": {
     "id": "vmWXIU1_iEg",
@@ -3635,6 +4085,12 @@
     "channel": "Andrew Kwong (DeltaBolic)",
     "trusted": true
   },
+  "side leg hip circle": {
+    "id": "VgysBPnVJWg",
+    "title": "How to Do\uff1aSIDE LEG CIRCLES",
+    "channel": "Leap Fitness",
+    "trusted": false
+  },
   "side leg kick": {
     "id": "sPUqXsGoR9k",
     "title": "Side Leg Kick Variations on the Mat | Online Pilates Classes",
@@ -3719,6 +4175,12 @@
     "channel": "Girls Gone Strong | Women's Health & Fitness",
     "trusted": true
   },
+  "single arm high cable tricep extension": {
+    "id": "8rl4ioij6lc",
+    "title": "Single arm cable triceps extension",
+    "channel": "Elliott Upton",
+    "trusted": false
+  },
   "single arm kettlebell deadlift": {
     "id": "ttTgM3m9MQE",
     "title": "The Single Arm Kettlebell Deadlift | How To Perform For Less Joint Pain and Arthritis",
@@ -3754,6 +4216,12 @@
     "title": "How To Do A NEUTRAL GRIP SEATED SINGLE ARM LAT PULLDOWN | Exercise Demonstration Video and Guide",
     "channel": "Live Lean TV Daily Exercises",
     "trusted": true
+  },
+  "single arm low cable crossover fly": {
+    "id": "HZPLylyM0NU",
+    "title": "How To Do Single Arm Low Cable Crossover | Exercise Demo",
+    "channel": "OriGym",
+    "trusted": false
   },
   "single arm overhead dumbbell lunge": {
     "id": "rsSNPWK2bPE",
@@ -3868,6 +4336,12 @@
     "title": "How To: Single-Leg Calf Raise",
     "channel": "ScottHermanFitness",
     "trusted": true
+  },
+  "single leg straight forward bend": {
+    "id": "CVQWlCvYjmI",
+    "title": "Single leg forward bend video 112",
+    "channel": "Lifted Lotus Online Yoga School",
+    "trusted": false
   },
   "single-leg cycles": {
     "id": "hVuF348tUeY",
@@ -4097,6 +4571,12 @@
     "channel": "Janis Saffell",
     "trusted": false
   },
+  "stability ball abdominal twist": {
+    "id": "J9yNZW5EBek",
+    "title": "How To: Oblique Twists on Stability Ball",
+    "channel": "1st Step Pro-Wellness Nutritional Supplements",
+    "trusted": false
+  },
   "stability ball back extension": {
     "id": "qSA_mlzx4nI",
     "title": "How To Do A Back Extension On A Swiss Ball (Exercise Demo)",
@@ -4149,6 +4629,12 @@
     "id": "7f_htgPOAYQ",
     "title": "How to Plank on a Stability Ball | Health",
     "channel": "Health",
+    "trusted": false
+  },
+  "stability ball plank on balance trainer": {
+    "id": "9DQ1CEsocNw",
+    "title": "GREAT Balance Trainer & Stability Ball Combo Exercises!",
+    "channel": "BOSU",
     "trusted": false
   },
   "stability ball roll out": {
@@ -4270,6 +4756,18 @@
     "title": "How To: Standing Leg Curl (BM)",
     "channel": "ScottHermanFitness",
     "trusted": true
+  },
+  "standing leg side circle": {
+    "id": "JQCcOqzI0nY",
+    "title": "How to: Standing Leg Circles for a better core stability & hip mobility.",
+    "channel": "Keep Fit with Kim",
+    "trusted": false
+  },
+  "standing leg side hold": {
+    "id": "6b1hu6iSqok",
+    "title": "How to do Standing Side Leg Raise | Joanna Soh",
+    "channel": "Joanna Soh",
+    "trusted": false
   },
   "standing loop band hamstring curl": {
     "id": "FvcNY367muc",
@@ -4509,6 +5007,12 @@
     "id": "XQOYs0nurds",
     "title": "TRX Kneeling Rollout",
     "channel": "TRXtraining",
+    "trusted": false
+  },
+  "trx alternating hamstring pull-in": {
+    "id": "ESEA4PMbI5s",
+    "title": "Exercise Tutorial: TRX Alternating Hamstring Runner",
+    "channel": "Travis Tarrant",
     "trusted": false
   },
   "trx atomic push up": {
@@ -4840,6 +5344,12 @@
     "title": "Master the Turkish Get-Up (Avoid These 3 Mistakes!)",
     "channel": "Squat University",
     "trusted": true
+  },
+  "underhand rear delt raise": {
+    "id": "pUIAvdK1SZw",
+    "title": "Underhand Grip Rear Lateral Raise Exercise",
+    "channel": "PerfectBodyMagazine",
+    "trusted": false
   },
   "up dog": {
     "id": "O6IcireDN_g",

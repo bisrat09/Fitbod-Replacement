@@ -80,6 +80,25 @@ const EXCLUDE = new Set([
   'pvc windmill',
   'australian crawl',
   'bridge side to side',
+  // Relaxed pass, hand-reviewed 2026-11-08
+  'lateral cable tricep extension',
+  'partner standing chest press',
+  'balance trainer leg crossover planks',
+  'balance trainer single leg lifts',
+  'balance trainer side star plank',
+  'mini loop band hip flexor',
+  'balance trainer single leg trx lunges',
+  'balance trainer trx pistol squats',
+  'balance trainer hesitation lunges',
+  'partner back to back wall sit',
+  'barbell bulgarian split jump',
+  'dumbbell bulgarian split jumps',
+  'squat with rotation',
+  'handle band forward raise',
+  'single arm bottoms-up kettlebell clean',
+  'balance trainer toe taps',
+  'balance trainer lateral jumps',
+  'dumbbell calf raise to high pull',
 ]);
 // Re-upload / spam channels
 const BLOCKED_CHANNELS = ['how to lose weight with the keto diet', 'statsky dev'];
@@ -90,6 +109,9 @@ function secs(len) {
   if (!len) return 0;
   return len.split(':').map(Number).reduce((a, b) => a * 60 + b, 0);
 }
+
+const SYN = { one: 'single', 'one-arm': 'single', triceps: 'tricep', biceps: 'bicep', dumbbells: 'dumbbell', db: 'dumbbell', bb: 'barbell', kb: 'kettlebell', 'ez-bar': 'ez', 'e-z': 'ez', pushup: 'push', pullup: 'pull', 'push-up': 'push', 'pull-up': 'pull' };
+const canon = (t) => t.toLowerCase().replace(/[^a-z0-9 ]+/g, ' ').split(/\s+/).map((w) => SYN[w] ?? w).join(' ');
 
 function words(s) {
   return s.toLowerCase().replace(/[^a-z0-9 ]+/g, ' ').split(/\s+/).filter((w) => w.length > 2 && !['with', 'the', 'and'].includes(w));
@@ -130,11 +152,11 @@ async function searchOnce(q) {
 
 /** Score: must mention the movement; trusted channel + short tutorial wins. */
 function pick(name, results) {
-  const need = words(name);
+  const need = words(canon(name));
   const scored = results
     .filter((r) => r.seconds >= 20 && r.seconds <= 15 * 60)
     .map((r, rank) => {
-      const t = r.title.toLowerCase();
+      const t = canon(r.title);
       const hit = need.filter((w) => t.includes(w.replace(/s$/, ''))).length / Math.max(need.length, 1);
       if (BLOCKED_CHANNELS.includes(r.channel.toLowerCase())) return { ...r, hit: 0, trusted: false, s: -99 };
       const trusted = TRUSTED.some((ch) => r.channel.toLowerCase().includes(ch));
@@ -146,7 +168,7 @@ function pick(name, results) {
       if (r.seconds <= 6 * 60) s += 1;
       return { ...r, hit, trusted, s };
     })
-    .filter((r) => r.hit >= (r.trusted ? 0.67 : 0.85))
+    .filter((r) => r.hit >= (r.trusted ? 0.67 : RELAXED ? 0.67 : 0.85))
     .sort((a, b) => b.s - a.s);
   return scored[0] ?? null;
 }
@@ -155,7 +177,8 @@ const only = process.argv[2];
 const save = (obj) => fs.writeFileSync(OUT, JSON.stringify(Object.fromEntries(Object.keys(obj).sort().map((k) => [k, obj[k]])), null, 2) + '\n');
 const existing = fs.existsSync(OUT) ? JSON.parse(fs.readFileSync(OUT, 'utf8')) : {};
 const force = process.argv.includes('--force');
-const names = only && only !== '--force' ? [only.toLowerCase()] : ALL_NAMES.filter((k) => force || OVERRIDES[k] || EXCLUDE.has(k) || !existing[k]);
+const RELAXED = process.argv.includes('--relaxed');
+const names = only && !only.startsWith('--') ? [only.toLowerCase()] : ALL_NAMES.filter((k) => force || OVERRIDES[k] || EXCLUDE.has(k) || !existing[k]);
 const result = { ...existing };
 let found = 0;
 for (const key of names) {
@@ -179,8 +202,8 @@ for (const key of names) {
   } catch (e) {
     console.log(`ERR ${key}: ${e.message}`);
   }
-  if (!only || only === '--force') save(result);
+  if (!only || only.startsWith('--')) save(result);
   await sleep(1200);
 }
-if (!only || only === '--force') save(result);
+if (!only || only.startsWith('--')) save(result);
 console.log(`\n${found}/${names.length} exercises have a specific video`);
