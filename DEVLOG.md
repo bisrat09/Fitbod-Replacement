@@ -1,3 +1,10 @@
+# 2026-11-08 — Log tab redesign
+
+- Stats header: total workouts, distinct training days this week vs weekly goal (default 4, tap to cycle 1-7, `weekly_goal_days`), streak of consecutive weeks hitting the goal (current week counts once hit, never breaks it).
+- Calendar collapsed to the current week, chevron expands to month with prev/next. Workout days tinted; tap filters the list to that day (auto-loads older pages).
+- Timeline cards: date + duration above, title = top 3 primary muscles by working sets (`set_muscle_groups` in `listWorkoutSummariesEnhanced`), Exercises / Volume / Sets, short exercise list. Tap to expand sets, PRs, Repeat, Delete. 30 per page, Show more. Reloads on tab focus.
+- New `src/lib/logStats.ts`, `listWorkoutDays()`, `src/__tests__/logStats.test.ts`. 369 tests.
+
 # 2026-11-07 — Gym feedback: rest timer + search
 
 - Rest timer defaults per exercise instead of 120s for everything: heavy barbell compounds 120s, compounds 90s, isolation 60s, core/calves/forearms 30s. Adjusting +/-10s on a running timer saves that exercise's rest (settings `rest_seconds:<id>`).
