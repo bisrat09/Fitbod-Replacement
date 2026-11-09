@@ -1,3 +1,10 @@
+# 2026-11-08 — Specific form videos
+
+- "Watch form videos" used a YouTube search URL, which shows ads and random results. `scripts/buildFormVideos.mjs` searches each exercise, scores results (title must name the movement, trusted coaching channel +6, variation mismatch like seated vs standing -4, tutorial words, under 15 min) and writes `src/data/formVideos.json` (id, title, channel). Incremental + retries (YouTube throttles bursts).
+- Reviewed all picks by title; 14 wrong-movement or re-upload picks excluded, Barbell Shoulder Press pinned to Jeff Nippard's OHP video.
+- ExerciseDemoModal: "Watch form video" opens youtube.com/watch?v=ID (opens the YouTube app), shows channel + title, "More videos" keeps the search. Unknown exercises: "Search form videos".
+- 372 tests.
+
 # 2026-11-08 — Log tab redesign
 
 - Stats header: total workouts, distinct training days this week vs weekly goal (default 4, tap to cycle 1-7, `weekly_goal_days`), streak of consecutive weeks hitting the goal (current week counts once hit, never breaks it).

@@ -4,6 +4,7 @@
  */
 
 import instructions from '@/data/exerciseInstructions.json';
+import formVideos from '@/data/formVideos.json';
 
 export type ExerciseInstructions = {
   steps: string[];
@@ -21,7 +22,18 @@ export function exercisePhotoUrls(info: ExerciseInstructions | null): string[] {
   return (info?.images ?? []).map((p) => PHOTO_BASE + p);
 }
 
-/** YouTube search for real form videos of this exercise. */
+export type FormVideo = { url: string; title: string; channel: string };
+
+const videos = formVideos as Record<string, { id: string; title: string; channel: string }>;
+
+/** One hand-picked form video (trusted coaching channel), built by `scripts/buildFormVideos.mjs`. */
+export function exerciseFormVideo(name: string): FormVideo | null {
+  const v = videos[name.toLowerCase().trim().replace(/\s+/g, ' ')];
+  if (!v?.id) return null;
+  return { url: `https://www.youtube.com/watch?v=${v.id}`, title: v.title, channel: v.channel.replace(/\u2122/g, '') };
+}
+
+/** Fallback: YouTube search for form videos of this exercise. */
 export function exerciseVideoSearchUrl(name: string): string {
   return `https://www.youtube.com/results?search_query=${encodeURIComponent(`${name} exercise proper form`)}`;
 }

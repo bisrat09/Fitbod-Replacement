@@ -4,7 +4,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '@/theme/ThemeContext';
 import { fontSize, fontWeight } from '@/theme/typography';
 import { ExerciseImage } from './ExerciseImage';
-import { getExerciseInstructions, exercisePhotoUrls, exerciseVideoSearchUrl } from '@/lib/exerciseInstructions';
+import { getExerciseInstructions, exercisePhotoUrls, exerciseVideoSearchUrl, exerciseFormVideo } from '@/lib/exerciseInstructions';
 import { isGifBlocked } from '@/lib/exerciseImages';
 
 type ExerciseDemoModalProps = {
@@ -89,13 +89,27 @@ export function ExerciseDemoModal({ visible, onClose, name, imageUrl }: Exercise
           <View style={styles.body}>
             <Text style={[styles.title, { color: c.text }]}>{name}</Text>
 
-            <Pressable
-              onPress={() => Linking.openURL(exerciseVideoSearchUrl(name))}
-              style={[styles.videoBtn, { backgroundColor: c.accent }]}
-            >
-              <Ionicons name="logo-youtube" size={20} color={c.textOnAccent} />
-              <Text style={[styles.videoBtnText, { color: c.textOnAccent }]}>Watch form videos</Text>
-            </Pressable>
+            {(() => {
+              const video = exerciseFormVideo(name);
+              return (
+                <View style={{ gap: 6 }}>
+                  <Pressable
+                    onPress={() => Linking.openURL(video ? video.url : exerciseVideoSearchUrl(name))}
+                    style={[styles.videoBtn, { backgroundColor: c.accent }]}
+                  >
+                    <Ionicons name="logo-youtube" size={20} color={c.textOnAccent} />
+                    <Text style={[styles.videoBtnText, { color: c.textOnAccent }]}>{video ? 'Watch form video' : 'Search form videos'}</Text>
+                  </Pressable>
+                  {video && (
+                    <Pressable onPress={() => Linking.openURL(exerciseVideoSearchUrl(name))} hitSlop={6}>
+                      <Text style={{ color: c.textMuted, fontSize: fontSize.small, textAlign: 'center' }} numberOfLines={2}>
+                        {video.channel}: {video.title}{'  '}<Text style={{ color: c.accent }}>More videos</Text>
+                      </Text>
+                    </Pressable>
+                  )}
+                </View>
+              );
+            })()}
 
             {muscles.length > 0 && (
               <View style={styles.section}>

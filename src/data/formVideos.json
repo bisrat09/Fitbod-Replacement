@@ -1,0 +1,1340 @@
+{
+  "ab crunch machine": {
+    "id": "_O1xunCfYEM",
+    "title": "How To: Abdominal Crunch (Hammer Strength)",
+    "channel": "ScottHermanFitness",
+    "trusted": true
+  },
+  "ab rollout": {
+    "id": "A3uK5TPzHq8",
+    "title": "Never Do Ab Wheel Rollouts Like This!",
+    "channel": "ATHLEAN-X™",
+    "trusted": true
+  },
+  "ankle circles": {
+    "id": "SG3aVv8bXd0",
+    "title": "How to Do Ankle Circles",
+    "channel": "Blind Athletes Exercise",
+    "trusted": false
+  },
+  "arnold dumbbell press": {
+    "id": "6Z15_WdXmVw",
+    "title": "Arnold Press - Shoulder Exercise - Proper Form Tutorial",
+    "channel": "Buff Dudes",
+    "trusted": true
+  },
+  "around the worlds": {
+    "id": "w_Pplr0hI1s",
+    "title": "How to Perform Around the Worlds - Chest Exercise Tutorial",
+    "channel": "Buff Dudes",
+    "trusted": true
+  },
+  "back extensions": {
+    "id": "H8Swl1N-uis",
+    "title": "STOP Doing Back Extensions Like This!",
+    "channel": "Squat University",
+    "trusted": true
+  },
+  "back squat": {
+    "id": "my0tLDaWyDU",
+    "title": "How To Squat Correctly (NO BACK PAIN)",
+    "channel": "Squat University",
+    "trusted": true
+  },
+  "barbell ab rollout": {
+    "id": "O-d6HC9gLcw",
+    "title": "How to : Barbell Ab Rollout - Abs Roller Exercise",
+    "channel": "Buff Dudes",
+    "trusted": true
+  },
+  "barbell bench press": {
+    "id": "rT7DgCr-3pg",
+    "title": "How To: Barbell Bench Press",
+    "channel": "ScottHermanFitness",
+    "trusted": true
+  },
+  "barbell curl": {
+    "id": "kwG2ipFRgfo",
+    "title": "How to Do a Barbell Curl | Arm Workout",
+    "channel": "Howcast",
+    "trusted": true
+  },
+  "barbell decline bench press": {
+    "id": "LfyQBUKR8SE",
+    "title": "How To: Barbell Decline Bench Press",
+    "channel": "ScottHermanFitness",
+    "trusted": true
+  },
+  "barbell glute bridge": {
+    "id": "0od5lwWMGV8",
+    "title": "How To: Barbell Glute Bridge | 3 GOLDEN RULES (BUILD BIGGER GLUTES!)",
+    "channel": "ScottHermanFitness",
+    "trusted": true
+  },
+  "barbell hip thrust": {
+    "id": "Zp26q4BY5HE",
+    "title": "How To Do a Barbell Hip Thrust",
+    "channel": "Girls Gone Strong | Women's Health & Fitness",
+    "trusted": true
+  },
+  "barbell incline bench press": {
+    "id": "SrqOu55lrYU",
+    "title": "How To: Incline Barbell Bench Press | 3 GOLDEN RULES! (MADE BETTER!)",
+    "channel": "ScottHermanFitness",
+    "trusted": true
+  },
+  "barbell lunge": {
+    "id": "-yxNPwWlr8I",
+    "title": "The Almighty Lunge: DB / Barbell",
+    "channel": "Alan Thrall (Untamed Strength)",
+    "trusted": true
+  },
+  "barbell seated calf raise": {
+    "id": "o9XGa9ozKB0",
+    "title": "How To Set Up A Seated Calf Raise With A Barbell",
+    "channel": "Ryan Irwin (Impact Action Coaching)",
+    "trusted": false
+  },
+  "barbell shoulder press": {
+    "id": "_RlRDWO2jfg",
+    "title": "Build Bigger Shoulders With Perfect Training Technique (The Overhead Press)",
+    "channel": "Jeff Nippard",
+    "trusted": true
+  },
+  "barbell shrug": {
+    "id": "jTVbilkxSAk",
+    "title": "HOW TO BUILD BIG TRAPS WITH BARBELL SHRUGS || 3 GOLDEN RULES",
+    "channel": "ScottHermanFitness",
+    "trusted": true
+  },
+  "barbell step up": {
+    "id": "wGoKb6mPJzU",
+    "title": "Step-Ups for Glutes (w/ Common Mistakes) | Form Tutorial",
+    "channel": "Physique Development",
+    "trusted": true
+  },
+  "bench dip": {
+    "id": "c3ZGl4pAwZ4",
+    "title": "How To: Bench Dip",
+    "channel": "ScottHermanFitness",
+    "trusted": true
+  },
+  "bent over barbell row": {
+    "id": "9efgcAjQe7E",
+    "title": "How To: Barbell Bent-Over Row",
+    "channel": "ScottHermanFitness",
+    "trusted": true
+  },
+  "bicycle crunch": {
+    "id": "Iwyvozckjak",
+    "title": "How to Do a Bicycle Crunch | Boot Camp Workout",
+    "channel": "Howcast",
+    "trusted": true
+  },
+  "box squat": {
+    "id": "sWKlUCGfX9s",
+    "title": "How To Perform The Box Squat | Beginner Squat Variation",
+    "channel": "Dr. Carl Baird",
+    "trusted": true
+  },
+  "cable bicep curl": {
+    "id": "Okl64XegSu0",
+    "title": "How To: High Cable Biceps Curl",
+    "channel": "Physique Development",
+    "trusted": true
+  },
+  "cable chest press": {
+    "id": "FVWJglwid4I",
+    "title": "How to Do a Cable Chest Press | Chest Workout",
+    "channel": "Howcast",
+    "trusted": true
+  },
+  "cable crunch": {
+    "id": "3qjoXDTuyOE",
+    "title": "Cable Crunch - Abs / Core Exercise - Bodybuilding.com",
+    "channel": "Bodybuilding.com",
+    "trusted": true
+  },
+  "cable face pull": {
+    "id": "ljgqer1ZpXg",
+    "title": "STOP F*cking Up Face Pulls (PROPER FORM!)",
+    "channel": "ATHLEAN-X™",
+    "trusted": true
+  },
+  "cable hip adduction": {
+    "id": "5Mkus4JdXDE",
+    "title": "How To: Hip Adduction (LF Cable)",
+    "channel": "ScottHermanFitness",
+    "trusted": true
+  },
+  "cable lateral raise": {
+    "id": "Sp8be0IFNvk",
+    "title": "How to Fix your Cable Lateral Raise | DB vs. CABLE",
+    "channel": "John Jewett",
+    "trusted": false
+  },
+  "cable preacher curl": {
+    "id": "7v7uldi1eLU",
+    "title": "Preacher Curls Are What Your Bicep Workouts Have Been Missing!",
+    "channel": "Mind Pump TV",
+    "trusted": true
+  },
+  "cable pull through": {
+    "id": "fbF4_pn_0xc",
+    "title": "How To Do A CABLE PULL THROUGH | Exercise Demonstration Video and Guide",
+    "channel": "Live Lean TV Daily Exercises",
+    "trusted": true
+  },
+  "cable rear delt fly": {
+    "id": "FqfYvaRgKyM",
+    "title": "How to Grow Your Rear Delts FAST (3 Simple Techniques)",
+    "channel": "Jeremy Ethier",
+    "trusted": true
+  },
+  "cable rope hammer curls": {
+    "id": "1Quc_tOv97I",
+    "title": "How To: Rope Hammer Curl",
+    "channel": "ScottHermanFitness",
+    "trusted": true
+  },
+  "cable rope overhead triceps extension": {
+    "id": "mRozZKkGIfg",
+    "title": "Cable Rope Overhead Tricep Extension - Tricep Exercise - Bodybuilding.com",
+    "channel": "Bodybuilding.com",
+    "trusted": true
+  },
+  "cable rope tricep extension": {
+    "id": "5dw9gAAdXjU",
+    "title": "How to: Cable Rope Tricep Extension",
+    "channel": "MenoMojo",
+    "trusted": false
+  },
+  "cable row": {
+    "id": "xQNrFHEMhI4",
+    "title": "Seated Cable Row | Exercise Guide",
+    "channel": "Bodybuilding.com",
+    "trusted": true
+  },
+  "cable russian twists": {
+    "id": "pAplQXk3dkU",
+    "title": "How To: Oblique Twist \"Wood Chopper\" (LF CAble)",
+    "channel": "ScottHermanFitness",
+    "trusted": true
+  },
+  "cable shoulder press": {
+    "id": "fBTGwHChaf4",
+    "title": "How to Perform Cable Shoulder Press (Improve Shoulder Health)",
+    "channel": "Physique Development",
+    "trusted": true
+  },
+  "cable shrugs": {
+    "id": "7sQ6i1jzYWc",
+    "title": "Angled Cable Shrug",
+    "channel": "Nick Tumminello - Trainer of Trainers",
+    "trusted": true
+  },
+  "cable tricep pushdown": {
+    "id": "_w-HpW70nSQ",
+    "title": "HOW TO: Cable Triceps Pushdown || 3 Golden Rules (FOR GROWTH)",
+    "channel": "ScottHermanFitness",
+    "trusted": true
+  },
+  "cable wrist curl": {
+    "id": "rjEThzptUuI",
+    "title": "How to do Arm Forearms Cable Pulley Wrist Curl correctly? Avoid any injury. #110",
+    "channel": "Abawi Fit",
+    "trusted": false
+  },
+  "child's pose": {
+    "id": "nMp3MlTz9fA",
+    "title": "How to do a child's pose stretch",
+    "channel": "Medibank",
+    "trusted": false
+  },
+  "clean": {
+    "id": "E2z5zK5V-MM",
+    "title": "How to POWER CLEAN / Step-by-Step (2023)",
+    "channel": "TOROKHTIY",
+    "trusted": true
+  },
+  "clean and jerk": {
+    "id": "RP1094HlQOQ",
+    "title": "How to Do Clean & Jerk: Full Guide to Improve C&J Technique & Lift More",
+    "channel": "TOROKHTIY",
+    "trusted": true
+  },
+  "clean and press": {
+    "id": "NwQVfcvesOs",
+    "title": "Quarantine Tips - How to Clean and Press with Mark Rippetoe",
+    "channel": "Starting Strength",
+    "trusted": true
+  },
+  "clean deadlift": {
+    "id": "iCWAMA9Zeus",
+    "title": "Clean Deadlift | Olympic Weightlifting Exercise Library",
+    "channel": "Catalyst Athletics",
+    "trusted": true
+  },
+  "clean from blocks": {
+    "id": "T4EAdzwVEg4",
+    "title": "Block Clean | Olympic Weightlifting Exercise Library",
+    "channel": "Catalyst Athletics",
+    "trusted": true
+  },
+  "clean pull": {
+    "id": "RnbJcrtOaB0",
+    "title": "Clean PULL / Full Guide & Tips in Just 2 Min",
+    "channel": "TOROKHTIY",
+    "trusted": true
+  },
+  "close-grip bench press": {
+    "id": "UYJsFzqdgK4",
+    "title": "HOW TO: Close-Grip Bench Press (TRICEPS BUILDER) || PERFECT FORM",
+    "channel": "ScottHermanFitness",
+    "trusted": true
+  },
+  "close-grip ez-bar curl": {
+    "id": "o74HeVd6BIw",
+    "title": "How To: Close-Grip EZ-Bar Curl",
+    "channel": "ScottHermanFitness",
+    "trusted": true
+  },
+  "close-grip lat pulldown": {
+    "id": "SALxEARiMkw",
+    "title": "How to do Lat Pulldowns (AVOID MISTAKES!)",
+    "channel": "ATHLEAN-X™",
+    "trusted": true
+  },
+  "concentration curl": {
+    "id": "ebqgIOiYGEY",
+    "title": "Concentration Curls Aren't Working for You (HERE'S WHY!)",
+    "channel": "ATHLEAN-X™",
+    "trusted": true
+  },
+  "cross body hammer curls": {
+    "id": "jQgl3niYeds",
+    "title": "Cross Body Hammer Curl | How to Perform This Effective Exercise Properly",
+    "channel": "One Minute Tutorial",
+    "trusted": false
+  },
+  "crunches": {
+    "id": "zkQWXbAP9l0",
+    "title": "NEVER DO CRUNCHES LIKE THIS | 10 Most Common Mistakes!",
+    "channel": "ATHLEAN-X™",
+    "trusted": true
+  },
+  "dead bug": {
+    "id": "JrcoGEZn6L4",
+    "title": "Dead Bug Exercise For Beginners | Positioning, Progressions, and Common Mistakes",
+    "channel": "Dr. Carl Baird",
+    "trusted": true
+  },
+  "deadlift": {
+    "id": "r4MzxtBKyNE",
+    "title": "How To Perfect Your Deadlift | Form Check | Men's Health",
+    "channel": "Men's Health",
+    "trusted": true
+  },
+  "decline crunch": {
+    "id": "zkQWXbAP9l0",
+    "title": "NEVER DO CRUNCHES LIKE THIS | 10 Most Common Mistakes!",
+    "channel": "ATHLEAN-X™",
+    "trusted": true
+  },
+  "decline oblique crunch": {
+    "id": "sBAZTuZAUA8",
+    "title": "How To: Decline Oblique Crunch",
+    "channel": "Live Lean TV Daily Exercises",
+    "trusted": true
+  },
+  "decline push up": {
+    "id": "SKPab2YC8BE",
+    "title": "How To: Decline Push-Up",
+    "channel": "ScottHermanFitness",
+    "trusted": true
+  },
+  "decline reverse crunch": {
+    "id": "YcMj0EEadQo",
+    "title": "Decline Reverse Crunch - Ab Exercise - Bodybuilding.com",
+    "channel": "Bodybuilding.com",
+    "trusted": true
+  },
+  "dip": {
+    "id": "vi1-BOcj3cQ",
+    "title": "Are You Doing Dips Properly? (AVOID MISTAKES!)",
+    "channel": "ATHLEAN-X™",
+    "trusted": true
+  },
+  "dumbbell bench press": {
+    "id": "U2wKgoUAEMo",
+    "title": "Dumbbell Bench Press - Modern Woman's Guide to Strength Training",
+    "channel": "Girls Gone Strong | Women's Health & Fitness",
+    "trusted": true
+  },
+  "dumbbell bicep curl": {
+    "id": "ykJmrZ5v0Oo",
+    "title": "How to Do a Dumbbell Biceps Curl | Arm Workout",
+    "channel": "Howcast",
+    "trusted": true
+  },
+  "dumbbell clean": {
+    "id": "sZ4XMWn8bAU",
+    "title": "Dumbbell Clean and Press (FULL TUTORIAL) - Best Full-Body Dumbbell Exercises",
+    "channel": "Mike | J2FIT Strength & Conditioning",
+    "trusted": false
+  },
+  "dumbbell decline fly": {
+    "id": "QENKPHhQVi4",
+    "title": "How to Properly Do a DUMBBELL FLY | Mind Pump",
+    "channel": "Mind Pump TV",
+    "trusted": true
+  },
+  "dumbbell floor press": {
+    "id": "uUGDRwge4F8",
+    "title": "How To: Dumbbell Floor Press",
+    "channel": "ScottHermanFitness",
+    "trusted": true
+  },
+  "dumbbell fly": {
+    "id": "QENKPHhQVi4",
+    "title": "How to Properly Do a DUMBBELL FLY | Mind Pump",
+    "channel": "Mind Pump TV",
+    "trusted": true
+  },
+  "dumbbell front raise": {
+    "id": "-t7fuZ0KhDA",
+    "title": "How To: Dumbbell Front Raise",
+    "channel": "ScottHermanFitness",
+    "trusted": true
+  },
+  "dumbbell hammer curl": {
+    "id": "8XLxfXROrTo",
+    "title": "HOW TO: Dumbbell Hammer Curl (BICEPS PEAK BUILDER!) || PERFECT FORM",
+    "channel": "ScottHermanFitness",
+    "trusted": true
+  },
+  "dumbbell incline bench press": {
+    "id": "8iPEnn-ltC8",
+    "title": "How To: Dumbbell Incline Chest Press",
+    "channel": "ScottHermanFitness",
+    "trusted": true
+  },
+  "dumbbell incline fly": {
+    "id": "idAvu2HvqSQ",
+    "title": "HOW TO: Incline Dumbbell Fly || PERFECT FORM (GROWTH & STRENGTH)",
+    "channel": "ScottHermanFitness",
+    "trusted": true
+  },
+  "dumbbell lateral raise": {
+    "id": "Y29xKcze8Ik",
+    "title": "How to Perform Dumbbell Lateral Raise | Form Tutorial",
+    "channel": "Physique Development",
+    "trusted": true
+  },
+  "dumbbell lunge": {
+    "id": "3TM-vVWuLYE",
+    "title": "How To Do A DUMBBELL FORWARD LUNGE | Exercise Demonstration Video and Guide",
+    "channel": "Live Lean TV Daily Exercises",
+    "trusted": true
+  },
+  "dumbbell rear delt raise": {
+    "id": "ttvfGg9d76c",
+    "title": "How To: Dumbbell Bent-Over Raise",
+    "channel": "ScottHermanFitness",
+    "trusted": true
+  },
+  "dumbbell row": {
+    "id": "gfUg6qWohTk",
+    "title": "STOP F*cking Up Dumbbell Rows (PROPER FORM!)",
+    "channel": "ATHLEAN-X™",
+    "trusted": true
+  },
+  "dumbbell shoulder press": {
+    "id": "GFblCmuEE18",
+    "title": "HOW TO: Dumbbell Shoulder Press (BIGGER SHOULDERS & BIGGER BENCH PRESS!) || PERFECT FORM",
+    "channel": "ScottHermanFitness",
+    "trusted": true
+  },
+  "dumbbell shrug": {
+    "id": "cJRVVxmytaM",
+    "title": "How To: Dumbbell Shrugs",
+    "channel": "ScottHermanFitness",
+    "trusted": true
+  },
+  "dumbbell side bend": {
+    "id": "dL9ZzqtQI5c",
+    "title": "How to Do a Dumbbell Side Bend | Ab Workout",
+    "channel": "Howcast",
+    "trusted": true
+  },
+  "dumbbell skullcrusher": {
+    "id": "VP9Qp72zZ_c",
+    "title": "How to Do SKULLCRUSHERS with Dumbbells for BIG Triceps (ADVANCED)",
+    "channel": "Mind Pump TV",
+    "trusted": true
+  },
+  "dumbbell squat": {
+    "id": "v_c67Omje48",
+    "title": "How to Dumbbell Squat | Mike Hildebrandt",
+    "channel": "Bodybuilding.com",
+    "trusted": true
+  },
+  "dumbbell step up": {
+    "id": "7AtIjR-QqVA",
+    "title": "Dumbbell Step Ups - Leg Exercise - Bodybuilding.com",
+    "channel": "Bodybuilding.com",
+    "trusted": true
+  },
+  "exercise ball crunch": {
+    "id": "sUMW-xhzI84",
+    "title": "Killer Ab Exercise- The Physio Ball Crunch",
+    "channel": "Mind Pump TV",
+    "trusted": true
+  },
+  "exercise ball pull in": {
+    "id": "gkd9D5zJEts",
+    "title": "Tutorial | Exercise Ball Pull-In",
+    "channel": "Get Right Results",
+    "trusted": false
+  },
+  "ez-bar curl": {
+    "id": "zG2xJ0Q5QtI",
+    "title": "How To: Inside-Grip Bicep Curl With E-Z Bar Curl",
+    "channel": "ScottHermanFitness",
+    "trusted": true
+  },
+  "farmer's walk": {
+    "id": "NH7Xv-7NQNQ",
+    "title": "How To Perform Farmer Walks Exercise Tutorial",
+    "channel": "Buff Dudes Workouts",
+    "trusted": true
+  },
+  "floor press": {
+    "id": "vAFw7EPL4eM",
+    "title": "Floor Press Exercise Tutorial | Old School Chest Workout",
+    "channel": "Buff Dudes Workouts",
+    "trusted": true
+  },
+  "flutter kicks": {
+    "id": "ANVdMDaYRts",
+    "title": "How To: Flutter Kicks",
+    "channel": "ScottHermanFitness",
+    "trusted": true
+  },
+  "front plate raise": {
+    "id": "e8my9OOCXVo",
+    "title": "How To: Overhead Front Raise (With Plate)",
+    "channel": "ScottHermanFitness",
+    "trusted": true
+  },
+  "glute ham raise": {
+    "id": "1TlhdiFSJrU",
+    "title": "Glute-Ham Raise (GHR) | Olympic Weightlifting Exercise Library",
+    "channel": "Catalyst Athletics",
+    "trusted": true
+  },
+  "glute kickback machine": {
+    "id": "dJa_Nf4zdik",
+    "title": "Build Bigger Glutes With Perfect Training Technique ft. Stephanie Buttermore (Glute Kickback)",
+    "channel": "Jeff Nippard",
+    "trusted": true
+  },
+  "good morning": {
+    "id": "InVuScSda8E",
+    "title": "Build Your Hamstrings- How to Properly do Good Mornings",
+    "channel": "Mind Pump TV",
+    "trusted": true
+  },
+  "hack squat": {
+    "id": "0tn5K9NlCfo",
+    "title": "Hack Squat | Exercise Guide",
+    "channel": "Bodybuilding.com",
+    "trusted": true
+  },
+  "hammer curls": {
+    "id": "BRVDS6HVR9Q",
+    "title": "How To Perform HAMMER CURLS | Biceps Exercise Tutorial",
+    "channel": "Buff Dudes Workouts",
+    "trusted": true
+  },
+  "hammerstrength high row": {
+    "id": "x7x6c8SPlds",
+    "title": "How To: Hammerstrength High Row",
+    "channel": "Bodyplex Milledgeville",
+    "trusted": false
+  },
+  "hammerstrength iso row": {
+    "id": "9WeqqzVCmY0",
+    "title": "Hammer Strength Iso-lateral Low Row Tutorial",
+    "channel": "Mustang Fitness",
+    "trusted": false
+  },
+  "handstand push up": {
+    "id": "PDKmh0OJ6Ic",
+    "title": "Handstand Push-Up For Beginners (Increase Your Strength)",
+    "channel": "FitnessFAQs",
+    "trusted": true
+  },
+  "hang clean": {
+    "id": "QCQuZITCnPk",
+    "title": "Hang Clean Technique Explained: Perfect Form in 8 Steps",
+    "channel": "TOROKHTIY",
+    "trusted": true
+  },
+  "hang snatch": {
+    "id": "Php-RclQ1yU",
+    "title": "Hang Snatch | Olympic Weightlifting Exercise Library",
+    "channel": "Catalyst Athletics",
+    "trusted": true
+  },
+  "hanging leg raise": {
+    "id": "Pr1ieGZ5atk",
+    "title": "Hanging Leg Raise | HOW-TO",
+    "channel": "ATHLEAN-X™",
+    "trusted": true
+  },
+  "hip thrust": {
+    "id": "LM8XHLYJoYs",
+    "title": "Proper Hip Thrust Form",
+    "channel": "Bret Contreras Glute Guy",
+    "trusted": true
+  },
+  "hug a ball": {
+    "id": "YfpNnMjEsqw",
+    "title": "Hug the ball shoulder stability exercise",
+    "channel": "Body Works Clinic",
+    "trusted": false
+  },
+  "inchworm": {
+    "id": "VSp0z7Mp5IU",
+    "title": "How to Do an Inchworm | Abs Workout",
+    "channel": "Howcast",
+    "trusted": true
+  },
+  "incline back extension": {
+    "id": "H8Swl1N-uis",
+    "title": "STOP Doing Back Extensions Like This!",
+    "channel": "Squat University",
+    "trusted": true
+  },
+  "incline cable chest press": {
+    "id": "UJL1YgWL6Rg",
+    "title": "How To: Seated Cable Incline Chest Press",
+    "channel": "Live Lean TV Daily Exercises",
+    "trusted": true
+  },
+  "incline dumbbell curl": {
+    "id": "DCe8f6vMe9A",
+    "title": "Stop Screwing Up Incline Dumbbell Curls (PROPER FORM!)",
+    "channel": "ATHLEAN-X™",
+    "trusted": true
+  },
+  "incline push up": {
+    "id": "76TQU7iZlsI",
+    "title": "The Incline Push Up | How To Perform | What To Avoid",
+    "channel": "Dr. Carl Baird",
+    "trusted": true
+  },
+  "inverted row": {
+    "id": "11F_O_sZ1Z4",
+    "title": "How to Perform the Inverted Row | Back | Exercise Tutorial",
+    "channel": "Buff Dudes Workouts",
+    "trusted": true
+  },
+  "jackknife sit-up": {
+    "id": "GEZ8NLbtc8Q",
+    "title": "Jackknife Sit Up - Core / Abs - Bodybuilding.com",
+    "channel": "Bodybuilding.com",
+    "trusted": true
+  },
+  "kettlebell halo": {
+    "id": "Zy6bgAxPeks",
+    "title": "Kettlebell Halo",
+    "channel": "Men's Health",
+    "trusted": true
+  },
+  "kettlebell hang clean": {
+    "id": "lliRf_d6MDc",
+    "title": "How to Hang Clean with a Kettlebell (NO WRIST BANGING!)",
+    "channel": "ATHLEAN-X™",
+    "trusted": true
+  },
+  "kettlebell pistol squat": {
+    "id": "R1mxpLzYgxM",
+    "title": "The Complete Pistol Squat Checklist | No Mistakes!",
+    "channel": "FitnessFAQs",
+    "trusted": true
+  },
+  "kettlebell sumo high pull": {
+    "id": "Li4g5p6s2eM",
+    "title": "How To: Kettlebell High-Pull",
+    "channel": "ScottHermanFitness",
+    "trusted": true
+  },
+  "kettlebell thruster": {
+    "id": "MsOjtMojmQs",
+    "title": "Kettlebell Thrusters- How To",
+    "channel": "CrossFit Big Dane",
+    "trusted": false
+  },
+  "kettlebell windmill": {
+    "id": "q8K_Wg8OuV4",
+    "title": "How to Perform a Kettlebell Windmill | Nuffield Health",
+    "channel": "Nuffield Health",
+    "trusted": true
+  },
+  "kneeling squat": {
+    "id": "LMEGUcIqXUU",
+    "title": "Try This Exercise For HUGE Leg Gains! (Kneeling Squats Tutorial)",
+    "channel": "Buff Dudes Workouts",
+    "trusted": true
+  },
+  "lat pulldown": {
+    "id": "SALxEARiMkw",
+    "title": "How to do Lat Pulldowns (AVOID MISTAKES!)",
+    "channel": "ATHLEAN-X™",
+    "trusted": true
+  },
+  "lateral bound": {
+    "id": "niEGdFUQ6sY",
+    "title": "How to Lateral Bound",
+    "channel": "LPS Athletic",
+    "trusted": false
+  },
+  "lateral cone hop": {
+    "id": "IjDguatdRKw",
+    "title": "How To Do Single Leg Lateral Cone Hops | Exercise Demonstration Video and Guide",
+    "channel": "Live Lean TV Daily Exercises",
+    "trusted": true
+  },
+  "leg extension": {
+    "id": "o90ocSBDJis",
+    "title": "How to Do Leg Extensions with GREAT Technique (Grow Your Quads)",
+    "channel": "Physique Development",
+    "trusted": true
+  },
+  "leg press": {
+    "id": "B6rGDcfyPto",
+    "title": "How To Leg Press For Best Quad Growth | Targeting The Muscle Series",
+    "channel": "Renaissance Periodization",
+    "trusted": true
+  },
+  "leg raise": {
+    "id": "QyVq5oUBpss",
+    "title": "The WORST Ab Training MISTAKES | Leg Raises",
+    "channel": "FitnessFAQs",
+    "trusted": true
+  },
+  "lying hamstrings curl": {
+    "id": "P7-RxTVe6O0",
+    "title": "How to Lying Hamstring Curl | Proper Technique, Set Up, & Mistakes",
+    "channel": "Physique Development",
+    "trusted": true
+  },
+  "machine bicep curl": {
+    "id": "AR-oARBkYxI",
+    "title": "How to PROPERLY DO Machine Bicep Curls (Machine Preacher Curls)",
+    "channel": "Colossus Fitness",
+    "trusted": false
+  },
+  "machine fly": {
+    "id": "Dbly77Jgbo8",
+    "title": "How to Seated Machine (Pec Deck) Chest Fly",
+    "channel": "Physique Development",
+    "trusted": true
+  },
+  "machine hip abductor": {
+    "id": "OjI5OpV6IWA",
+    "title": "How to PROPERLY Use The Abductor Machine (STOP DOING THIS)",
+    "channel": "Colossus Fitness",
+    "trusted": false
+  },
+  "machine hip adductor": {
+    "id": "e9AqTFMmP18",
+    "title": "Hip Adductor Machine: Demo",
+    "channel": "R Greenwood",
+    "trusted": false
+  },
+  "machine leg press": {
+    "id": "M_xoJ0iRLFc",
+    "title": "How to LEG PRESS for Glutes | Improve Your Technique & Grow More Muscle",
+    "channel": "Physique Development",
+    "trusted": true
+  },
+  "machine preacher curl": {
+    "id": "AR-oARBkYxI",
+    "title": "How to PROPERLY DO Machine Bicep Curls (Machine Preacher Curls)",
+    "channel": "Colossus Fitness",
+    "trusted": false
+  },
+  "machine rear delt fly": {
+    "id": "6yMdhi2DVao",
+    "title": "How To Properly Use The Rear Delt Fly Machine (+ BONUS TIP)",
+    "channel": "Mind Pump TV",
+    "trusted": true
+  },
+  "machine shoulder press": {
+    "id": "3R14MnZbcpw",
+    "title": "How to PROPERLY Shoulder Machine Press (LEARN FAST)",
+    "channel": "Colossus Fitness",
+    "trusted": false
+  },
+  "machine tricep dip": {
+    "id": "EBnq0A5L_wo",
+    "title": "How to PROPERLY Use The Tricep Dip Machine (TRY THIS)",
+    "channel": "Colossus Fitness",
+    "trusted": false
+  },
+  "machine tricep extension": {
+    "id": "j4XSuFLiZ6I",
+    "title": "How To Do A SEATED MACHINE TRICEPS EXTENSION | Exercise Demonstration Video and Guide",
+    "channel": "Live Lean TV Daily Exercises",
+    "trusted": true
+  },
+  "mountain climber": {
+    "id": "De3Gl-nC7IQ",
+    "title": "How to do Mountain Climbers Exercise the RIGHT way.",
+    "channel": "Nick Tumminello - Trainer of Trainers",
+    "trusted": true
+  },
+  "muscle snatch": {
+    "id": "nJmtGVutszE",
+    "title": "Muscle Snatch | Olympic Weightlifting Exercise Library",
+    "channel": "Catalyst Athletics",
+    "trusted": true
+  },
+  "muscle up": {
+    "id": "_eQ2gw_Gg5Y",
+    "title": "How To Muscle-Up For Beginners (BEST EXERCISES)",
+    "channel": "FitnessFAQs",
+    "trusted": true
+  },
+  "olympic squat": {
+    "id": "-sM5af2545M",
+    "title": "Dial in Your Squat | Olympic Weightlifting Squat Technique",
+    "channel": "Catalyst Athletics",
+    "trusted": true
+  },
+  "overhead squat": {
+    "id": "TUtBNkk_lio",
+    "title": "How To Do The Overhead Squat with Olympian Sonny Webster | EPISODE 2",
+    "channel": "Mind Pump TV",
+    "trusted": true
+  },
+  "pallof press": {
+    "id": "otxypVv_0Es",
+    "title": "How To Perform The Pallof Press Exercise For Less Lower Back Pain",
+    "channel": "Dr. Carl Baird",
+    "trusted": true
+  },
+  "plank": {
+    "id": "A2b2EmIg0dA",
+    "title": "How To Plank (Proper Form | Cues | Progressions)",
+    "channel": "E3 Rehab",
+    "trusted": true
+  },
+  "power clean": {
+    "id": "E2z5zK5V-MM",
+    "title": "How to POWER CLEAN / Step-by-Step (2023)",
+    "channel": "TOROKHTIY",
+    "trusted": true
+  },
+  "power clean from blocks": {
+    "id": "5vVSGITznQk",
+    "title": "How to Power Clean [From Olympic Weightlifter Darren Barnes]",
+    "channel": "Squat University",
+    "trusted": true
+  },
+  "power snatch": {
+    "id": "1Tnl799bCqw",
+    "title": "How to POWER SNATCH: 8 Steps to Perfect Technique",
+    "channel": "TOROKHTIY",
+    "trusted": true
+  },
+  "power snatch from blocks": {
+    "id": "yN1ouEOGpag",
+    "title": "Block Power Snatch | Olympic Weightlifting Exercise Library",
+    "channel": "Catalyst Athletics",
+    "trusted": true
+  },
+  "preacher curl": {
+    "id": "7v7uldi1eLU",
+    "title": "Preacher Curls Are What Your Bicep Workouts Have Been Missing!",
+    "channel": "Mind Pump TV",
+    "trusted": true
+  },
+  "pull up": {
+    "id": "sIvJTfGxdFo",
+    "title": "The Official Pull-Up Checklist (AVOID MISTAKES!)",
+    "channel": "ATHLEAN-X™",
+    "trusted": true
+  },
+  "push up": {
+    "id": "i9sTjhN4Z3M",
+    "title": "The RIGHT Way To Do Push-Ups (PERFECT FORM)",
+    "channel": "Mind Pump TV",
+    "trusted": true
+  },
+  "rack pulls": {
+    "id": "cxVrqTqD_J4",
+    "title": "How to Rack Pull with Mark Rippetoe",
+    "channel": "Starting Strength",
+    "trusted": true
+  },
+  "reverse barbell curl": {
+    "id": "didEQUuieRQ",
+    "title": "How To: Reverse Barbell Curl | BICEPS BUILDER",
+    "channel": "ScottHermanFitness",
+    "trusted": true
+  },
+  "reverse crunch": {
+    "id": "fhrkw1aaP8k",
+    "title": "Lower Ab Exercise Mistakes (REVERSE CRUNCH!)",
+    "channel": "ATHLEAN-X™",
+    "trusted": true
+  },
+  "reverse dumbbell curl": {
+    "id": "nRgxYX2Ve9w",
+    "title": "How to Do a Reverse Curl | Arm Workout",
+    "channel": "Howcast",
+    "trusted": true
+  },
+  "reverse hyperextension": {
+    "id": "MT0U96RqkhM",
+    "title": "Reverse Hyperextension for Low Back Pain? | Sciatica Relief",
+    "channel": "RehabFix",
+    "trusted": false
+  },
+  "ring dip": {
+    "id": "2bdNrGhoyuk",
+    "title": "How to ring dip - beginner progressions",
+    "channel": "The Movement Collective ",
+    "trusted": false
+  },
+  "romanian deadlift": {
+    "id": "_oyxCn2iSjU",
+    "title": "HOW TO DO ROMANIAN DEADLIFTS (RDLs): Build Beefy Hamstrings With Perfect Technique",
+    "channel": "Jeff Nippard",
+    "trusted": true
+  },
+  "rope climb": {
+    "id": "yiLV0Dr3ACU",
+    "title": "How to MASTER the Rope Climb for CrossFit!",
+    "channel": "Monroe Miller",
+    "trusted": false
+  },
+  "russian twist": {
+    "id": "wkD8rjkodUI",
+    "title": "How to Do a Russian Twist | Ab Workout",
+    "channel": "Howcast",
+    "trusted": true
+  },
+  "scapular pull up": {
+    "id": "pE8PJsWEV7k",
+    "title": "Scapular Pull Ups",
+    "channel": "Functional Bodybuilding",
+    "trusted": true
+  },
+  "scissor kick": {
+    "id": "WoNCIBVLbgY",
+    "title": "How to Do Scissors | Ab Workout",
+    "channel": "Howcast",
+    "trusted": true
+  },
+  "seated back extension": {
+    "id": "H8Swl1N-uis",
+    "title": "STOP Doing Back Extensions Like This!",
+    "channel": "Squat University",
+    "trusted": true
+  },
+  "seated cable row": {
+    "id": "xQNrFHEMhI4",
+    "title": "Seated Cable Row | Exercise Guide",
+    "channel": "Bodybuilding.com",
+    "trusted": true
+  },
+  "seated dumbbell calf raise": {
+    "id": "fFWpWJy8ybU",
+    "title": "How To: Dumbbell Seated Calf Raise",
+    "channel": "Live Lean TV Daily Exercises",
+    "trusted": true
+  },
+  "seated dumbbell curl": {
+    "id": "nZkCoxZun0Y",
+    "title": "How To Properly Do Seated Dumbbell Curls For Best Results",
+    "channel": "David Duncan",
+    "trusted": false
+  },
+  "seated leg curl": {
+    "id": "ELOCsoDSmrg",
+    "title": "How To: Seated Leg Curl (Cybex)",
+    "channel": "ScottHermanFitness",
+    "trusted": true
+  },
+  "seated machine calf press": {
+    "id": "D-jcJWDdbbU",
+    "title": "HOW TO USE A CALF PRESS MACHINE",
+    "channel": "Mike Sewell (Sewell Fitness)",
+    "trusted": false
+  },
+  "seated tricep press": {
+    "id": "hLOl4nJlo0I",
+    "title": "Seated triceps press",
+    "channel": "TheMastermind002",
+    "trusted": false
+  },
+  "shotgun row": {
+    "id": "m3sY7iJryGQ",
+    "title": "How To Shotgun Row | Tutorial | Back Exercise",
+    "channel": "Anabolic Aliens",
+    "trusted": false
+  },
+  "side laterals to front raise": {
+    "id": "Gmi_DCnJ93c",
+    "title": "How to Do Side Lateral Raises (with PERFECT FORM)",
+    "channel": "Andrew Kwong (DeltaBolic)",
+    "trusted": true
+  },
+  "side leg raises": {
+    "id": "izV5th7AQHM",
+    "title": "How to Do Side Leg Raises | Knee Exercises",
+    "channel": "Howcast",
+    "trusted": true
+  },
+  "single arm cable crossover": {
+    "id": "xXy-q7enfxk",
+    "title": "How To: One-Arm Crossover (LF Cable)",
+    "channel": "ScottHermanFitness",
+    "trusted": true
+  },
+  "single arm push up": {
+    "id": "JiHkxqbhNuw",
+    "title": "How to Do One-Arm Push Ups | Mike Vazquez",
+    "channel": "Bodybuilding.com",
+    "trusted": true
+  },
+  "single arm row": {
+    "id": "zXD5rnv0gD0",
+    "title": "Single Arm Row Tutorial - Proper Form and Technique",
+    "channel": "Runna",
+    "trusted": false
+  },
+  "single leg glute bridge": {
+    "id": "b1zTCyGJXCQ",
+    "title": "Single Leg Glute Bridge Exercise | How To Perform And Common Mistakes",
+    "channel": "Dr. Carl Baird",
+    "trusted": true
+  },
+  "single leg leg extension": {
+    "id": "ljO4jkwv8wQ",
+    "title": "How To Do Leg Extensions With Perfect Technique (Grow Every Quad Head)",
+    "channel": "Jeff Nippard",
+    "trusted": true
+  },
+  "sit up": {
+    "id": "jDwoBqPH0jk",
+    "title": "How to Do a Sit-Up Properly | Gym Workout",
+    "channel": "Howcast",
+    "trusted": true
+  },
+  "skullcrusher": {
+    "id": "8t2a93BjDec",
+    "title": "How to Do SKULLCRUSHERS for BIG Triceps | Targeting The Muscle Series",
+    "channel": "Renaissance Periodization",
+    "trusted": true
+  },
+  "sled push": {
+    "id": "9XRRXaUpnLk",
+    "title": "How To Do The Sled Push The RIGHT Way! (AVOID MISTAKES!)",
+    "channel": "Mind Pump TV",
+    "trusted": true
+  },
+  "smith machine behind the back shrug": {
+    "id": "QIiilFBaaWM",
+    "title": "How To Do A Smith Machine Behind The Back Shrug | Exercise Demonstration Video and Guide",
+    "channel": "Live Lean TV Daily Exercises",
+    "trusted": true
+  },
+  "smith machine bench press": {
+    "id": "z_r6hDOYtO0",
+    "title": "How To: Smith Machine- Bench Press",
+    "channel": "ScottHermanFitness",
+    "trusted": true
+  },
+  "smith machine bent over row": {
+    "id": "ZFNLCpj8e-o",
+    "title": "How To Do A SMITH MACHINE BENT OVER ROW | Exercise Demonstration Video and Guide",
+    "channel": "Live Lean TV Daily Exercises",
+    "trusted": true
+  },
+  "smith machine calf raise": {
+    "id": "FNdI5TynYxs",
+    "title": "How To Do A STANDING SMITH MACHINE CALF RAISE ON STEP | Exercise Demonstration Video and Guide",
+    "channel": "Live Lean TV Daily Exercises",
+    "trusted": true
+  },
+  "smith machine close-grip bench press": {
+    "id": "UYJsFzqdgK4",
+    "title": "HOW TO: Close-Grip Bench Press (TRICEPS BUILDER) || PERFECT FORM",
+    "channel": "ScottHermanFitness",
+    "trusted": true
+  },
+  "smith machine hip raise": {
+    "id": "ADgWjz9i42Y",
+    "title": "How to: Smith Machine Glute Bridge (Hip Thrust) | Grow Bigger Glutes w/ Minimal Setup",
+    "channel": "Physique Development",
+    "trusted": true
+  },
+  "smith machine incline bench press": {
+    "id": "b8DqTO6ak0k",
+    "title": "How To: Smith Machine- Incline Bench Press",
+    "channel": "ScottHermanFitness",
+    "trusted": true
+  },
+  "smith machine one-arm upright row": {
+    "id": "vcXkzN6QXbk",
+    "title": "How To: Smith Machine- Upright-Row",
+    "channel": "ScottHermanFitness",
+    "trusted": true
+  },
+  "smith machine overhead shoulder press": {
+    "id": "aKWQrB8afy0",
+    "title": "How To Do A SMITH MACHINE SEATED SHOULDER PRESS | Exercise Demonstration Video and Guide",
+    "channel": "Live Lean TV Daily Exercises",
+    "trusted": true
+  },
+  "smith machine reverse calf raises": {
+    "id": "rPWMBOLNPfs",
+    "title": "How To: Smith Machine Donkey Calf Raise",
+    "channel": "Live Lean TV Daily Exercises",
+    "trusted": true
+  },
+  "smith machine squat": {
+    "id": "AHnX-aimA4E",
+    "title": "How To: Smith Machine- Squat",
+    "channel": "ScottHermanFitness",
+    "trusted": true
+  },
+  "smith machine stiff-legged deadlift": {
+    "id": "ONRRAgNLVac",
+    "title": "How To Do A SMITH MACHINE DEADLIFT | Exercise Demonstration Video and Guide",
+    "channel": "Live Lean TV Daily Exercises",
+    "trusted": true
+  },
+  "smith machine upright row": {
+    "id": "vcXkzN6QXbk",
+    "title": "How To: Smith Machine- Upright-Row",
+    "channel": "ScottHermanFitness",
+    "trusted": true
+  },
+  "snatch": {
+    "id": "yHZ1eZ8fJjc",
+    "title": "HOW TO SNATCH / A Visual Guide for athletes & coaches / Torokhtiy",
+    "channel": "TOROKHTIY",
+    "trusted": true
+  },
+  "snatch balance": {
+    "id": "cMVxFAyQgRk",
+    "title": "Snatch Balance - How To Push Down Better | Olympic Weightlifting Technique",
+    "channel": "Catalyst Athletics",
+    "trusted": true
+  },
+  "snatch deadlift": {
+    "id": "GP6VNoIZyF4",
+    "title": "Increase Your Deadlift : How To Snatch Grip Deadlift",
+    "channel": "Alan Thrall (Untamed Strength)",
+    "trusted": true
+  },
+  "snatch from blocks": {
+    "id": "mfOYbSBEwdc",
+    "title": "Snatch Work from the Blocks - Brian Wilhelm, Danielle Welihoskiy & Greg Everett",
+    "channel": "Catalyst Athletics",
+    "trusted": true
+  },
+  "snatch pull": {
+    "id": "V-KJfr6ae1s",
+    "title": "Finish The Pull | Snatch & Clean Technique",
+    "channel": "Catalyst Athletics",
+    "trusted": true
+  },
+  "spider curls": {
+    "id": "CITtSuda0Fg",
+    "title": "HOW TO: Spider Curl (HUGE BICEPS BUILDER!) || PERFECT FORM",
+    "channel": "ScottHermanFitness",
+    "trusted": true
+  },
+  "split clean": {
+    "id": "MmCQ0tmk3KY",
+    "title": "The Split Clean with Mark Rippetoe",
+    "channel": "Starting Strength",
+    "trusted": true
+  },
+  "split jerk": {
+    "id": "2GPA-cjUFnA",
+    "title": "Split Jerk | Olympic Weightlifting Exercise Library",
+    "channel": "Catalyst Athletics",
+    "trusted": true
+  },
+  "split snatch": {
+    "id": "ETZkvQWNoBI",
+    "title": "Split Snatch / Torokhtiy Olympic Weightlifting Library",
+    "channel": "Torokhtiy Weightlifting Library",
+    "trusted": true
+  },
+  "split squat": {
+    "id": "4bNQITw0VdY",
+    "title": "How To Perform PERFECT Split Squats (Everything You Need To Know)",
+    "channel": "E3 Rehab",
+    "trusted": true
+  },
+  "standing barbell calf raise": {
+    "id": "3UWi44yN-wM",
+    "title": "How To: Standing Barbell Calf Raise",
+    "channel": "ScottHermanFitness",
+    "trusted": true
+  },
+  "standing dumbbell calf raise": {
+    "id": "wxwY7GXxL4k",
+    "title": "Standing Dumbbell Calf Raises - Calf Exercise - Bodybuilding.com",
+    "channel": "Bodybuilding.com",
+    "trusted": true
+  },
+  "standing dumbbell tricep extension": {
+    "id": "-Vyt2QdsR7E",
+    "title": "How To: Standing Overhead Dumbbell Tricep Extension",
+    "channel": "ScottHermanFitness",
+    "trusted": true
+  },
+  "standing hip circle": {
+    "id": "D_kQzMB_HkY",
+    "title": "How to do standing hip circles (Home training exercise)",
+    "channel": "Sporting Health Club",
+    "trusted": false
+  },
+  "standing leg curl": {
+    "id": "Z053-kKjesQ",
+    "title": "How To: Standing Leg Curl (BM)",
+    "channel": "ScottHermanFitness",
+    "trusted": true
+  },
+  "standing machine calf press": {
+    "id": "YMmgqO8Jo-k",
+    "title": "How To: Standing Calf (BM)",
+    "channel": "ScottHermanFitness",
+    "trusted": true
+  },
+  "star jump": {
+    "id": "h6wu4_LOhyU",
+    "title": "How to Do a Star Jump | Warrior Fitness",
+    "channel": "Howcast",
+    "trusted": true
+  },
+  "stomach vacuum": {
+    "id": "b5GsE6ZHn_E",
+    "title": "How To Do A Stomach Vacuum - Train Your Transverse Abdominis",
+    "channel": "Mind Pump TV",
+    "trusted": true
+  },
+  "straight-arm pulldown": {
+    "id": "QUIB08yf_dM",
+    "title": "Straight Arm Pulldown Technique #backday #workout",
+    "channel": "Bodybuilding.com",
+    "trusted": true
+  },
+  "sumo deadlift": {
+    "id": "t3Ig1Y5COFU",
+    "title": "How To Sumo Deadlift The Starting Strength Way",
+    "channel": "Starting Strength",
+    "trusted": true
+  },
+  "superman": {
+    "id": "0rVIf0RpZcA",
+    "title": "How To Do A SUPERMAN W PULL | Exercise Demonstration Video and Guide",
+    "channel": "Live Lean TV Daily Exercises",
+    "trusted": true
+  },
+  "svend press": {
+    "id": "cIoUZOnypS8",
+    "title": "Svend Press | Exercise Guide",
+    "channel": "Bodybuilding.com",
+    "trusted": true
+  },
+  "tate press": {
+    "id": "IgSjoXbpy1M",
+    "title": "How To: Tate Press | INCREASE YOUR BENCH & BUILD BIGGER TRICEPS!",
+    "channel": "ScottHermanFitness",
+    "trusted": true
+  },
+  "tire flip": {
+    "id": "aIDjGG_xwHg",
+    "title": "How To Do A TIRE FLIP | Exercise Demonstration Video and Guide",
+    "channel": "Live Lean TV Daily Exercises",
+    "trusted": true
+  },
+  "toe touchers": {
+    "id": "dgLVRLamx9c",
+    "title": "Toe Touchers Exercise Guide and Video",
+    "channel": "lipigard",
+    "trusted": false
+  },
+  "trap bar deadlift": {
+    "id": "TU2xZ7s4jus",
+    "title": "The Trap Bar Deadlift",
+    "channel": "Alan Thrall (Untamed Strength)",
+    "trusted": true
+  },
+  "tricep overhead extension with rope": {
+    "id": "l4i7iDLiMXs",
+    "title": "Rope Overhead Tricep Extension — (FORM & TUTORIAL)",
+    "channel": "Fit Father Project - Fitness For Busy Fathers",
+    "trusted": false
+  },
+  "tricep stretch": {
+    "id": "hSaqjF0dMMg",
+    "title": "How to Stretch Your Triceps",
+    "channel": "Howcast",
+    "trusted": true
+  },
+  "tuck crunch": {
+    "id": "uAVwnCOuGuM",
+    "title": "How To Tuck Crunch",
+    "channel": "2ExtremesFitness",
+    "trusted": false
+  },
+  "v-bar pulldown": {
+    "id": "SALxEARiMkw",
+    "title": "How to do Lat Pulldowns (AVOID MISTAKES!)",
+    "channel": "ATHLEAN-X™",
+    "trusted": true
+  },
+  "vertical leg raise": {
+    "id": "QyVq5oUBpss",
+    "title": "The WORST Ab Training MISTAKES | Leg Raises",
+    "channel": "FitnessFAQs",
+    "trusted": true
+  },
+  "wide grip lat pulldown": {
+    "id": "lueEJGjTuPQ",
+    "title": "Wide-Grip Lat Pulldown | Back Exercise Guide",
+    "channel": "Bodybuilding.com",
+    "trusted": true
+  },
+  "zercher squat": {
+    "id": "Da75bVCfTNo",
+    "title": "How to Perform Zercher Squats - Leg Squat Exercise",
+    "channel": "Buff Dudes",
+    "trusted": true
+  },
+  "zottman curl": {
+    "id": "D7bMA4WEKMI",
+    "title": "How to Perform Zottman Curls | Bicep / Forearms Exercise Tutorial",
+    "channel": "Buff Dudes Workouts",
+    "trusted": true
+  },
+  "zottman preacher curl": {
+    "id": "D7bMA4WEKMI",
+    "title": "How to Perform Zottman Curls | Bicep / Forearms Exercise Tutorial",
+    "channel": "Buff Dudes Workouts",
+    "trusted": true
+  }
+}
