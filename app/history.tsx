@@ -1,9 +1,11 @@
 import { describeSet } from '@/lib/cardio';
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, Pressable } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { bootstrapDb } from '@/lib/bootstrap';
-import { ensureUser, listWorkoutSummariesEnhanced, listWorkoutDetail, getUserUnit, deleteWorkout, repeatWorkout, getSetPRStatus, setSetting, getWorkoutDatesForMonth } from '@/lib/dao';
+import { ensureUser, listWorkoutSummariesEnhanced, listWorkoutDetail, getUserUnit, deleteWorkout, repeatWorkout, getSetPRStatus, setSetting, getSetting, listWorkoutDays } from '@/lib/dao';
+import { computeLogStats, DEFAULT_WEEKLY_GOAL, weekDaysSunFirst, workoutTitle, summarizeNames, formatVolume, formatDuration } from '@/lib/logStats';
+import { useFocusEffect } from 'expo-router';
 import * as Crypto from 'expo-crypto';
 import { useTheme } from '@/theme/ThemeContext';
 import { fontSize, fontWeight } from '@/theme/typography';
@@ -25,7 +27,11 @@ export default function History() {
     const d = new Date();
     return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
   });
-  const [calDays, setCalDays] = useState<Set<string>>(new Set());
+  const [calOpen, setCalOpen] = useState(false);
+  const [selectedDay, setSelectedDay] = useState<string | null>(null);
+  const [allDays, setAllDays] = useState<string[]>([]);
+  const [goal, setGoal] = useState(DEFAULT_WEEKLY_GOAL);
+  const [limit, setLimit] = useState(30);
 
   useEffect(() => {
     (async () => {
@@ -38,23 +44,26 @@ export default function History() {
     })();
   }, []);
 
-  useEffect(() => {
-    (async () => {
-      if (!dbCtx) return;
-      const rows = await listWorkoutSummariesEnhanced(dbCtx, 50);
-      setWorkouts(rows);
-      const days = await getWorkoutDatesForMonth(dbCtx, calMonth);
-      setCalDays(new Set(days));
-    })();
-  }, [dbCtx]);
+  async function reload(ctx = dbCtx, lim = limit) {
+    if (!ctx) return;
+    const [rows, days, g] = await Promise.all([
+      listWorkoutSummariesEnhanced(ctx, lim),
+      listWorkoutDays(ctx),
+      getSetting(ctx, 'weekly_goal_days'),
+    ]);
+    setWorkouts(rows);
+    setAllDays(days);
+    const gi = parseInt(g ?? '', 10);
+    if (gi >= 1 && gi <= 7) setGoal(gi);
+  }
 
-  useEffect(() => {
-    if (!dbCtx) return;
-    (async () => {
-      const days = await getWorkoutDatesForMonth(dbCtx, calMonth);
-      setCalDays(new Set(days));
-    })();
-  }, [calMonth, dbCtx]);
+  useFocusEffect(useCallback(() => { reload(); }, [dbCtx, limit]));
+
+  async function cycleGoal() {
+    const next = goal >= 7 ? 1 : goal + 1;
+    setGoal(next);
+    if (dbCtx) await setSetting(dbCtx, 'weekly_goal_days', String(next));
+  }
 
   async function handleRepeatWorkout(sourceWorkoutId: string) {
     if (!dbCtx) return;
@@ -64,15 +73,13 @@ export default function History() {
     await setSetting(dbCtx, 'workout_start_time', String(Date.now()));
     setRepeatStatus('Workout created! Go to Workout tab.');
     setTimeout(() => setRepeatStatus(null), 3000);
-    const rows = await listWorkoutSummariesEnhanced(dbCtx, 50);
-    setWorkouts(rows);
+    await reload();
   }
 
   async function handleDeleteWorkout(workoutId: string) {
     if (!dbCtx) return;
     await deleteWorkout(dbCtx, workoutId);
-    const rows = await listWorkoutSummariesEnhanced(dbCtx, 50);
-    setWorkouts(rows);
+    await reload();
     setExpanded(null);
   }
 
@@ -107,44 +114,118 @@ export default function History() {
     }
   }
 
-  // ── Calendar ──
+  const todayKey = new Date().toISOString().slice(0, 10);
+  const stats = computeLogStats(allDays, goal, todayKey);
+  const daySet = new Set(allDays);
+  const shown = selectedDay ? workouts.filter((w: any) => (w.date || '').slice(0, 10) === selectedDay) : workouts;
+
+  function pickDay(day: string) {
+    if (!daySet.has(day)) return;
+    if (selectedDay === day) { setSelectedDay(null); return; }
+    // Make sure that day's workouts are loaded (list is newest first)
+    const lastIdx = allDays.lastIndexOf(day);
+    if (lastIdx >= limit) setLimit(lastIdx + 1);
+    setSelectedDay(day);
+  }
+
+  function renderDay(day: string, key: string, dim = false) {
+    const d = Number(day.slice(8, 10));
+    const has = daySet.has(day);
+    const isToday = day === todayKey;
+    const isSel = day === selectedDay;
+    return (
+      <Pressable key={key} onPress={() => pickDay(day)} style={styles.calCell} disabled={!has}>
+        <View style={[
+          styles.dayCircle,
+          has && { backgroundColor: c.accentLight },
+          isSel && { backgroundColor: c.accent },
+          isToday && !isSel && { borderWidth: 1.5, borderColor: c.accent },
+        ]}>
+          <Text style={[styles.calDay, { color: isSel ? c.textOnAccent : has ? c.accent : dim ? c.textMuted : c.text }, has && { fontWeight: fontWeight.bold }]}>{d}</Text>
+        </View>
+      </Pressable>
+    );
+  }
+
+  // ── Calendar: week strip, expands to month ──
   function renderCalendar() {
     const [y, m] = calMonth.split('-').map(Number);
     const firstDay = new Date(y, m - 1, 1).getDay();
     const daysInMonth = new Date(y, m, 0).getDate();
-    const monthName = new Date(y, m - 1).toLocaleDateString(undefined, { month: 'long', year: 'numeric' });
+    const monthName = new Date(y, m - 1).toLocaleDateString(undefined, { month: calOpen ? 'long' : 'short', year: calOpen ? 'numeric' : undefined });
     const cells: React.ReactNode[] = [];
-    for (let i = 0; i < firstDay; i++) cells.push(<View key={`e${i}`} style={styles.calCell} />);
-    for (let d = 1; d <= daysInMonth; d++) {
-      const dateStr = `${calMonth}-${String(d).padStart(2, '0')}`;
-      const hasWorkout = calDays.has(dateStr);
-      const isToday = dateStr === new Date().toISOString().slice(0, 10);
-      cells.push(
-        <View key={d} style={[styles.calCell, isToday && { backgroundColor: c.accentLight, borderRadius: 6 }]}>
-          <Text style={[styles.calDay, { color: isToday ? c.accent : c.text }]}>{d}</Text>
-          {hasWorkout && <View style={[styles.calDot, { backgroundColor: c.accent }]} />}
-        </View>,
-      );
+    if (calOpen) {
+      for (let i = 0; i < firstDay; i++) cells.push(<View key={`e${i}`} style={styles.calCell} />);
+      for (let d = 1; d <= daysInMonth; d++) cells.push(renderDay(`${calMonth}-${String(d).padStart(2, '0')}`, `d${d}`));
+    } else {
+      weekDaysSunFirst(todayKey).forEach((day, i) => cells.push(renderDay(day, `w${i}`)));
     }
     return (
       <View style={[styles.calContainer, { backgroundColor: c.card, borderColor: c.cardBorder }]}>
         <View style={styles.calHeader}>
-          <Pressable onPress={() => changeMonth(-1)} hitSlop={8}>
-            <Ionicons name="chevron-back" size={20} color={c.textSecondary} />
-          </Pressable>
-          <Text style={[styles.calMonth, { color: c.text }]}>{monthName}</Text>
-          <Pressable onPress={() => changeMonth(1)} hitSlop={8}>
-            <Ionicons name="chevron-forward" size={20} color={c.textSecondary} />
-          </Pressable>
+          <Text style={[styles.sectionTitle, { color: c.text }]}>Calendar</Text>
+          <View style={styles.calHeaderRight}>
+            {calOpen && (
+              <Pressable onPress={() => changeMonth(-1)} hitSlop={8}>
+                <Ionicons name="chevron-back" size={18} color={c.textSecondary} />
+              </Pressable>
+            )}
+            <Pressable onPress={() => { setCalOpen((o) => !o); if (calOpen) setCalMonth(todayKey.slice(0, 7)); }} hitSlop={8} style={styles.calToggle}>
+              <Text style={[styles.calMonth, { color: c.accent }]}>{monthName}</Text>
+              <Ionicons name={calOpen ? 'chevron-up' : 'chevron-down'} size={16} color={c.accent} />
+            </Pressable>
+            {calOpen && (
+              <Pressable onPress={() => changeMonth(1)} hitSlop={8}>
+                <Ionicons name="chevron-forward" size={18} color={c.textSecondary} />
+              </Pressable>
+            )}
+          </View>
         </View>
         <View style={styles.calWeekRow}>
-          {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map((d, i) => (
+          {['SU', 'MO', 'TU', 'WE', 'TH', 'FR', 'SA'].map((d, i) => (
             <Text key={i} style={[styles.calWeekDay, { color: c.textMuted }]}>{d}</Text>
           ))}
         </View>
         <View style={styles.calGrid}>{cells}</View>
       </View>
     );
+  }
+
+  function renderStats() {
+    const goalHit = stats.daysThisWeek >= goal;
+    return (
+      <View style={[styles.statsCard, { backgroundColor: c.card, borderColor: c.cardBorder }]}>
+        <View style={styles.statCell}>
+          <Text style={[styles.statLabel, { color: c.textMuted }]}>WORKOUTS</Text>
+          <Text style={[styles.statValue, { color: c.text }]}>{stats.total.toLocaleString('en-US')}</Text>
+        </View>
+        <View style={[styles.statDivider, { backgroundColor: c.cardBorder }]} />
+        <Pressable style={styles.statCell} onPress={cycleGoal} hitSlop={4}>
+          <Text style={[styles.statLabel, { color: c.textMuted }]}>THIS WEEK</Text>
+          <Text style={[styles.statValue, { color: goalHit ? c.green : c.text }]}>
+            {stats.daysThisWeek}/{goal}
+            <Text style={[styles.statUnit, { color: c.textSecondary }]}> days</Text>
+          </Text>
+          <Text style={[styles.statHint, { color: c.textMuted }]}>tap to set goal</Text>
+        </Pressable>
+        <View style={[styles.statDivider, { backgroundColor: c.cardBorder }]} />
+        <View style={styles.statCell}>
+          <Text style={[styles.statLabel, { color: c.textMuted }]}>STREAK</Text>
+          <Text style={[styles.statValue, { color: stats.streakWeeks > 0 ? c.accent : c.text }]}>
+            {stats.streakWeeks}
+            <Text style={[styles.statUnit, { color: c.textSecondary }]}> {stats.streakWeeks === 1 ? 'week' : 'weeks'}</Text>
+          </Text>
+        </View>
+      </View>
+    );
+  }
+
+  function dayHeading(iso: string) {
+    const rel = formatDate(iso);
+    if (rel === 'Today' || rel === 'Yesterday') return rel.toUpperCase();
+    try {
+      return new Date(iso).toLocaleDateString(undefined, { weekday: 'short', month: 'long', day: 'numeric' }).toUpperCase();
+    } catch { return iso; }
   }
 
   return (
@@ -157,62 +238,69 @@ export default function History() {
         </View>
       )}
 
+      {renderStats()}
       {renderCalendar()}
 
-      {workouts.length === 0 ? (
-        <Text style={[styles.empty, { color: c.textMuted }]}>No workouts yet. Start one from the Workout tab!</Text>
+      <View style={styles.pastHeader}>
+        <Text style={[styles.sectionTitle, { color: c.text }]}>{selectedDay ? dayHeading(selectedDay) : 'Past Workouts'}</Text>
+        {selectedDay && (
+          <Pressable onPress={() => setSelectedDay(null)} hitSlop={8}>
+            <Text style={[styles.calMonth, { color: c.accent }]}>Show all</Text>
+          </Pressable>
+        )}
+      </View>
+
+      {shown.length === 0 ? (
+        <Text style={[styles.empty, { color: c.textMuted }]}>{selectedDay ? 'Loading...' : 'No workouts yet. Start one from the Workout tab!'}</Text>
       ) : (
-        workouts.map((w: any) => {
+        shown.map((w: any, idx: number) => {
           const names = (w.exercise_names || '').split(',').filter(Boolean);
           const isExpanded = expanded === w.id;
           const sets = detail[w.id] ?? [];
+          const isLast = idx === shown.length - 1;
           return (
-            <Pressable key={w.id} onPress={() => toggleExpand(w.id)}>
+            <View key={w.id} style={styles.timelineItem}>
+              <View style={styles.timelineRail}>
+                <View style={[styles.timelineDot, { backgroundColor: idx === 0 ? c.accent : c.textMuted }]} />
+                {!isLast && <View style={[styles.timelineLine, { backgroundColor: c.cardBorder }]} />}
+              </View>
+              <View style={styles.timelineBody}>
+                <View style={styles.dateRow}>
+                  <Text style={[styles.dateHeading, { color: c.textSecondary }]}>{dayHeading(w.date)}</Text>
+                  <Text style={[styles.dateHeading, { color: c.textMuted }]}>{formatDuration(w.duration_seconds)}</Text>
+                </View>
+            <Pressable onPress={() => toggleExpand(w.id)}>
               <Card style={isExpanded ? { borderColor: c.accent } : undefined}>
-                {/* Header row */}
+                {/* Title + chevron */}
                 <View style={styles.cardHeader}>
-                  <View>
-                    <Text style={[styles.date, { color: c.text }]}>{formatDate(w.date)}</Text>
-                    {w.duration_seconds > 0 && (
-                      <Text style={[styles.duration, { color: c.textMuted }]}>
-                        {Math.round(w.duration_seconds / 60)} min
-                      </Text>
-                    )}
+                  <Text style={[styles.cardTitle, { color: c.text }]} numberOfLines={2}>{workoutTitle(w.set_muscle_groups)}</Text>
+                  <Ionicons name={isExpanded ? 'chevron-up' : 'chevron-down'} size={18} color={c.textMuted} />
+                </View>
+
+                {/* Stats row */}
+                <View style={[styles.cardStats, { borderColor: c.cardBorder }]}>
+                  <View style={styles.cardStat}>
+                    <Text style={[styles.cardStatLabel, { color: c.textMuted }]}>EXERCISES</Text>
+                    <Text style={[styles.cardStatValue, { color: c.text }]}>{w.exercise_count || names.length}</Text>
                   </View>
-                  <View style={styles.badgesRow}>
-                    {w.split && (
-                      <Text style={[styles.splitBadge, { backgroundColor: c.accent, color: c.textOnAccent }]}>
-                        {w.split.toUpperCase()}
-                      </Text>
-                    )}
-                    <Text style={[styles.setsBadge, { backgroundColor: c.setBadgeBg, color: c.textSecondary }]}>
-                      {w.working_sets || 0} sets
-                    </Text>
+                  <View style={[styles.statDivider, { backgroundColor: c.cardBorder }]} />
+                  <View style={styles.cardStat}>
+                    <Text style={[styles.cardStatLabel, { color: c.textMuted }]}>VOLUME</Text>
+                    <Text style={[styles.cardStatValue, { color: c.text }]}>{w.total_volume > 0 ? `${formatVolume(w.total_volume)} ${unit}` : '-'}</Text>
+                  </View>
+                  <View style={[styles.statDivider, { backgroundColor: c.cardBorder }]} />
+                  <View style={styles.cardStat}>
+                    <Text style={[styles.cardStatLabel, { color: c.textMuted }]}>SETS</Text>
+                    <Text style={[styles.cardStatValue, { color: c.text }]}>{w.working_sets || 0}</Text>
                   </View>
                 </View>
 
-                {/* Volume */}
-                {w.total_volume > 0 && (
-                  <Text style={[styles.volume, { color: c.textSecondary }]}>
-                    {Math.round(w.total_volume).toLocaleString()} {unit} volume
+                {/* Exercise summary */}
+                {!isExpanded && (
+                  <Text style={[styles.exercises, { color: c.textSecondary }]} numberOfLines={2}>
+                    {summarizeNames(names)}
                   </Text>
                 )}
-
-                {/* Exercise names */}
-                <Text style={[styles.exercises, { color: c.textSecondary }]} numberOfLines={isExpanded ? undefined : 2}>
-                  {names.length > 0 ? names.join(' \u00B7 ') : 'No exercises'}
-                </Text>
-
-                {/* Muscle groups */}
-                {(() => {
-                  const allMg = (w.all_muscle_groups || '').split(',').map((s: string) => s.trim()).filter(Boolean);
-                  const unique = [...new Set(allMg)].slice(0, 6);
-                  return unique.length > 0 ? (
-                    <Text style={[styles.musclesText, { color: c.textMuted }]}>
-                      {unique.join(' \u00B7 ').replace(/_/g, ' ')}
-                    </Text>
-                  ) : null;
-                })()}
 
                 {/* Notes */}
                 {w.notes && (
@@ -271,18 +359,17 @@ export default function History() {
                   </View>
                 )}
 
-                {/* Expand hint */}
-                <View style={styles.expandHintRow}>
-                  <Ionicons
-                    name={isExpanded ? 'chevron-up' : 'chevron-down'}
-                    size={14}
-                    color={c.textMuted}
-                  />
-                </View>
               </Card>
             </Pressable>
+              </View>
+            </View>
           );
         })
+      )}
+      {!selectedDay && workouts.length >= limit && (
+        <Pressable onPress={() => setLimit((l) => l + 30)} style={[styles.moreBtn, { borderColor: c.cardBorder }]}>
+          <Text style={[styles.calMonth, { color: c.accent }]}>Show more</Text>
+        </Pressable>
       )}
       <View style={{ height: 40 }} />
     </ScrollView>
@@ -328,7 +415,8 @@ const styles = StyleSheet.create({
   cardHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'flex-start',
+    alignItems: 'center',
+    gap: 8,
   },
   date: {
     fontSize: fontSize.body,
@@ -442,7 +530,136 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginTop: 2,
   },
+  // Stats header
+  statsCard: {
+    flexDirection: 'row',
+    borderWidth: 1,
+    borderRadius: 16,
+    paddingVertical: 16,
+    marginBottom: 12,
+  },
+  statCell: {
+    flex: 1,
+    alignItems: 'center',
+    gap: 4,
+  },
+  statLabel: {
+    fontSize: fontSize.tiny,
+    fontWeight: fontWeight.semibold,
+    letterSpacing: 0.8,
+  },
+  statValue: {
+    fontSize: 26,
+    fontWeight: fontWeight.bold,
+    fontVariant: ['tabular-nums'],
+  },
+  statUnit: {
+    fontSize: fontSize.caption,
+    fontWeight: fontWeight.medium,
+  },
+  statHint: {
+    fontSize: 10,
+  },
+  statDivider: {
+    width: 1,
+    alignSelf: 'stretch',
+  },
+  sectionTitle: {
+    fontSize: 22,
+    fontWeight: fontWeight.bold,
+  },
+  pastHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  // Timeline
+  timelineItem: {
+    flexDirection: 'row',
+  },
+  timelineRail: {
+    width: 18,
+    alignItems: 'center',
+  },
+  timelineDot: {
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+    marginTop: 4,
+  },
+  timelineLine: {
+    width: 2,
+    flex: 1,
+    marginTop: 4,
+  },
+  timelineBody: {
+    flex: 1,
+    paddingLeft: 8,
+    paddingBottom: 16,
+    gap: 8,
+  },
+  dateRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+  },
+  dateHeading: {
+    fontSize: fontSize.small,
+    fontWeight: fontWeight.semibold,
+    letterSpacing: 0.5,
+  },
+  cardTitle: {
+    flex: 1,
+    fontSize: 20,
+    fontWeight: fontWeight.bold,
+  },
+  cardStats: {
+    flexDirection: 'row',
+    borderTopWidth: 1,
+    borderBottomWidth: 1,
+    paddingVertical: 10,
+    marginVertical: 4,
+  },
+  cardStat: {
+    flex: 1,
+    alignItems: 'center',
+    gap: 2,
+  },
+  cardStatLabel: {
+    fontSize: 10,
+    fontWeight: fontWeight.semibold,
+    letterSpacing: 0.8,
+  },
+  cardStatValue: {
+    fontSize: fontSize.body,
+    fontWeight: fontWeight.semibold,
+    fontVariant: ['tabular-nums'],
+  },
+  moreBtn: {
+    borderWidth: 1,
+    borderRadius: 12,
+    paddingVertical: 12,
+    alignItems: 'center',
+    marginLeft: 26,
+  },
   // Calendar
+  calHeaderRight: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+  },
+  calToggle: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  dayCircle: {
+    width: 34,
+    height: 34,
+    borderRadius: 17,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   calContainer: {
     marginBottom: 16,
     borderWidth: 1,
@@ -476,8 +693,8 @@ const styles = StyleSheet.create({
   calCell: {
     width: '14.28%' as any,
     alignItems: 'center',
-    paddingVertical: 4,
-    minHeight: 32,
+    paddingVertical: 3,
+    minHeight: 40,
   },
   calDay: {
     fontSize: fontSize.caption,

@@ -815,7 +815,8 @@ export async function listWorkoutSummariesEnhanced(ctx: Ctx, limit: number = 50)
        SUM(CASE WHEN s.is_warmup=0 AND s.is_completed=1 THEN 1 ELSE 0 END) AS working_sets,
        SUM(CASE WHEN s.is_warmup=0 AND s.is_completed=1 THEN COALESCE(s.weight,0) * COALESCE(s.reps,0) ELSE 0 END) AS total_volume,
        GROUP_CONCAT(DISTINCT ex.name) AS exercise_names,
-       GROUP_CONCAT(DISTINCT ex.muscle_groups) AS all_muscle_groups
+       GROUP_CONCAT(DISTINCT ex.muscle_groups) AS all_muscle_groups,
+       GROUP_CONCAT(CASE WHEN s.is_warmup=0 THEN ex.muscle_groups END, '|') AS set_muscle_groups
      FROM workouts w
      LEFT JOIN sets s ON s.workout_id = w.id AND s.user_id = w.user_id
      LEFT JOIN exercises ex ON ex.id = s.exercise_id
@@ -1082,6 +1083,15 @@ export async function deleteBodyWeight(ctx: Ctx, id: string) {
 }
 
 // Calendar: get workout dates for a given month (YYYY-MM)
+/** Every workout's day ('YYYY-MM-DD'), newest first. One entry per workout. */
+export async function listWorkoutDays(ctx: Ctx): Promise<string[]> {
+  const rows = await ctx.db.getAllAsync<{ day: string }>(
+    `SELECT substr(date, 1, 10) AS day FROM workouts WHERE user_id=? ORDER BY date DESC`,
+    [ctx.userId]
+  );
+  return rows.map((r) => r.day);
+}
+
 export async function getWorkoutDatesForMonth(ctx: Ctx, yearMonth: string) {
   const start = `${yearMonth}-01`;
   // Get last day of month
