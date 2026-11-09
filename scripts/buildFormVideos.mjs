@@ -13,6 +13,10 @@ import { fileURLToPath } from 'node:url';
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const OUT = path.join(root, 'src/data/formVideos.json');
 const instructions = JSON.parse(fs.readFileSync(path.join(root, 'src/data/exerciseInstructions.json'), 'utf8'));
+// Whole seed library (the strings inside RAW in seedExercises.ts), plus anything with instructions
+const seedSrc = fs.readFileSync(path.join(root, 'src/data/seedExercises.ts'), 'utf8');
+const seedNames = [...seedSrc.slice(seedSrc.indexOf('const RAW')).matchAll(/^\s+'([^']+)',?$/gm)].map((m) => m[1].toLowerCase().trim().replace(/\s+/g, ' '));
+const ALL_NAMES = [...new Set([...Object.keys(instructions), ...seedNames])];
 
 const TRUSTED = [
   'jeff nippard', 'renaissance periodization', 'scott herman fitness', 'scottHermanfitness', 'athlean-x',
@@ -36,7 +40,49 @@ const EXCLUDE = new Set([
   'machine bench press', 'incline hammer curl', 'smith machine pistol squat', 'calf press', 'v-bar pull up',
   'plate pinch', 'chin up', 'leg pull-in', 'windmill', 'lateral box jump',
   'single leg butt kick', 'smith machine decline press', 'smith machine hang power clean', 'weighted ball hyperextension',
+  // Library pass, hand-reviewed 2026-11-08
+  'airplane',
+  'pancake',
+  'incline ez-bar curl',
+  'barbell pause curl',
+  'single leg curl',
+  'partner leg up stretch',
+  'vertical knee raise',
+  'medicine ball leg crunch',
+  'cable underhand tricep pushdown',
+  'elevated plank',
+  'leg raises with stability ball',
+  'dumbbell halo to oblique crunch',
+  'partner sit up hi-five',
+  'partner lying leg throw down',
+  'partner russian twist',
+  'single arm overhead kettlebell squat',
+  'pvc helicopter',
+  'machine row',
+  'dumbbell squat to shoulder press',
+  'medicine ball squat',
+  'cluster',
+  'wall ball',
+  'butt scoot',
+  'box drops',
+  'medicine ball overhead lunge',
+  'wall triple knee drive',
+  'foam roll hip thrust',
+  'single leg foam roll hip thrust',
+  'forward lunge with twist',
+  'dumbbell punches',
+  'partner handstand',
+  'loop band shoulder internal rotation',
+  'trx t deltoid fly',
+  'seated point and flex',
+  'ac-skips',
+  'ab-skips',
+  'pvc windmill',
+  'australian crawl',
+  'bridge side to side',
 ]);
+// Re-upload / spam channels
+const BLOCKED_CHANNELS = ['how to lose weight with the keto diet', 'statsky dev'];
 
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
@@ -90,6 +136,7 @@ function pick(name, results) {
     .map((r, rank) => {
       const t = r.title.toLowerCase();
       const hit = need.filter((w) => t.includes(w.replace(/s$/, ''))).length / Math.max(need.length, 1);
+      if (BLOCKED_CHANNELS.includes(r.channel.toLowerCase())) return { ...r, hit: 0, trusted: false, s: -99 };
       const trusted = TRUSTED.some((ch) => r.channel.toLowerCase().includes(ch));
       let s = hit * 10 - rank * 0.3;
       // Penalize a different variation (seated vs standing, dumbbell vs barbell...)
@@ -99,7 +146,7 @@ function pick(name, results) {
       if (r.seconds <= 6 * 60) s += 1;
       return { ...r, hit, trusted, s };
     })
-    .filter((r) => r.hit >= 0.5)
+    .filter((r) => r.hit >= (r.trusted ? 0.67 : 0.85))
     .sort((a, b) => b.s - a.s);
   return scored[0] ?? null;
 }
@@ -108,7 +155,7 @@ const only = process.argv[2];
 const save = (obj) => fs.writeFileSync(OUT, JSON.stringify(Object.fromEntries(Object.keys(obj).sort().map((k) => [k, obj[k]])), null, 2) + '\n');
 const existing = fs.existsSync(OUT) ? JSON.parse(fs.readFileSync(OUT, 'utf8')) : {};
 const force = process.argv.includes('--force');
-const names = only && only !== '--force' ? [only.toLowerCase()] : Object.keys(instructions).filter((k) => force || OVERRIDES[k] || EXCLUDE.has(k) || !existing[k]);
+const names = only && only !== '--force' ? [only.toLowerCase()] : ALL_NAMES.filter((k) => force || OVERRIDES[k] || EXCLUDE.has(k) || !existing[k]);
 const result = { ...existing };
 let found = 0;
 for (const key of names) {
@@ -124,7 +171,7 @@ for (const key of names) {
     if (best) {
       result[key] = { id: best.id, title: best.title, channel: best.channel, trusted: best.trusted };
       found++;
-      console.log(`${best.trusted ? 'OK ' : '?? '} ${key} -> ${best.channel}: ${best.title}`);
+      console.log(`${best.trusted ? 'OK ' : '?? '} ${best.hit.toFixed(2)} ${key} -> ${best.channel}: ${best.title}`);
     } else {
       delete result[key];
       console.log(`--  ${key}: no match (search fallback)`);

@@ -1,3 +1,8 @@
+# 2026-11-08 — Form videos for the whole library
+
+- Build 16 only had videos for the 237 exercises with written instructions. `buildFormVideos.mjs` now reads every name in seedExercises.ts RAW (1,060) plus instruction keys. Match threshold raised (trusted channel needs 67% of name words in title, others 85%), match score logged.
+- 830 exercises now have a video. All new picks reviewed by title; 39 excluded in EXCLUDE (off-topic results like "airplane" -> paper planes, "pancake" -> recipe, "cluster" -> eyelashes, "australian crawl" -> band), BLOCKED_CHANNELS for re-upload channels.
+
 # 2026-11-08 — Specific form videos
 
 - "Watch form videos" used a YouTube search URL, which shows ads and random results. `scripts/buildFormVideos.mjs` searches each exercise, scores results (title must name the movement, trusted coaching channel +6, variation mismatch like seated vs standing -4, tutorial words, under 15 min) and writes `src/data/formVideos.json` (id, title, channel). Incremental + retries (YouTube throttles bursts).
