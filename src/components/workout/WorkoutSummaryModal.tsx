@@ -1,5 +1,5 @@
-import React from 'react';
-import { View, Text, Modal, ScrollView, StyleSheet } from 'react-native';
+import React, { useState } from 'react';
+import { View, Text, TextInput, Modal, ScrollView, StyleSheet } from 'react-native';
 import { useTheme } from '@/theme/ThemeContext';
 import { fontSize, fontWeight } from '@/theme/typography';
 import { PinkButton } from '../PinkButton';
@@ -12,6 +12,8 @@ type WorkoutSummaryModalProps = {
   unit: 'lb' | 'kg';
   onShare: () => void;
   onDone: () => void;
+  /** Saves the body weight and recomputes calories; shown only when calories are unknown. */
+  onSetBodyWeight?: (weight: number) => void;
 };
 
 function formatDuration(sec: number): string {
@@ -20,9 +22,12 @@ function formatDuration(sec: number): string {
   return h > 0 ? `${h}h ${m}m` : `${m}m`;
 }
 
-export function WorkoutSummaryModal({ summary, unit, onShare, onDone }: WorkoutSummaryModalProps) {
+export function WorkoutSummaryModal({ summary, unit, onShare, onDone, onSetBodyWeight }: WorkoutSummaryModalProps) {
   const { c } = useTheme();
+  const [bw, setBw] = useState('');
   if (!summary) return null;
+  const bwValue = parseFloat(bw.replace(',', '.'));
+  const bwValid = !isNaN(bwValue) && bwValue > 0;
 
   const date = new Date(summary.date).toLocaleDateString(undefined, { weekday: 'long', month: 'short', day: 'numeric' });
   const stats: { value: string; label: string }[] = [
@@ -40,7 +45,7 @@ export function WorkoutSummaryModal({ summary, unit, onShare, onDone }: WorkoutS
   return (
     <Modal visible animationType="slide" presentationStyle="pageSheet" onRequestClose={onDone}>
       <View style={[styles.container, { backgroundColor: c.bg }]}>
-        <ScrollView contentContainerStyle={styles.scroll}>
+        <ScrollView contentContainerStyle={styles.scroll} keyboardShouldPersistTaps="handled">
           <Text style={[styles.title, { color: c.text }]}>Workout Complete</Text>
           <Text style={[styles.subtitle, { color: c.textSecondary }]}>
             {splitLabel(summary.split)} · {date}
@@ -55,9 +60,30 @@ export function WorkoutSummaryModal({ summary, unit, onShare, onDone }: WorkoutS
             ))}
           </View>
           {summary.calories == null && (
-            <Text style={[styles.hint, { color: c.textMuted }]}>
-              Log your body weight when finishing to estimate calories.
-            </Text>
+            onSetBodyWeight ? (
+              <View style={styles.bwBlock}>
+                <Text style={[styles.hint, { color: c.textMuted }]}>
+                  Enter your body weight once to estimate calories. It is remembered for next time.
+                </Text>
+                <View style={styles.bwRow}>
+                  <TextInput
+                    placeholder={`Body weight (${unit})`}
+                    value={bw}
+                    onChangeText={setBw}
+                    keyboardType="decimal-pad"
+                    returnKeyType="done"
+                    onSubmitEditing={() => { if (bwValid) onSetBodyWeight(bwValue); }}
+                    style={[styles.bwInput, { backgroundColor: c.inputBg, borderColor: c.inputBorder, color: c.text }]}
+                    placeholderTextColor={c.textMuted}
+                  />
+                  <ActionChip icon="flame-outline" label="Estimate" onPress={() => { if (bwValid) onSetBodyWeight(bwValue); }} />
+                </View>
+              </View>
+            ) : (
+              <Text style={[styles.hint, { color: c.textMuted }]}>
+                Log your body weight in Settings to estimate calories.
+              </Text>
+            )
           )}
 
           {summary.muscles.length > 0 && (
@@ -113,6 +139,9 @@ const styles = StyleSheet.create({
   statValue: { fontSize: fontSize.h2, fontWeight: fontWeight.bold },
   statLabel: { fontSize: fontSize.tiny, textTransform: 'uppercase' },
   hint: { fontSize: fontSize.small },
+  bwBlock: { gap: 8 },
+  bwRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  bwInput: { flex: 1, borderWidth: 1, borderRadius: 10, paddingHorizontal: 12, paddingVertical: 10, fontSize: fontSize.body },
   section: { marginTop: 12, gap: 8 },
   sectionTitle: { fontSize: fontSize.h3, fontWeight: fontWeight.bold },
   muscleRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },

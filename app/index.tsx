@@ -101,6 +101,7 @@ export default function Today() {
   const [showFinishModal, setShowFinishModal] = useState(false);
   const [summary, setSummary] = useState<WorkoutSummary | null>(null);
   const pendingSummary = useRef<WorkoutSummary | null>(null);
+  const summaryArgs = useRef<Parameters<typeof summarizeWorkout>[0] | null>(null);
   const previewSeq = useRef(0);
   const summaryWorkoutId = useRef<string | null>(null);
   const [weeklyVolume, setWeeklyVolume] = useState<Record<string, number>>({});
@@ -776,10 +777,11 @@ export default function Today() {
     const muscleGroupsByExercise: Record<string, string> = {};
     for (const exs of Object.values(blockExercises)) for (const e of exs) muscleGroupsByExercise[e.exercise_id] = e.muscle_groups ?? '';
     summaryWorkoutId.current = workoutId;
-    const done = summarizeWorkout({
+    summaryArgs.current = {
       split, date: new Date().toISOString(), durationSec: elapsed, sets,
       muscleGroupsByExercise, bodyWeight, unit,
-    });
+    };
+    const done = summarizeWorkout(summaryArgs.current);
     // iOS can't present the summary while the finish sheet is still up:
     // close the sheet, then show the summary once it has dismissed
     pendingSummary.current = done;
@@ -806,6 +808,14 @@ export default function Today() {
     if (!pendingSummary.current) return;
     setSummary(pendingSummary.current);
     pendingSummary.current = null;
+  }
+
+  /** Body weight entered on the summary: save it and fill in the calories. */
+  async function handleSummaryBodyWeight(weight: number) {
+    if (!summaryArgs.current) return;
+    summaryArgs.current = { ...summaryArgs.current, bodyWeight: weight };
+    setSummary(summarizeWorkout(summaryArgs.current));
+    if (dbCtx) await logBodyWeight(dbCtx, { id: Crypto.randomUUID(), date: new Date().toISOString(), weight });
   }
 
   async function handleShareWorkout() {
@@ -960,7 +970,8 @@ export default function Today() {
         summary={summary}
         unit={unit}
         onShare={handleShareWorkout}
-        onDone={() => { setSummary(null); summaryWorkoutId.current = null; }}
+        onSetBodyWeight={handleSummaryBodyWeight}
+        onDone={() => { setSummary(null); summaryWorkoutId.current = null; summaryArgs.current = null; }}
       />
 
       {/* Plate calculator */}

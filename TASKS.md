@@ -224,7 +224,10 @@ Goal: replace the paid Fitbod subscription. Bisrat has an active Apple Developer
 - [x] Build 16 queued 2026-11-08 (EAS 07b85005, auto-submit)
 - [x] [2026-11-08] Build 16 feedback: Cable One Arm Tricep Side Extension still opened a search (only the 237 exercises with instructions had videos). Script now covers the whole 1,060 seed library. 915 exercises have one specific video; every library pick hand-reviewed by title, 57 wrong picks excluded (paper airplane, pancake recipe, eyelash, FedEx, guitar...), re-upload channels blocked. Rest fall back to search. YouTube may still show its own pre-roll ads (no way around that without Premium)
 - [x] Build 17 queued 2026-11-09 (EAS fc815b73, auto-submit)
-- [ ] IN PROGRESS: Bisrat checks Log tab + videos at the gym on build 17. Add build 17 to Friends group
+- [x] [2026-11-11] Bisrat used build 17 at the gym: summary shows, calories blank
+- [x] [2026-11-11] Calories showed "--" because no body weight was ever logged (the only places to log it were Settings and an optional field on the finish sheet). Summary now has a body weight field next to an Estimate button when calories are unknown: saves the weight, fills calories in place, reused for every later workout. 373 tests
+- [ ] IN PROGRESS: Build 18 with the calories fix (waiting on Bisrat's yes). Add latest build to Friends group
+- [ ] Open question: 2026-11-11 summary was titled "Pull" but the lifts were triceps and delts (push). Ask Bisrat if he swapped exercises or the plan proposed them
 - [ ] Later: rest-done local notification while the app is in background (needs expo-notifications, new dependency, Bisrat approval)
 - [x] [2026-11-08] Muscle-recovery tracking (Fitbod-style freshness per muscle)
 - [ ] Pre-existing: 26 TypeScript errors (expo-file-system documentDirectory API change, Timer types)

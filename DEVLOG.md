@@ -573,3 +573,8 @@ Next Steps
 - Remove Exercise added to the detail action menu (Alert confirm when logged sets exist).
 - dropUnloggedSets on finish keeps history clean when Bisrat runs out of time.
 - Push preview listed Cable Hip Extension (glutes): concurrent refreshPreview calls after finish (old split + replanned split) could resolve out of order. Sequence ref fixes it.
+
+## 2026-11-11 — Calories on the summary
+- Gym feedback on build 17: Workout Complete showed "--" for calories. Not a calculation bug: estimateCalories needs a body weight and none was in body_weight.
+- WorkoutSummaryModal: when calories are null it shows a body weight input + Estimate. app/index.tsx keeps the summarizeWorkout args in a ref (summaryArgs) so the summary is recomputed in place, then logBodyWeight saves it. getLatestBodyWeight picks it up on every later finish.
+- Not fixed, needs Bisrat's answer: summary title said Pull for a triceps/delts session.

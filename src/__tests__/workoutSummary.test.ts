@@ -61,3 +61,21 @@ describe('splitLabel', () => {
     expect(splitLabel(null)).toBe('Workout');
   });
 });
+
+describe('calories when body weight arrives after the workout', () => {
+  const args = {
+    split: 'push', date: '2026-11-11T15:00:00Z', durationSec: 5400,
+    sets: [
+      { exercise_id: 'ohp', exercise_name: 'Barbell Shoulder Press', weight: 65, reps: 8, is_warmup: 0, is_completed: 1 },
+      { exercise_id: 'stair', exercise_name: 'Stair Climber', weight: null, reps: null, is_warmup: 0, is_completed: 1, duration_sec: 600 },
+    ],
+    muscleGroupsByExercise: { ohp: 'delts,triceps', stair: 'cardio' },
+    unit: 'lb' as const,
+  };
+  test('unknown without a body weight, filled in once one is given', () => {
+    expect(summarizeWorkout({ ...args, bodyWeight: null }).calories).toBeNull();
+    const withBw = summarizeWorkout({ ...args, bodyWeight: 180 });
+    expect(withBw.calories).toBeGreaterThan(estimateCalories(5400 - 600, 180, 'lb')!);
+    expect(withBw.lines.find((l) => l.exerciseId === 'stair')?.cardio?.calories).toBeGreaterThan(0);
+  });
+});
