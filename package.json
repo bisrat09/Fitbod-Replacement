@@ -15,6 +15,7 @@
   },
   "dependencies": {
     "@expo/metro-runtime": "~6.1.2",
+    "@kingstinct/react-native-healthkit": "^16.2.0",
     "babel-preset-expo": "~54.0.10",
     "expo": "~54.0.37",
     "expo-constants": "~18.0.14",
@@ -29,6 +30,7 @@
     "react-dom": "19.1.0",
     "react-native": "0.81.5",
     "react-native-gesture-handler": "~2.28.0",
+    "react-native-nitro-modules": "^0.37.2",
     "react-native-reanimated": "~4.1.1",
     "react-native-safe-area-context": "~5.6.0",
     "react-native-screens": "~4.16.0",

@@ -40,6 +40,7 @@ import { WorkoutSummaryModal } from '@/components/workout/WorkoutSummaryModal';
 import { summarizeWorkout, type WorkoutSummary } from '@/lib/workoutSummary';
 import { computeRecovery, type RecoveryMap } from '@/lib/muscleRecovery';
 import { isCardio } from '@/lib/cardio';
+import { isHealthSyncOn, syncHealthWeight } from '@/lib/healthKit';
 import { RestTimer } from '@/components/RestTimer';
 import { defaultRestSeconds, clampRest, restSettingKey, startTimer, timeLeft as timerLeft, pauseTimer, resumeTimer, adjustTimer, finishTimer, type TimerState } from '@/lib/restTimer';
 
@@ -779,7 +780,12 @@ export default function Today() {
         bodyWeight = bw;
       }
     }
-    if (dbCtx && bodyWeight == null) bodyWeight = (await getLatestBodyWeight(dbCtx))?.weight ?? null;
+    if (dbCtx && bodyWeight == null) {
+      // Apple Health (Renpho and other scales) wins when it has a newer measurement
+      bodyWeight = (await isHealthSyncOn(dbCtx))
+        ? (await syncHealthWeight(dbCtx, unit)).weight
+        : (await getLatestBodyWeight(dbCtx))?.weight ?? null;
+    }
 
     // Snapshot the summary before the workout state is cleared
     const muscleGroupsByExercise: Record<string, string> = {};

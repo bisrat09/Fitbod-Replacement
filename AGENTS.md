@@ -26,6 +26,7 @@ Project Snapshot
   - `src/lib/db.ts`: open DB + migrate
   - `src/lib/dao.ts`: DAO for users, exercises, workouts, sets, metrics
   - `src/lib/progression.ts`: RIR progression + Epley 1RM
+  - `src/lib/healthWeight.ts` + `src/lib/healthKit.ts`: Apple Health body weight sync (pure logic + native adapter, opt-in via Settings)
   - `src/lib/bootstrap.ts`: bootstrap DB + persistent `userId`
   - `src/state/store.ts`: future global state (Zustand)
 

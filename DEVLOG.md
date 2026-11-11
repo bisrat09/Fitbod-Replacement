@@ -574,6 +574,15 @@ Next Steps
 - dropUnloggedSets on finish keeps history clean when Bisrat runs out of time.
 - Push preview listed Cable Hip Extension (glutes): concurrent refreshPreview calls after finish (old split + replanned split) could resolve out of order. Sequence ref fixes it.
 
+## 2026-11-11 — Apple Health body weight
+- Bisrat weighs in with Renpho. Renpho has no public API; it writes to Apple Health, so Fitlog reads `HKQuantityTypeIdentifierBodyMass` from HealthKit.
+- Deps (approved): `@kingstinct/react-native-healthkit` 16.2.0, `react-native-nitro-modules` 0.37.2. app.json plugin with `NSHealthUpdateUsageDescription: false`, `background: false` (read-only, no background delivery). `expo config --type introspect` shows the healthkit entitlement + share usage string; expo-doctor 18/18; iOS bundle exports.
+- `src/lib/healthWeight.ts` (pure, tested): `syncBodyWeightFromHealth` reads the newest sample in the user's unit, rounds to 0.1, saves it only when measured after the newest body_weight row (no duplicates, a newer manual entry wins), never throws, 4s timeout so Finish can't hang.
+- `src/lib/healthKit.ts`: lazy `require` of the native module behind `Platform.OS === 'ios'` + try/catch. Always calls `requestAuthorization` before the query (querying an unrequested type crashes; iOS shows the sheet only once).
+- Opt-in: Settings > Body Weight > Sync from Apple Health. Nothing touches Health until the switch is on. Finish uses it when on (typed weight on the finish sheet still wins).
+- iOS never tells an app that read access was denied, the query just comes back empty, so the switch shows a "No weight found" hint in that case.
+- Not device-tested before the build: no Xcode on this machine.
+
 ## 2026-11-11 — Calories on the summary
 - Gym feedback on build 17: Workout Complete showed "--" for calories. Not a calculation bug: estimateCalories needs a body weight and none was in body_weight.
 - WorkoutSummaryModal: when calories are null it shows a body weight input + Estimate. app/index.tsx keeps the summarizeWorkout args in a ref (summaryArgs) so the summary is recomputed in place, then logBodyWeight saves it. getLatestBodyWeight picks it up on every later finish.

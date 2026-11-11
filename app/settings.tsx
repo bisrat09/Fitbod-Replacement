@@ -4,7 +4,9 @@ import { Ionicons } from '@expo/vector-icons';
 import * as FileSystem from 'expo-file-system/legacy';
 import * as Crypto from 'expo-crypto';
 import { bootstrapDb } from '@/lib/bootstrap';
-import { ensureUser, getUserUnit, updateUserUnit, exportAllData, importData, importFitbodPlan, exerciseMuscleGroupsByName, logBodyWeight, getBodyWeightHistory, deleteBodyWeight, getLifetimeStats } from '@/lib/dao';
+import { ensureUser, getUserUnit, updateUserUnit, exportAllData, importData, importFitbodPlan, exerciseMuscleGroupsByName, logBodyWeight, getBodyWeightHistory, deleteBodyWeight, getLifetimeStats, setSetting } from '@/lib/dao';
+import { isHealthAvailable, isHealthSyncOn, syncHealthWeight } from '@/lib/healthKit';
+import { HEALTH_SYNC_SETTING } from '@/lib/healthWeight';
 import { useTheme } from '@/theme/ThemeContext';
 import { parseFitbodCsv, planFitbodImport, guessExercise } from '@/lib/fitbodImport';
 import { fontSize, fontWeight } from '@/theme/typography';
@@ -19,6 +21,9 @@ export default function Settings() {
   const [bwInput, setBwInput] = useState('');
   const [bwHistory, setBwHistory] = useState<any[]>([]);
   const [stats, setStats] = useState<any>(null);
+  const [healthAvailable] = useState(() => isHealthAvailable());
+  const [healthOn, setHealthOn] = useState(false);
+  const [healthMsg, setHealthMsg] = useState<string | null>(null);
 
   useEffect(() => {
     (async () => {
@@ -28,6 +33,10 @@ export default function Settings() {
       setUnit(await getUserUnit(ctx));
       setDbCtx(ctx);
       await refreshData(ctx);
+      if (await isHealthSyncOn(ctx)) {
+        setHealthOn(true);
+        if ((await syncHealthWeight(ctx, await getUserUnit(ctx))).imported) await refreshData(ctx);
+      }
     })();
   }, []);
 
@@ -53,6 +62,21 @@ export default function Settings() {
     await logBodyWeight(dbCtx, { id: Crypto.randomUUID(), date: new Date().toISOString(), weight: w });
     setBwInput('');
     await refreshData();
+  }
+
+  async function toggleHealthSync(on: boolean) {
+    if (!dbCtx) return;
+    setHealthOn(on);
+    await setSetting(dbCtx, HEALTH_SYNC_SETTING, on ? '1' : '0');
+    if (!on) { setHealthMsg(null); return; }
+    // First time on: iOS shows the Health permission sheet here
+    const r = await syncHealthWeight(dbCtx, unit);
+    if (r.imported) await refreshData();
+    setHealthMsg(
+      r.sample
+        ? `Latest from Apple Health: ${r.sample.weight} ${unit}`
+        : 'No weight found. Turn on Apple Health in your scale app, and allow Fitlog in Health > Sharing > Apps.'
+    );
   }
 
   async function handleDeleteBw(id: string) {
@@ -204,6 +228,22 @@ export default function Settings() {
               ))}
             </View>
           )}
+          {healthAvailable && (
+            <View style={[styles.healthRow, { borderTopColor: c.cardBorder }]}>
+              <View style={{ flex: 1 }}>
+                <Text style={[styles.settingLabel, { color: c.text }]}>Sync from Apple Health</Text>
+                <Text style={[styles.healthHint, { color: c.textSecondary }]}>
+                  {healthMsg ?? 'Reads your latest weight from Renpho or any scale that writes to Health'}
+                </Text>
+              </View>
+              <Switch
+                value={healthOn}
+                onValueChange={toggleHealthSync}
+                trackColor={{ false: c.cardBorder, true: c.accent }}
+                thumbColor={c.textOnAccent}
+              />
+            </View>
+          )}
         </Card>
       </View>
 
@@ -342,6 +382,8 @@ const styles = StyleSheet.create({
     fontWeight: fontWeight.semibold,
   },
   bwList: { marginTop: 8 },
+  healthRow: { flexDirection: 'row', alignItems: 'center', gap: 12, marginTop: 12, paddingTop: 12, borderTopWidth: StyleSheet.hairlineWidth },
+  healthHint: { fontSize: fontSize.caption, marginTop: 2 },
   bwRow: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingVertical: 10 },
   bwDate: { fontSize: fontSize.body, width: 64 },
   bwWeight: { fontSize: fontSize.body, fontWeight: fontWeight.semibold, flex: 1 },

@@ -67,12 +67,14 @@ src/lib/                # Core logic
   workoutGenerator.ts   # Smart split suggestion + exercise selection (pure logic)
   fitbodImport.ts       # Fitbod CSV parse + import plan (pure logic); dao.importFitbodPlan writes it
   targetMuscles.ts      # Muscle group percentage computation (pure logic)
+  healthWeight.ts       # Apple Health body weight sync rules (pure logic)
+  healthKit.ts          # Native HealthKit adapter (only file that imports the HealthKit library)
   migrations/           # Incremental schema migrations (v2-v8)
 ```
 
 ## Key Conventions
 - **Multi-user schema**: Every table has `user_id`. Always include it in queries.
-- **Offline-first**: No network calls. All data in SQLite.
+- **Offline-first**: No network calls. All data in SQLite. Only outside data source: Apple Health body weight (on-device, opt-in).
 - **Idempotent seeds**: Exercises are seeded via `INSERT OR IGNORE` / `findByName` check.
 - **Migrations**: Incremental via `app_meta.schema_version`. Add new migrations in `src/lib/migrations/`.
 - **DAO pattern**: All DB access goes through `src/lib/dao.ts`. No raw SQL in screens.
@@ -110,7 +112,7 @@ Hidden routes: Programs, Exercises, Equipment, Recent (Log)
 ```bash
 npm start              # Expo dev server
 npm start -- --clear   # Clear cache
-npm test               # 305 tests
+npm test               # 384 tests
 npm run build:gifmap   # Regenerate exercise GIF map from ExerciseDB API
 npx expo run:ios       # Build + run iOS
 npx expo-doctor        # Check dependencies
