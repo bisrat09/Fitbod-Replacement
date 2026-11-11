@@ -578,3 +578,4 @@ Next Steps
 - Gym feedback on build 17: Workout Complete showed "--" for calories. Not a calculation bug: estimateCalories needs a body weight and none was in body_weight.
 - WorkoutSummaryModal: when calories are null it shows a body weight input + Estimate. app/index.tsx keeps the summarizeWorkout args in a ref (summaryArgs) so the summary is recomputed in place, then logBodyWeight saves it. getLatestBodyWeight picks it up on every later finish.
 - Not fixed, needs Bisrat's answer: summary title said Pull for a triceps/delts session.
+- Pull label on a push day: selectExercises can't put triceps/delts lifts in a pull plan, so the plan was push and the label drifted. Bootstrap calls replan() (setSplit from recovery) even when active_workout_id exists. New effect in app/index.tsx: on workoutId, setSplit(getWorkoutSplit()).

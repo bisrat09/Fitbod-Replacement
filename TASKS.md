@@ -226,8 +226,9 @@ Goal: replace the paid Fitbod subscription. Bisrat has an active Apple Developer
 - [x] Build 17 queued 2026-11-09 (EAS fc815b73, auto-submit)
 - [x] [2026-11-11] Bisrat used build 17 at the gym: summary shows, calories blank
 - [x] [2026-11-11] Calories showed "--" because no body weight was ever logged (the only places to log it were Settings and an optional field on the finish sheet). Summary now has a body weight field next to an Estimate button when calories are unknown: saves the weight, fills calories in place, reused for every later workout. 373 tests
-- [ ] IN PROGRESS: Build 18 with the calories fix (waiting on Bisrat's yes). Add latest build to Friends group
-- [ ] Open question: 2026-11-11 summary was titled "Pull" but the lifts were triceps and delts (push). Ask Bisrat if he swapped exercises or the plan proposed them
+- [ ] IN PROGRESS: Build 18 with the calories fix and split label fix (waiting on Bisrat's yes). Add latest build to Friends group
+- [x] [2026-11-11] Push day labeled "Pull" (Bisrat changed nothing, only added the stair stepper). Cause: the split label lived only in screen state. When iOS reloaded the app mid-workout, startup re-planned from muscle recovery, and with push muscles now tired it picked Pull. The stored workout was still push. Fix: the active workout's stored split now sets the label (`getWorkoutSplit`), also covers Repeat and Quick Start
+- [ ] Waiting on Bisrat: approve Apple Health dependency to read body weight (Renpho syncs to Apple Health; Renpho has no public API)
 - [ ] Later: rest-done local notification while the app is in background (needs expo-notifications, new dependency, Bisrat approval)
 - [x] [2026-11-08] Muscle-recovery tracking (Fitbod-style freshness per muscle)
 - [ ] Pre-existing: 26 TypeScript errors (expo-file-system documentDirectory API change, Timer types)

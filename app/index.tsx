@@ -14,7 +14,7 @@ import {
   deleteSetting, getActiveProgram, getNextProgramDay,
   listProgramDayExercises, updateWorkoutNotes, getWorkoutStreak,
   getWorkoutsThisWeek, saveWorkoutAsTemplate,
-  logBodyWeight, getLatestBodyWeight, getBestSetsInWorkout, getMostRecentWorkoutId,
+  logBodyWeight, getLatestBodyWeight, getBestSetsInWorkout, getMostRecentWorkoutId, getWorkoutSplit,
   repeatWorkout, listWorkoutDetail, updateWorkoutDuration,
   getRecentWorkoutSplits,
   getRecentMuscleSets,
@@ -269,6 +269,14 @@ export default function Today() {
 
   // Refresh blocks/sets when workout changes
   useEffect(() => { if (dbCtx && workoutId) refreshBlocksAndSets(); }, [dbCtx, workoutId]);
+  // The active workout owns the split label. Without this, reopening the app mid-workout
+  // re-planned from recovery (push muscles now tired) and relabeled a push day as Pull.
+  useEffect(() => {
+    if (!dbCtx || !workoutId) return;
+    let cancelled = false;
+    getWorkoutSplit(dbCtx, workoutId).then((sp) => { if (!cancelled && sp) setSplit(sp); });
+    return () => { cancelled = true; };
+  }, [dbCtx, workoutId]);
   useEffect(() => { fetchLastTimePreviews(); }, [blockExercises]);
 
   // Generate preview exercises for pre-workout screen

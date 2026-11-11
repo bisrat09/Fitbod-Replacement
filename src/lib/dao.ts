@@ -845,6 +845,14 @@ export async function listExercisesWithMetrics(ctx: Ctx) {
 // ========== ITERATION 11 ==========
 
 // Repeat a past workout: copy structure (blocks + exercises) into a new workout with fresh sets
+/** The split a workout was started with ('push', 'pull', ...), or null. */
+export async function getWorkoutSplit(ctx: Ctx, workoutId: string): Promise<string | null> {
+  const row = await ctx.db.getFirstAsync<{ split: string | null }>(
+    `SELECT split FROM workouts WHERE id=? AND user_id=?`, [workoutId, ctx.userId]
+  );
+  return row?.split ?? null;
+}
+
 export async function repeatWorkout(ctx: Ctx, sourceWorkoutId: string, newWorkoutId: string, newDate: string) {
   const ts = nowIso();
   // Get source workout
