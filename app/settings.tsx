@@ -1,5 +1,5 @@
-import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, Pressable, TextInput, Switch } from 'react-native';
+import React, { useEffect, useRef, useState } from 'react';
+import { View, Text, StyleSheet, ScrollView, Pressable, TextInput, Switch, AppState } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import * as FileSystem from 'expo-file-system/legacy';
 import * as Crypto from 'expo-crypto';
@@ -13,6 +13,8 @@ import { fontSize, fontWeight } from '@/theme/typography';
 import { Card } from '@/components/Card';
 import { SettingsRow } from '@/components/SettingsRow';
 
+const HEALTH_PROMPT_TIMEOUT_MS = 5 * 60 * 1000;
+
 export default function Settings() {
   const { theme, c, toggle: toggleTheme } = useTheme();
   const [dbCtx, setDbCtx] = useState<any>(null);
@@ -24,6 +26,7 @@ export default function Settings() {
   const [healthAvailable] = useState(() => isHealthAvailable());
   const [healthOn, setHealthOn] = useState(false);
   const [healthMsg, setHealthMsg] = useState<string | null>(null);
+  const healthBusy = useRef(false);
 
   useEffect(() => {
     (async () => {
@@ -35,7 +38,7 @@ export default function Settings() {
       await refreshData(ctx);
       if (await isHealthSyncOn(ctx)) {
         setHealthOn(true);
-        if ((await syncHealthWeight(ctx, await getUserUnit(ctx))).imported) await refreshData(ctx);
+        await runHealthSync(ctx);
       }
     })();
   }, []);
@@ -69,15 +72,34 @@ export default function Settings() {
     setHealthOn(on);
     await setSetting(dbCtx, HEALTH_SYNC_SETTING, on ? '1' : '0');
     if (!on) { setHealthMsg(null); return; }
-    // First time on: iOS shows the Health permission sheet here
-    const r = await syncHealthWeight(dbCtx, unit);
-    if (r.imported) await refreshData();
-    setHealthMsg(
-      r.sample
-        ? `Latest from Apple Health: ${r.sample.weight} ${unit}`
-        : 'No weight found. Turn on Apple Health in your scale app, and allow Fitlog in Health > Sharing > Apps.'
-    );
+    // First time on: iOS shows the Health permission sheet here, so wait for the answer
+    // (the default 4s timeout would give up while the sheet is still on screen)
+    await runHealthSync(dbCtx, HEALTH_PROMPT_TIMEOUT_MS);
   }
+
+  async function runHealthSync(ctx: any, timeoutMs?: number) {
+    if (healthBusy.current) return;
+    healthBusy.current = true;
+    try {
+      const u = await getUserUnit(ctx);
+      const r = await syncHealthWeight(ctx, u, timeoutMs);
+      if (r.imported) await refreshData(ctx);
+      setHealthMsg(
+        r.sample
+          ? `Latest from Apple Health: ${r.sample.weight} ${u}`
+          : 'No weight found. Turn on Apple Health in your scale app, and allow Fitlog in Health > Sharing > Apps.'
+      );
+    } finally {
+      healthBusy.current = false;
+    }
+  }
+
+  // Coming back from the Health or scale app: read again
+  useEffect(() => {
+    if (!dbCtx || !healthOn) return;
+    const sub = AppState.addEventListener('change', (st) => { if (st === 'active') runHealthSync(dbCtx); });
+    return () => sub.remove();
+  }, [dbCtx, healthOn]);
 
   async function handleDeleteBw(id: string) {
     if (!dbCtx) return;

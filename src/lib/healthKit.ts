@@ -54,10 +54,11 @@ async function readLatestWeight(unit: WeightUnit): Promise<WeightSample | null> 
 export const healthKitSource: HealthWeightSource = { readLatestWeight };
 
 /** Read Health and store a newer weight. Returns the weight to use for this user. */
-export async function syncHealthWeight(ctx: Ctx, unit: WeightUnit): Promise<HealthSyncResult> {
+export async function syncHealthWeight(ctx: Ctx, unit: WeightUnit, timeoutMs?: number): Promise<HealthSyncResult> {
   return syncBodyWeightFromHealth({
     source: healthKitSource,
     unit,
+    timeoutMs,
     getLatest: () => getLatestBodyWeight(ctx),
     save: (s) => logBodyWeight(ctx, { id: Crypto.randomUUID(), date: s.date, weight: s.weight }),
   });
