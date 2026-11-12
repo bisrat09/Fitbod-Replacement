@@ -1,6 +1,7 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, Pressable, TextInput } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useFocusEffect } from 'expo-router';
 import { bootstrapDb } from '@/lib/bootstrap';
 import { ensureUser, listExercisesWithMetrics, getMetricHistory, getUserUnit } from '@/lib/dao';
 import { useTheme } from '@/theme/ThemeContext';
@@ -8,6 +9,8 @@ import { fontSize, fontWeight } from '@/theme/typography';
 import { epley1RM } from '@/lib/progression';
 import { Card } from '@/components/Card';
 import { ExerciseInitial } from '@/components/ExerciseInitial';
+import { BodyFatGoalCard } from '@/components/BodyFatGoalCard';
+import { loadBodyFatGoal, setBodyFatGoalPct, type BodyFatGoalState } from '@/lib/healthKit';
 
 export default function Progress() {
   const { c } = useTheme();
@@ -18,6 +21,8 @@ export default function Progress() {
   const [unit, setUnit] = useState<'lb' | 'kg'>('lb');
   const [calcWeight, setCalcWeight] = useState('');
   const [calcReps, setCalcReps] = useState('');
+  const [bodyFat, setBodyFat] = useState<BodyFatGoalState | null>(null);
+  const bodyFatBusy = useRef(false);
 
   useEffect(() => {
     (async () => {
@@ -30,6 +35,25 @@ export default function Progress() {
       setExercises(exs);
     })();
   }, []);
+
+  // Body fat goal: re-read Apple Health every time the tab is opened
+  const reloadBodyFat = useCallback(async () => {
+    if (!dbCtx || bodyFatBusy.current) return;
+    bodyFatBusy.current = true;
+    try {
+      setBodyFat(await loadBodyFatGoal(dbCtx, await getUserUnit(dbCtx)));
+    } finally {
+      bodyFatBusy.current = false;
+    }
+  }, [dbCtx]);
+  useFocusEffect(useCallback(() => { reloadBodyFat(); }, [reloadBodyFat]));
+
+  async function saveBodyFatGoal(pct: number) {
+    if (!dbCtx) return;
+    setBodyFat((prev) => (prev ? { ...prev, goalPct: pct } : prev));
+    await setBodyFatGoalPct(dbCtx, pct);
+    await reloadBodyFat();
+  }
 
   async function toggleExpand(exerciseId: string) {
     if (expanded === exerciseId) { setExpanded(null); return; }
@@ -52,7 +76,9 @@ export default function Progress() {
   return (
     <ScrollView style={[styles.container, { backgroundColor: c.bg }]}>
       <Text style={[styles.h1, { color: c.text }]}>Progress</Text>
-      <Text style={[styles.hint, { color: c.textMuted }]}>Track your estimated 1RM over time per exercise.</Text>
+      <Text style={[styles.hint, { color: c.textMuted }]}>Track your body fat goal and estimated 1RM per exercise.</Text>
+
+      <BodyFatGoalCard state={bodyFat} unit={unit} onSaveGoal={saveBodyFatGoal} />
 
       {/* 1RM Calculator */}
       <Card>

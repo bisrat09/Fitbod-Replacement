@@ -24,7 +24,7 @@ app/                    # Screens (Expo Router)
   _layout.tsx           # Tab navigation (4 tabs: Workout, Log, Progress, Settings)
   index.tsx             # Workout screen (split into sub-components)
   history.tsx           # Workout history with expandable detail, calendar, PR badges
-  progress.tsx          # 1RM trends per exercise, gold PR timeline
+  progress.tsx          # Body fat goal card, 1RM trends per exercise, gold PR timeline
   programs.tsx          # Program builder (hidden route, accessible from Settings)
   settings.tsx          # Grouped sections, unit segmented control, Switch toggle, data export/import
   exercises.tsx         # Exercise library with search + custom creation (hidden route)
@@ -69,12 +69,13 @@ src/lib/                # Core logic
   targetMuscles.ts      # Muscle group percentage computation (pure logic)
   healthWeight.ts       # Apple Health body weight sync rules (pure logic)
   healthKit.ts          # Native HealthKit adapter (only file that imports the HealthKit library)
+  bodyComposition.ts    # Body fat goal maths: 7-day average, lean mass, goal weight, trend (pure logic)
   migrations/           # Incremental schema migrations (v2-v8)
 ```
 
 ## Key Conventions
 - **Multi-user schema**: Every table has `user_id`. Always include it in queries.
-- **Offline-first**: No network calls. All data in SQLite. Only outside data source: Apple Health body weight (on-device, opt-in).
+- **Offline-first**: No network calls. All data in SQLite. Only outside data source: Apple Health body weight and body fat (on-device, opt-in).
 - **Idempotent seeds**: Exercises are seeded via `INSERT OR IGNORE` / `findByName` check.
 - **Migrations**: Incremental via `app_meta.schema_version`. Add new migrations in `src/lib/migrations/`.
 - **DAO pattern**: All DB access goes through `src/lib/dao.ts`. No raw SQL in screens.
@@ -112,7 +113,7 @@ Hidden routes: Programs, Exercises, Equipment, Recent (Log)
 ```bash
 npm start              # Expo dev server
 npm start -- --clear   # Clear cache
-npm test               # 384 tests
+npm test               # 395 tests
 npm run build:gifmap   # Regenerate exercise GIF map from ExerciseDB API
 npx expo run:ios       # Build + run iOS
 npx expo-doctor        # Check dependencies

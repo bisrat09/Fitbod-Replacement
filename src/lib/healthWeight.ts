@@ -44,7 +44,7 @@ export function isNewerSample(sample: WeightSample, latest: { date: string } | n
   return Date.parse(sample.date) > stored;
 }
 
-function withTimeout<T>(p: Promise<T>, ms: number): Promise<T | null> {
+export function withTimeout<T>(p: Promise<T>, ms: number): Promise<T | null> {
   return new Promise((resolve) => {
     const t = setTimeout(() => resolve(null), ms);
     p.then((v) => { clearTimeout(t); resolve(v); }, () => { clearTimeout(t); resolve(null); });

@@ -591,3 +591,12 @@ Next Steps
 - WorkoutSummaryModal: when calories are null it shows a body weight input + Estimate. app/index.tsx keeps the summarizeWorkout args in a ref (summaryArgs) so the summary is recomputed in place, then logBodyWeight saves it. getLatestBodyWeight picks it up on every later finish.
 - Not fixed, needs Bisrat's answer: summary title said Pull for a triceps/delts session.
 - Pull label on a push day: selectExercises can't put triceps/delts lifts in a pull plan, so the plan was push and the label drifted. Bootstrap calls replan() (setSplit from recovery) even when active_workout_id exists. New effect in app/index.tsx: on workoutId, setSplit(getWorkoutSplit()).
+
+## 2026-11-11 — Body fat goal tracker
+- Bisrat's target is 15% body fat. Renpho writes body fat to Apple Health, so Fitlog reads `HKQuantityTypeIdentifierBodyFatPercentage` (unit '%', HealthKit returns a fraction, `normalizePercent` handles both).
+- `src/lib/bodyComposition.ts` (pure, tested): one value per day, 7-day average (falls back to the latest reading, flagged stale), lean mass = weight x (1 - bf), weight at goal = lean / (1 - goal), least-squares trend over 28 days (needs 5 days of readings spread over 10), weeks to goal only when dropping at least 0.05 points a week.
+- `src/lib/healthKit.ts`: `READ_TYPES` (body mass + body fat) is requested together before every query; `loadBodyFatGoal` reads 90 days, falls back to Fitlog's own body_weight rows when Health has no weight, stores the first non-stale reading as `body_fat_start_pct` for the progress bar. Goal lives in `body_fat_goal_pct` (default 15).
+- `src/components/BodyFatGoalCard.tsx` at the top of Progress, reloads on tab focus. Hidden where Health is unavailable; prompts to turn on the Health switch when it is off.
+- Day buckets are UTC days, so a late-evening weigh-in can land on the next day. Fine for a weekly average.
+- `NSHealthShareUsageDescription` now mentions body fat.
+- Not device-tested before the build: no Xcode on this machine.

@@ -27,6 +27,7 @@ Project Snapshot
   - `src/lib/dao.ts`: DAO for users, exercises, workouts, sets, metrics
   - `src/lib/progression.ts`: RIR progression + Epley 1RM
   - `src/lib/healthWeight.ts` + `src/lib/healthKit.ts`: Apple Health body weight sync (pure logic + native adapter, opt-in via Settings)
+  - `src/lib/bodyComposition.ts` + `src/components/BodyFatGoalCard.tsx`: body fat goal tracker on Progress (reads body fat + weight from Apple Health through `healthKit.ts`)
   - `src/lib/bootstrap.ts`: bootstrap DB + persistent `userId`
   - `src/state/store.ts`: future global state (Zustand)
 
