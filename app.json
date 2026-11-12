@@ -18,7 +18,7 @@
         "@kingstinct/react-native-healthkit",
         {
           "NSHealthShareUsageDescription": "Fitlog reads your body weight from Apple Health to estimate workout calories.",
-          "NSHealthUpdateUsageDescription": false,
+          "NSHealthUpdateUsageDescription": "Fitlog can save your workouts to Apple Health.",
           "background": false
         }
       ]

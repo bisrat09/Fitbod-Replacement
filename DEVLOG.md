@@ -582,6 +582,8 @@ Next Steps
 - Opt-in: Settings > Body Weight > Sync from Apple Health. Nothing touches Health until the switch is on. Finish uses it when on (typed weight on the finish sheet still wins).
 - iOS never tells an app that read access was denied, the query just comes back empty, so the switch shows a "No weight found" hint in that case.
 - Not device-tested before the build: no Xcode on this machine.
+- Build 18 failed at signing (profile had no HealthKit capability): fixed by one interactive EAS build, which enabled the capability and regenerated the profile.
+- Build 19 uploaded but Apple rejected it during processing: ITMS-90683, NSHealthUpdateUsageDescription missing. `NSHealthUpdateUsageDescription: false` in the plugin was wrong; the string is required whenever the binary links HealthKit write APIs. Set to a real string. Fitlog still requests read access only.
 
 ## 2026-11-11 — Calories on the summary
 - Gym feedback on build 17: Workout Complete showed "--" for calories. Not a calculation bug: estimateCalories needs a body weight and none was in body_weight.
