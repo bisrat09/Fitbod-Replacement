@@ -107,7 +107,7 @@ export function BodyFatGoalCard({ state, unit, onSaveGoal }: Props) {
           </View>
 
           {goal.progress != null && (
-            <View style={[styles.track, { backgroundColor: c.inputBg }]}>
+            <View style={[styles.track, { backgroundColor: c.cardBorder }]}>
               <View
                 style={[
                   styles.fill,

@@ -236,7 +236,9 @@ Goal: replace the paid Fitbod subscription. Bisrat has an active Apple Developer
 - [x] [2026-11-11] Build 21 on TestFlight (EAS 41a0c456, Apple "ready to test" email 04:04 UTC): Health timeout fix
 - [x] [2026-11-11] Build 22 on TestFlight (EAS c4caeb8c, Apple "ready to test" email 04:13 UTC): body fat goal card
 - [x] [2026-11-13] Apple Health weight sync verified on Bisrat's phone: Settings shows "Latest from Apple Health: 198.4 lb" and the Nov 8 Renpho weigh-in was imported into Body Weight
-- [ ] IN PROGRESS: Bisrat opens Progress in build 22 and reports the body fat goal card. Then add build 22 to the Friends group
+- [x] [2026-11-13] Body fat goal card verified on Bisrat's phone (build 22): 22.1% to 15%, 198.4 lb, lean 154.6 lb, weight at 15% 181.8 lb, 16.6 lb to lose. Only 1 day of body fat readings so far, trend needs about 2 weeks
+- [x] [2026-11-13] Progress bar track was invisible at 0% (same colour as the card), now uses the card border colour. Committed, not in a build yet: ships with the next build
+- [ ] Bisrat: add build 22 to the Friends group; weigh in on Renpho most mornings so the 7-day average and trend fill in
 - [x] [2026-11-11] Body fat goal tracker on the Progress tab (Bisrat's target: 15% body fat). Reads 90 days of body fat and weight from Apple Health, shows the 7-day average, lean mass, weight at the goal, fat to lose, 4-week trend and weeks to go. Goal is editable on the card (default 15). Needs the Health switch on in Settings; iOS shows one more permission sheet for Body Fat Percentage. No new library. Not device-tested (no Xcode here)
 - [ ] Bisrat: in the build with the goal card, open Progress, allow Body Fat Percentage on the Health sheet, report what the card shows
 - [ ] Ideas from the body fat talk, not approved: cut mode in the workout generator, muscle-loss warning (lean mass dropping), lean-mass-based calorie estimate
